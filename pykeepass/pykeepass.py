@@ -26,14 +26,18 @@ def dump_to_file(kdb, outfile):
         f.write(kdb.pretty_print())
 
 
-def __xpath(tree, xpath_str):
+def __xpath(tree, xpath_str, first_match_only=True):
     result = tree.xpath(xpath_str)
-    # FIXME This raises a FutureWarning:
-    # kpwrite.py:217: FutureWarning: The behavior of this method will change in
-    # future versions. Use specific 'len(elem)' or 'elem is not None' test
-    # instead.
-    if len(result) > 0:
-        return result[0]
+    if first_match_only:
+        # FIXME This raises a FutureWarning:
+        # kpwrite.py:217: FutureWarning: The behavior of this method will change in
+        # future versions. Use specific 'len(elem)' or 'elem is not None' test
+        # instead.
+        if len(result) > 0:
+            return result[0]
+    else:
+        return result
+
 
 def find_group_by_path(etree, group_path_str=None):
     xp = '/KeePassFile/Root/Group'
@@ -204,6 +208,13 @@ def find_entry(etree, entry_name):
         entry_name
     )
     return __xpath(etree, xp)
+
+
+def find_entries_by_username(etree, username):
+    xp = '//Entry/String/Key[text()="Username"]/../Value[text()="{}"]/../..'.format(
+        username
+    )
+    return __xpath(etree, xp, False)
 
 
 def create_entry(etree, group, entry_name, entry_username, entry_password,
