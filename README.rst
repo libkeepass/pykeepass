@@ -27,4 +27,4 @@ This library allows you to write entries to a KeePass database
    )
    # save database
    with open('/tmp/pykeepass.kdbx', 'w+') as f:
-      pykeepass.write_to(f)
+      kdb.write_to(f)
