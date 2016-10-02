@@ -1,9 +1,4 @@
-from distutils.core import setup
-import os
-
-
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+from setuptools import find_packages, setup
 
 
 setup(
@@ -12,11 +7,11 @@ setup(
     license='GPL3',
     description='Low-level library to interact with keepass databases '\
                 '(supports the v.4 format)',
-    long_description=read('README.rst'),
+    long_description=open('README.rst').read(),
     author='Philipp Schmitt',
     author_email='philipp@schmitt.co',
     url='https://github.com/pschmitt/pykeepass',
-    packages=['pykeepass'],
+    packages=find_packages(),
     install_requires=['libkeepass-unicode'],
     entry_points={
         'console_scripts': ['pkpwrite=pykeepass.pkpwrite:main']
