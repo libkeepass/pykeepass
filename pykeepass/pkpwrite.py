@@ -6,7 +6,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import argparse
 import logging
-import pykeepass
+from pykeepass import PyKeePass
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -93,8 +93,8 @@ def write_entry(kdbx_file, kdbx_password, group_path,
             entry_title, entry_username, entry_password, group_path
         )
     )
-    pykeepass.read(kdbx_file, password=kdbx_password, keyfile=kdbx_keyfile)
-    pykeepass.add_entry(
+    kp = PyKeePass(kdbx_file, password=kdbx_password, keyfile=kdbx_keyfile)
+    kp.add_entry(
         group_path=group_path,
         entry_title=entry_title,
         entry_username=entry_username,
@@ -103,7 +103,7 @@ def write_entry(kdbx_file, kdbx_password, group_path,
         entry_notes=entry_notes,
         entry_tags=entry_tags, force_creation=force_creation
     )
-    file_written = pykeepass.save(kdbx_file if not outfile else outfile)
+    file_written = kp.save(kdbx_file if not outfile else outfile)
     logging.info('Wrote database to {}'.format(file_written.name))
 
 
