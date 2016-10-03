@@ -1,3 +1,5 @@
 .ropeproject/
 *.pyc
 dist/
+*.kdbx
+*.egg-info/
