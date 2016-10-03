@@ -39,7 +39,7 @@ def parse_args():
     )
     parser.add_argument(
         '-D', '--destination',
-        help='Group where to write the new entry to',
+        help='Group where to write the new entry to (path)',
         required=False
     )
     parser.add_argument(
@@ -84,50 +84,27 @@ def parse_args():
     return parser.parse_args()
 
 
-def write_entry(kdbx_file, kdbx_password, group_destination_name,
-                entry_name, entry_username, entry_password, entry_url,
+def write_entry(kdbx_file, kdbx_password, group_path,
+                entry_title, entry_username, entry_password, entry_url,
                 entry_notes, entry_tags, kdbx_keyfile=None,
                 force_creation=False, outfile=None):
     logging.info(
         'Atempt to write entry "{}: {}:{}" to {}'.format(
-            entry_name, entry_username, entry_password, group_destination_name
+            entry_title, entry_username, entry_password, group_path
         )
     )
-    with pykeepass.open(
-        kdbx_file, password=kdbx_password, keyfile=kdbx_keyfile
-    ) as kdb:
-        et = kdb.tree
-        destination_group = pykeepass.find_group_by_path(et, group_destination_name)
-        if not destination_group:
-            logging.info(
-                'Could not find destination group {}. Create it.'.format(
-                    group_destination_name
-                )
-            )
-            destination_group = pykeepass.create_group_path(
-                et, group_destination_name
-            )
-        e = pykeepass.find_entry(destination_group, entry_name)
-        if e and not force_creation:
-            logger.warning(
-                'An entry {} already exists in {}. Update it.'.format(
-                    entry_name, group_destination_name
-                )
-            )
-            pykeepass.update_entry(
-                e, entry_name, entry_username, entry_password,
-                entry_url, entry_notes, entry_tags
-            )
-        else:
-            pykeepass.create_entry(
-                et, destination_group, entry_name, entry_username,
-                entry_password, entry_notes, entry_url, entry_tags
-            )
-        outstream = open(
-            kdbx_file if not outfile else outfile, 'w+'
-        ).__enter__()
-        kdb.write_to(outstream)
-        logging.info('Wrote database to {}'.format(outstream.name))
+    pykeepass.read(kdbx_file, password=kdbx_password, keyfile=kdbx_keyfile)
+    pykeepass.add_entry(
+        group_path=group_path,
+        entry_title=entry_title,
+        entry_username=entry_username,
+        entry_password=entry_password,
+        entry_url=entry_url,
+        entry_notes=entry_notes,
+        entry_tags=entry_tags, force_creation=force_creation
+    )
+    file_written = pykeepass.save(kdbx_file if not outfile else outfile)
+    logging.info('Wrote database to {}'.format(file_written.name))
 
 
 def main():
@@ -137,9 +114,9 @@ def main():
         kdbx_password=args.password,
         kdbx_keyfile=args.keyfile,
         outfile=args.outfile,
-        group_destination_name=args.destination,
+        group_path=args.destination,
         force_creation=args.force,
-        entry_name=args.entry,
+        entry_title=args.entry,
         entry_username=args.entry_username,
         entry_password=args.entry_password,
         entry_url=args.entry_url,

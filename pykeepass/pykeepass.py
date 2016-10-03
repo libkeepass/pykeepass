@@ -8,6 +8,7 @@ from copy import deepcopy
 from datetime import datetime
 from lxml.etree import Element
 import base64
+import libkeepass
 import logging
 import os
 import uuid
@@ -16,8 +17,31 @@ import uuid
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+# KeePass DB
+kdb = None
+kdb_filename = None
 
-def dump_to_file(kdb, outfile):
+
+def read(filename, password=None, keyfile=None):
+    global kdb
+    global kdb_filename
+    logger.info('Open file {}'.format(filename))
+    kdb_filename = filename
+    kdb = libkeepass.open(
+        filename, password=password, keyfile=keyfile
+    ).__enter__()
+    return kdb
+
+
+def save(filename=None):
+    if not filename:
+        filename = kdb_filename
+    outfile = open(filename, 'w+').__enter__()
+    kdb.write_to(outfile)
+    return outfile
+
+
+def dump_xml(outfile):
     '''
     Dump the content of the database to a file
     NOTE The file is unencrypted!
@@ -26,7 +50,9 @@ def dump_to_file(kdb, outfile):
         f.write(kdb.pretty_print())
 
 
-def __xpath(tree, xpath_str, first_match_only=True):
+def __xpath(xpath_str, first_match_only=True, tree=None):
+    if not tree:
+        tree = kdb.tree
     result = tree.xpath(xpath_str)
     if first_match_only:
         # FIXME This raises a FutureWarning:
@@ -39,59 +65,63 @@ def __xpath(tree, xpath_str, first_match_only=True):
         return result
 
 
-def find_group_by_path(etree, group_path_str=None):
+def find_group_by_path(group_path_str=None, tree=None):
+    if not tree:
+        tree = kdb.tree
     xp = '/KeePassFile/Root/Group'
     # if group_path_str is not set, assume we look for root dir
     if group_path_str:
         for s in group_path_str.split('/'):
             xp += '/Group/Name[text()="{}"]/..'.format(s)
-    return __xpath(etree, xp)
+    return __xpath(xp, tree=tree)
 
 
-def get_root_group(etree):
-    return find_group_by_path(etree)
+def get_root_group(tree=None):
+    return find_group_by_path(tree=tree)
 
 
-def find_group_by_name(etree, group_name):
+def find_group_by_name(group_name, tree=None):
     '''
     '''
-    return __xpath(etree, '//Group/Name[text()="{}"]/..'.format(group_name))
+    return __xpath(tree, '//Group/Name[text()="{}"]/..'.format(group_name))
 
 
-def find_group(etree, group_name):
+def find_group(group_name, tree=None):
     gname = os.path.dirname(group_name) if group_name.contains('/') else group_name
     return find_group_by_name(gname)
 
 
-def generate_unique_uuid(etree):
-    uuids = [str(x) for x in etree.xpath('//UUID')]
+def __generate_uuid(tree=None):
+    if not tree:
+        tree = kdb.tree
+    uuids = [str(x) for x in tree.xpath('//UUID')]
     while True:
         rand_uuid = base64.b64encode(uuid.uuid1().bytes)
         if rand_uuid not in uuids:
             return rand_uuid
 
 
-def get_uuid_element(etree):
+def create_uuid_element(tree=None):
     uuid_el = Element('UUID')
-    uuid_el.text = generate_unique_uuid(etree)
+    uuid_el.text = __generate_uuid(tree)
     logger.info('New UUID: {}'.format(uuid_el.text))
     return uuid_el
 
 
-def get_name_element(name):
+def create_name_element(name):
     name_el = Element('Name')
     name_el.text = name
     return name_el
 
 
-def get_tags_element(tags):
+def create_tags_element(tags):
     tags_el = Element('Tags')
     if type(tags) is list:
         tags_el.text = ';'.join(tags)
     return tags_el
 
 
-def __get_string_element(key, value):
+def __create_string_element(key, value):
     string_el = Element('String')
     key_el = Element('Key')
     key_el.text = key
@@ -101,15 +131,16 @@ def __get_string_element(key, value):
     string_el.append(value_el)
     return string_el
 
-def get_title_element(title):
-    return __get_string_element('Title', title)
+
+def create_title_element(title):
+    return __create_string_element('Title', title)
 
 
-def get_username_element(username):
-    return __get_string_element('UserName', username)
+def create_username_element(username):
+    return __create_string_element('UserName', username)
 
 
-def get_password_element(password):
+def create_password_element(password):
     string_el = Element('String')
     key_el = Element('Key')
     key_el.text = 'Password'
@@ -123,12 +154,12 @@ def get_password_element(password):
     return string_el
 
 
-def get_url_element(url):
-    return __get_string_element('URL', url)
+def create_url_element(url):
+    return __create_string_element('URL', url)
 
 
-def get_notes_element(notes):
-    return __get_string_element('Notes', notes)
+def create_notes_element(notes):
+    return __create_string_element('Notes', notes)
 
 
 def dateformat(time=None):
@@ -142,7 +173,7 @@ def dateformat(time=None):
     return datetime.strftime(time, format=dformat)
 
 
-def get_time_element(expires=False, expiry_time=None):
+def create_time_element(expires=False, expiry_time=None):
     now_str = dateformat()
     expiry_time_str = dateformat(expiry_time)
 
@@ -173,28 +204,28 @@ def get_time_element(expires=False, expiry_time=None):
     return times_el
 
 
-def create_group_path(etree, group_path):
+def create_group_path(group_path, tree):
     logger.info('Create group {}'.format(group_path))
-    group = get_root_group(etree)
+    group = get_root_group(tree)
     path = ''
     for gn in group_path.split('/'):
-        group = __create_group_at_path(etree, path.rstrip('/'), gn)
+        group = __create_group_at_path(tree, path.rstrip('/'), gn)
         path += gn + '/'
     return group
 
 
-def __create_group_at_path(etree, group_path, group_name):
+def __create_group_at_path(tree, group_path, group_name):
     logger.info(
         'Create group {} at {}'.format(
             group_name,
             group_path if group_path else 'root dir'
         )
     )
-    parent_group = find_group_by_path(etree, group_path)
+    parent_group = find_group_by_path(group_path, tree)
     if parent_group:
         group_el = Element('Group')
-        name_el = get_name_element(group_name)
-        uuid_el = get_uuid_element(etree)
+        name_el = create_name_element(group_name)
+        uuid_el = create_uuid_element(tree)
         group_el.append(uuid_el)
         group_el.append(name_el)
         parent_group.append(group_el)
@@ -203,37 +234,39 @@ def __create_group_at_path(etree, group_path, group_name):
         logger.error('Could not find group at {}'.format(group_path))
 
 
-def find_entry(etree, entry_name):
+def find_entry(tree, entry_name):
     xp = '//Entry/String/Key[text()="Title"]/../Value[text()="{}"]/../..'.format(
         entry_name
     )
-    return __xpath(etree, xp)
+    return __xpath(xp, tree=tree)
 
 
-def find_entries_by_username(etree, username):
+def find_entries_by_username(tree, username):
     xp = '//Entry/String/Key[text()="Username"]/../Value[text()="{}"]/../..'.format(
         username
     )
-    return __xpath(etree, xp, False)
+    return __xpath(tree, xp, False)
 
 
-def create_entry(etree, group, entry_name, entry_username, entry_password,
+def create_entry(group, entry_title, entry_username, entry_password,
                  entry_notes=None, entry_url=None, entry_tags=None,
-                 entry_expires=False, entry_expiration_date=None):
+                 entry_expires=False, entry_expiration_date=None, tree=None):
+    if not tree:
+        tree = kdb.tree
     entry_el = Element('Entry')
-    title_el = get_title_element(entry_name)
-    uuid_el = get_uuid_element(etree)
-    username_el = get_username_element(entry_username)
-    password_el = get_password_element(entry_password)
-    times_el = get_time_element(entry_expires, entry_expiration_date)
+    title_el = create_title_element(entry_title)
+    uuid_el = create_uuid_element(tree)
+    username_el = create_username_element(entry_username)
+    password_el = create_password_element(entry_password)
+    times_el = create_time_element(entry_expires, entry_expiration_date)
     if entry_url:
-        url_el = get_url_element(entry_url)
+        url_el = create_url_element(entry_url)
         entry_el.append(url_el)
     if entry_notes:
-        notes_el = get_notes_element(entry_notes)
+        notes_el = create_notes_element(entry_notes)
         entry_el.append(notes_el)
     if entry_tags:
-        tags_el = get_tags_element(entry_tags)
+        tags_el = create_tags_element(entry_tags)
         entry_el.append(tags_el)
     entry_el.append(title_el)
     entry_el.append(uuid_el)
@@ -252,7 +285,7 @@ def touch_entry(entry):
 
 
 def __get_entry_string_field(entry, key):
-    return __xpath(entry, 'String/Key[text()="{}"]/..'.format(key))
+    return __xpath(tree=entry, xpath_str='String/Key[text()="{}"]/..'.format(key))
 
 
 def get_entry_title_field(entry):
@@ -311,3 +344,42 @@ def update_entry(entry, entry_title=None, entry_username=None,
     if entry_tags:
         entry.Tags = ';'.join(entry_tags)
     entry.Times.LastModificationTime = dateformat()
+
+
+def add_entry(group_path, entry_title, entry_username,
+              entry_password, entry_url=None, entry_notes=None,
+              entry_tags=None, force_creation=False):
+    destination_group = find_group_by_path(group_path)
+    if not destination_group:
+        logging.info(
+            'Could not find destination group {}. Create it.'.format(
+                group_path
+            )
+        )
+        destination_group = create_group_path(group_path)
+    e = find_entry(destination_group, entry_title)
+    if e and not force_creation:
+        logger.warning(
+            'An entry {} already exists in {}. Update it.'.format(
+                entry_title, group_path
+            )
+        )
+        update_entry(
+            e,
+            entry_title=entry_title,
+            entry_username=entry_username,
+            entry_password=entry_password,
+            entry_url=entry_url,
+            entry_notes=entry_notes,
+            entry_tags=entry_tags
+        )
+    else:
+        create_entry(
+            destination_group,
+            entry_title=entry_title,
+            entry_username=entry_username,
+            entry_password=entry_password,
+            entry_notes=entry_notes,
+            entry_url=entry_url,
+            entry_tags=entry_tags
+        )
