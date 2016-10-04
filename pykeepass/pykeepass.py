@@ -100,6 +100,11 @@ class PyKeePass():
         logger.info('New UUID: {}'.format(uuid_el.text))
         return uuid_el
 
+    def create_icon_element(self, icon):
+        icon_el = Element('IconID')
+        icon_el.text = str(icon)
+        return icon_el
+
     def create_name_element(self, name):
         name_el = Element('Name')
         name_el.text = name
@@ -231,7 +236,7 @@ class PyKeePass():
     def create_entry(self, group, entry_title, entry_username, entry_password,
                      entry_notes=None, entry_url=None, entry_tags=None,
                      entry_expires=False, entry_expiration_date=None,
-                     tree=None):
+                     entry_icon=None, tree=None):
         if not tree:
             tree = self.kdb.tree
         entry_el = Element('Entry')
@@ -249,6 +254,9 @@ class PyKeePass():
         if entry_tags:
             tags_el = self.create_tags_element(entry_tags)
             entry_el.append(tags_el)
+        if entry_icon:
+            icon_el = self.create_icon_element(entry_icon)
+            entry_el.append(icon_el)
         entry_el.append(title_el)
         entry_el.append(uuid_el)
         entry_el.append(username_el)
@@ -296,7 +304,7 @@ class PyKeePass():
 
     def update_entry(self, entry, entry_title=None, entry_username=None,
                      entry_password=None, entry_url=None, entry_notes=None,
-                     entry_tags=None,
+                     entry_tags=None, entry_icon=None,
                      entry_expires=None, entry_expiration_date=None):
         self.archive_entry(entry)
         if entry_title:
@@ -315,11 +323,13 @@ class PyKeePass():
             entry.Times.ExpiryTime = entry_expiration_date
         if entry_tags:
             entry.Tags = ';'.join(entry_tags)
+        if entry_icon:
+            entry.IconID.text = entry_icon
         entry.Times.LastModificationTime = self.__dateformat()
 
     def add_entry(self, group_path, entry_title, entry_username,
                   entry_password, entry_url=None, entry_notes=None,
-                  entry_tags=None, force_creation=False):
+                  entry_tags=None, entry_icon=None, force_creation=False):
         destination_group = self.find_group_by_path(group_path)
         if not destination_group:
             logging.info(
@@ -342,7 +352,8 @@ class PyKeePass():
                 entry_password=entry_password,
                 entry_url=entry_url,
                 entry_notes=entry_notes,
-                entry_tags=entry_tags
+                entry_tags=entry_tags,
+                entry_icon=entry_icon
             )
         else:
             self.create_entry(
@@ -352,5 +363,6 @@ class PyKeePass():
                 entry_password=entry_password,
                 entry_notes=entry_notes,
                 entry_url=entry_url,
-                entry_tags=entry_tags
+                entry_tags=entry_tags,
+                entry_icon=entry_icon
             )
