@@ -186,7 +186,9 @@ class PyKeePass():
 
         return times_el
 
-    def create_group_path(self, group_path, tree):
+    def create_group_path(self, group_path, tree=None):
+        if not tree:
+            tree = self.kdb.tree
         logger.info('Create group {}'.format(group_path))
         group = self.get_root_group(tree)
         path = ''
