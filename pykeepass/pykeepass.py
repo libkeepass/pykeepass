@@ -79,7 +79,7 @@ class PyKeePass():
     def find_group_by_name(self, group_name, tree=None):
         '''
         '''
-        return self.__xpath(tree, '//Group/Name[text()="{}"]/..'.format(group_name))
+        return self.__xpath(tree, './/Group/Name[text()="{}"]/..'.format(group_name))
 
     def find_group(self, group_name, tree=None):
         gname = os.path.dirname(group_name) if group_name.contains('/') else group_name
@@ -223,7 +223,7 @@ class PyKeePass():
         return self.__xpath(xpath_str=xp, tree=tree)
 
     def find_entries_by_username(self, username, tree=None):
-        xp = '//Entry/String/Key[text()="Username"]/../Value[text()="{}"]/../..'.format(
+        xp = './/Entry/String/Key[text()="Username"]/../Value[text()="{}"]/../..'.format(
             username
         )
         return self.__xpath(tree, xpath_str=xp, first_match_only=False)
@@ -286,7 +286,7 @@ class PyKeePass():
         Save the entry in its history
         '''
         archive = deepcopy(entry)
-        if getattr(entry, 'History'):
+        if entry.find('History'):
             archive.remove(archive.History)
             entry.History.append(archive)
         else:
