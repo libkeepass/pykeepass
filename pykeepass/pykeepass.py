@@ -324,7 +324,7 @@ class PyKeePass():
         if entry_tags:
             entry.Tags = ';'.join(entry_tags)
         if entry_icon:
-            entry.IconID.text = entry_icon
+            entry.IconID = int(entry_icon)
         entry.Times.LastModificationTime = self.__dateformat()
 
     def add_entry(self, group_path, entry_title, entry_username,
