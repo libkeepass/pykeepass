@@ -217,7 +217,7 @@ class PyKeePass():
             logger.error('Could not find group at {}'.format(group_path))
 
     def find_entry(self, entry_title, tree=None):
-        xp = '//Entry/String/Key[text()="Title"]/../Value[text()="{}"]/../..'.format(
+        xp = './/Entry/String/Key[text()="Title"]/../Value[text()="{}"]/../..'.format(
             entry_title
         )
         return self.__xpath(xpath_str=xp, tree=tree)
