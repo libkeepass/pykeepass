@@ -228,7 +228,7 @@ class PyKeePass():
         return self.__xpath(xpath_str=xp, tree=tree)
 
     def find_entries_by_username(self, username, tree=None):
-        xp = './/Entry/String/Key[text()="Username"]/../Value[text()="{}"]/../..'.format(
+        xp = './/Entry/String/Key[text()="UserName"]/../Value[text()="{}"]/../..'.format(
             username
         )
         return self.__xpath(tree=tree, xpath_str=xp, first_match_only=False)
