@@ -79,7 +79,7 @@ class PyKeePass():
     def find_group_by_name(self, group_name, tree=None):
         '''
         '''
-        return self.__xpath(tree, './/Group/Name[text()="{}"]/..'.format(group_name))
+        return self.__xpath('.//Group/Name[text()="{}"]/..'.format(group_name), tree=tree)
 
     def find_group(self, group_name, tree=None):
         gname = os.path.dirname(group_name) if '/' in group_name else group_name
