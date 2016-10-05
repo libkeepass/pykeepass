@@ -231,7 +231,7 @@ class PyKeePass():
         xp = './/Entry/String/Key[text()="Username"]/../Value[text()="{}"]/../..'.format(
             username
         )
-        return self.__xpath(tree, xpath_str=xp, first_match_only=False)
+        return self.__xpath(tree=tree, xpath_str=xp, first_match_only=False)
 
     def create_entry(self, group, entry_title, entry_username, entry_password,
                      entry_notes=None, entry_url=None, entry_tags=None,
