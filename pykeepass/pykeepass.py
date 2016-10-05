@@ -82,7 +82,7 @@ class PyKeePass():
         return self.__xpath(tree, './/Group/Name[text()="{}"]/..'.format(group_name))
 
     def find_group(self, group_name, tree=None):
-        gname = os.path.dirname(group_name) if group_name.contains('/') else group_name
+        gname = os.path.dirname(group_name) if '/' in group_name else group_name
         return self.find_group_by_name(gname)
 
     def __generate_uuid(self, tree=None):
