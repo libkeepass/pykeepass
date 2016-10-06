@@ -89,7 +89,7 @@ def write_entry(kdbx_file, kdbx_password, group_path,
                 entry_notes, entry_tags, kdbx_keyfile=None,
                 force_creation=False, outfile=None):
     logging.info(
-        'Atempt to write entry "{}: {}:{}" to {}'.format(
+        'Attempt to write entry "{}: {}:{}" to {}'.format(
             entry_title, entry_username, entry_password, group_path
         )
     )
