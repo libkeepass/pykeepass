@@ -45,3 +45,12 @@ class Group(BaseElement):
                 self._element.append(e._element)
         else:
             self._element.append(entries._element)
+
+    def __str__(self):
+        return 'Group {}'.format(self.name)
+
+    def __unicode__(self):
+        return self.__str__()
+
+    def __repr__(self):
+        return self.__str__()
