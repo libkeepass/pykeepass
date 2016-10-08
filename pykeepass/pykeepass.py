@@ -38,6 +38,18 @@ class PyKeePass():
         self.kdb.write_to(outfile)
         return outfile
 
+    @property
+    def root_group(self):
+        return self.get_root_group()
+
+    @property
+    def groups(self):
+        return self.__xpath('.//Group', first_match_only=False)
+
+    @property
+    def entries(self):
+        return self.__xpath('.//Entry', first_match_only=False)
+
     def dump_xml(self, outfile):
         '''
         Dump the content of the database to a file
@@ -46,26 +58,22 @@ class PyKeePass():
         with open(outfile, 'w+') as f:
             f.write(self.kdb.pretty_print())
 
-    def __xpath(self, xpath_str, first_match_only=True, tree=None, regex=False):
+    def __xpath(self, xpath_str, first_match_only=True, tree=None):
         if tree is None:
             tree = self.kdb.tree
         result = tree.xpath(
             xpath_str, namespaces={'re': 'http://exslt.org/regular-expressions'}
         )
-        if first_match_only:
-            # FIXME This raises a FutureWarning:
-            # kpwrite.py:217: FutureWarning: The behavior of this method will change in
-            # future versions. Use specific 'len(elem)' or 'elem is not None' test
-            # instead.
-            if len(result) > 0:
-                if result[0].tag == 'Entry':
-                    return Entry(element=result[0])
-                elif result[0].tag == 'Group':
-                    return Group(element=result[0])
-                else:
-                    return result[0]
-        else:
-            return result
+        # Typed result array
+        res = []
+        for r in result:
+            if r.tag == 'Entry':
+                res.append(Entry(element=r))
+            elif r.tag == 'Group':
+                res.append(Group(element=r))
+            else:
+                res.append(r)
+        return res[0] if first_match_only else res
 
     def find_group_by_path(self, group_path_str=None, tree=None):
         logger.info('Look for group {}'.format(group_path_str if group_path_str else 'ROOT'))
@@ -93,7 +101,6 @@ class PyKeePass():
     def find_group(self, group_name, tree=None):
         gname = os.path.dirname(group_name) if '/' in group_name else group_name
         return self.find_groups_by_name(gname)
-
 
     def create_group_path(self, group_path, tree=None):
         if not tree:
