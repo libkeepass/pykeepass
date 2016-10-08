@@ -123,9 +123,42 @@ class Entry(BaseElement):
         v = ';'.join(value if type(value) is list else [value])
         return self._set_subelement_text('Tags', v)
 
+    def __get_times_property(self, prop):
+        times = self._element.find('Times')
+        if times is not None:
+            prop = times.find(prop)
+            if prop is not None:
+                return prop.text
+
     @property
     def expires(self):
-        return self.__get_string_field('Times')
+        d = self.__get_times_property('Expires')
+        if d is not None:
+            return d.text == 'True'
+
+    @property
+    def expiry_time(self):
+        d = self.__get_times_property('ExpiryTime')
+        if d is not None:
+            return xmlfactory._date_from_str(d)
+
+    @property
+    def ctime(self):
+        d = self.__get_times_property('CreationTime')
+        if d is not None:
+            return xmlfactory._date_from_str(d)
+
+    @property
+    def atime(self):
+        d = self.__get_times_property('LastAccessTime')
+        if d is not None:
+            return xmlfactory._date_from_str(d)
+
+    @property
+    def mtime(self):
+        d = self.__get_times_property('LastModificationTime')
+        if d is not None:
+            return xmlfactory._date_from_str(d)
 
     @property
     def history(self):
@@ -140,11 +173,13 @@ class Entry(BaseElement):
     def parentgroup(self):
         return group.Group(element=self._element.getparent())
 
-    def touch(self):
+    def touch(self, modify=False):
         '''
         Update last access time of an entry
         '''
         self._element.Times.LastAccessTime = xmlfactory._dateformat()
+        if modify:
+            self._element.Times.LastModificationTime = xmlfactory._dateformat()
 
     def save_history(self):
         '''

@@ -72,7 +72,7 @@ def create_times_element(expires=False, expiry_time=None):
     mtime_el.text = now_str
     etime_el.text = expiry_time_str
     location_changed_el.text = now_str
-    expires_el.text = str(expires)
+    expires_el.text = str(expires) if expires is not None else None
     usage_count_el.text = str(0)
 
     times_el.append(ctime_el)
@@ -116,6 +116,10 @@ def __create_string_element(key, value):
     string.append(value_el)
     return string
 
+
+def _date_from_str(date):
+    dformat = '%Y-%m-%dT%H:%M:%SZ'
+    return datetime.strptime(date, dformat)
 
 def _dateformat(time=None):
     dformat = '%Y-%m-%dT%H:%M:%SZ'

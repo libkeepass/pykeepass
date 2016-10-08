@@ -175,7 +175,7 @@ class PyKeePass():
             if entry_tags:
                 e.tags = entry_tags
             # Update mtime
-            e.touch()
+            e.touch(modify=True)
         else:
             logger.info('Found entry, update it.')
             e = Entry(
