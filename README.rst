@@ -31,4 +31,4 @@ This library allows you to write entries to a KeePass database
    )
 
    # save database
-   pk.write_to('/tmp/pykeepass.kdbx')
+   pk.save('/tmp/pykeepass.kdbx')
