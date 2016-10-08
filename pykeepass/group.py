@@ -36,8 +36,10 @@ class Group(BaseElement):
         return [Group(element=x) for x in self._element.findall('Group')]
 
     @property
-    def path(self):
-        raise NotImplementedError()
+    def parentgroup(self):
+        if self._element.getparent() is None:
+            return None
+        return Group(element=self._element.getparent())
 
     def append(self, entries):
         if type(entries) is list:
@@ -47,7 +49,7 @@ class Group(BaseElement):
             self._element.append(entries._element)
 
     def __str__(self):
-        return 'Group {}'.format(self.name)
+        return 'Group: {} at {}'.format(self.name, self.path)
 
     def __unicode__(self):
         return self.__str__()

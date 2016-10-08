@@ -54,6 +54,16 @@ class Entry(BaseElement):
             logger.error('No field named {}'.format(key))
             raise NotImplementedError()
 
+    # Name is just a shortcut for title, so that both the Entry and Group can
+    # share the same path property implementation
+    @property
+    def name(self):
+        return self.title
+
+    @name.setter
+    def name(self, value):
+        self.title = value
+
     @property
     def title(self):
         return self.__get_string_field('Title')
@@ -127,10 +137,6 @@ class Entry(BaseElement):
         raise NotImplementedError()
 
     @property
-    def path(self):
-        return self._element.getroottree().getpath(self._element)
-
-    @property
     def parentgroup(self):
         return group.Group(element=self._element.getparent())
 
@@ -154,7 +160,7 @@ class Entry(BaseElement):
             self._element.append(history)
 
     def __str__(self):
-        return 'Entry {}: {}'.format(self.title, self.username)
+        return 'Entry {}: {} at {}'.format(self.title, self.username, self.path)
 
     def __unicode__(self):
         return self.__str__()

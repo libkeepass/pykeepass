@@ -27,3 +27,20 @@ class BaseElement(object):
     def uuid(self, value):
         # Ignore the provided value to avoid an uuid collision
         return self._set_subelement_text('UUID', xmlfactory._generate_uuid())
+
+    @property
+    def _path(self):
+        return self._element.getroottree().getpath(self._element)
+
+    @property
+    def path(self):
+        p = self.parentgroup
+        if p is None or self._element.getparent().tag == 'Root':
+            return None
+        ppath = ''
+        while p is not None:
+            if p.name is not None: # dont make the root appear
+                ppath += '{}/'.format(p.name)
+            p = p.parentgroup
+        return ppath + self.name # remove trailing '/'
+
