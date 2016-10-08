@@ -41,6 +41,10 @@ class Group(BaseElement):
             return None
         return Group(element=self._element.getparent())
 
+    @property
+    def is_root_group(self):
+        return self._element.getparent().tag == 'Root'
+
     def append(self, entries):
         if type(entries) is list:
             for e in entries:

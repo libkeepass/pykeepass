@@ -34,13 +34,14 @@ class BaseElement(object):
 
     @property
     def path(self):
+        # The root group is an orphan
+        if self.is_root_group or self.parentgroup is None:
+            return '/'
         p = self.parentgroup
-        if p is None or self._element.getparent().tag == 'Root':
-            return None
         ppath = ''
-        while p is not None:
-            if p.name is not None: # dont make the root appear
+        while p is not None and not p.is_root_group:
+            if p.name is not None: # dont make the root group appear
                 ppath += '{}/'.format(p.name)
             p = p.parentgroup
-        return ppath + self.name # remove trailing '/'
+        return '{}{}'.format(ppath, self.name)
 
