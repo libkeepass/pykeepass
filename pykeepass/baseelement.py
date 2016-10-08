@@ -16,8 +16,8 @@ class BaseElement(object):
         if v is not None:
             v = str(value)
         else:
-            icon = xmlfactory.create_element(tag, value)
-            self.element.append(icon)
+            el = xmlfactory.create_element(tag, value)
+            self._element.append(el)
 
     @property
     def uuid(self):
