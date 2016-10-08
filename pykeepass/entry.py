@@ -135,7 +135,7 @@ class Entry(BaseElement):
     def expires(self):
         d = self.__get_times_property('Expires')
         if d is not None:
-            return d.text == 'True'
+            return d == 'True'
 
     @property
     def expiry_time(self):
@@ -203,3 +203,13 @@ class Entry(BaseElement):
 
     def __repr__(self):
         return self.__str__()
+
+    def __eq__(self, other):
+        return (
+            (self.title, self.username, self.password, self.url,
+             self.notes, self.icon, self.tags, self.atime, self.ctime,
+             self.mtime, self.expires, self.uuid) ==
+            (other.title, other.username, other.password, other.url,
+             other.notes, other.icon, other.tags, other.atime, other.ctime,
+             other.mtime, other.expires, other.uuid)
+        )
