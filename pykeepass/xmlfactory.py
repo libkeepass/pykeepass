@@ -30,7 +30,7 @@ def create_tags_element(tags):
 
 
 def create_username_element(username):
-    return __create_string_element('UserName', username)
+    return _create_string_element('UserName', username)
 
 
 def create_password_element(password):
@@ -47,11 +47,11 @@ def create_password_element(password):
     return string_el
 
 def create_url_element(url):
-    return __create_string_element('URL', url)
+    return _create_string_element('URL', url)
 
 
 def create_notes_element(notes):
-    return __create_string_element('Notes', notes)
+    return _create_string_element('Notes', notes)
 
 
 def create_times_element(expires=False, expiry_time=None):
@@ -103,10 +103,10 @@ def create_uuid_element():
 
 
 def create_title_element(title):
-    return __create_string_element('Title', title)
+    return _create_string_element('Title', title)
 
 
-def __create_string_element(key, value):
+def _create_string_element(key, value):
     string = Element('String')
     key_el = Element('Key')
     key_el.text = key

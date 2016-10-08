@@ -51,8 +51,9 @@ class Entry(BaseElement):
         if results:
             results[0].Value = value
         else:
-            logger.error('No field named {}'.format(key))
-            raise NotImplementedError()
+            logger.debug('No field named {}. Create it.'.format(key))
+            el = xmlfactory._create_string_element(key, value)
+            self._element.append(el)
 
     # Name is just a shortcut for title, so that both the Entry and Group can
     # share the same path property implementation
