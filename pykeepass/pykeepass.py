@@ -154,6 +154,7 @@ class PyKeePass():
                     entry_title, group_path
                 )
             )
+            e.save_history()
             e.title = entry_title
             e.username = entry_username
             e.password = entry_password

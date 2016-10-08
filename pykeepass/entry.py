@@ -119,7 +119,8 @@ class Entry(BaseElement):
 
     @property
     def history(self):
-        raise NotImplementedError()
+        if self._element.find('History') is not None:
+            return [Entry(element=x) for x in self._element.find('History').findall('Entry')]
 
     @history.setter
     def history(self, value):
@@ -139,12 +140,12 @@ class Entry(BaseElement):
         '''
         self._element.Times.LastAccessTime = xmlfactory._dateformat()
 
-    def backup_history(self):
+    def save_history(self):
         '''
         Save the entry in its history
         '''
         archive = deepcopy(self._element)
-        if self._element.find('History'):
+        if self._element.find('History') is not None:
             archive.remove(archive.History)
             self._element.History.append(archive)
         else:
