@@ -48,12 +48,7 @@ class PyKeePass():
 
     @property
     def entries(self):
-        res = self.__xpath(
-            './/Entry',
-            first_match_only=False
-        )
-        # FIXME this works only because there is no check implemented when
-        # creating a new Group via Entry.parentgroup and its tag is not Group
+        res = self.__xpath('.//Entry', first_match_only=False)
         return [x for x in res if not x.is_a_history_entry]
 
     def dump_xml(self, outfile):
@@ -79,7 +74,8 @@ class PyKeePass():
                 res.append(Group(element=r))
             else:
                 res.append(r)
-        return res[0] if first_match_only else res
+        if len(res) > 0:
+            return res[0] if first_match_only else res
 
     def find_group_by_path(self, group_path_str=None, tree=None):
         logger.info('Look for group {}'.format(group_path_str if group_path_str else 'ROOT'))
@@ -93,7 +89,7 @@ class PyKeePass():
         return self.__xpath(xp, tree=tree)
 
     def get_root_group(self, tree=None):
-        return self.find_group_by_path(tree=tree)
+        return self.find_group_by_path()
 
     def find_groups_by_name(self, group_name, tree=None, regex=False):
         '''
@@ -104,7 +100,7 @@ class PyKeePass():
             xp = './/Group/Name[text()="{}"]/..'.format(group_name)
         return self.__xpath(xp, tree=tree, first_match_only=False)
 
-    def find_group(self, group_name, tree=None):
+    def find_group_by_name(self, group_name, tree=None):
         gname = os.path.dirname(group_name) if '/' in group_name else group_name
         return self.find_groups_by_name(gname)
 
@@ -144,6 +140,17 @@ class PyKeePass():
         xp = './/Entry/String/Key[text()="UserName"]/../Value[text()="{}"]/../..'.format(
             username
         )
+        return self.__xpath(tree=tree, xpath_str=xp, first_match_only=False)
+
+    def find_entries_by_password(self, password, regex=False, tree=None):
+        if regex:
+            xp = './/Entry/String/Key[text()="Password"]/../Value[re:test(text(), "{}")]/../..'.format(
+                password
+            )
+        else:
+            xp = './/Entry/String/Key[text()="Password"]/../Value[text()="{}"]/../..'.format(
+                password
+            )
         return self.__xpath(tree=tree, xpath_str=xp, first_match_only=False)
 
     def add_entry(self, group_path, entry_title, entry_username,
