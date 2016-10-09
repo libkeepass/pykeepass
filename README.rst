@@ -20,7 +20,7 @@ This library allows you to write entries to a KeePass database
    group.entries
 
    # find any entry by its title
-   entry = pk.find_entry('test')
+   entry = pk.find_entry_by_title('test')
 
    # retrieve the associated password
    entry.password

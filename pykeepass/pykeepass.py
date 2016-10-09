@@ -130,7 +130,7 @@ class PyKeePass():
         else:
             logger.error('Could not find group at {}'.format(group_path))
 
-    def find_entry(self, entry_title, tree=None):
+    def find_entry_by_title(self, entry_title, tree=None):
         xp = './/Entry/String/Key[text()="Title"]/../Value[text()="{}"]/../..'.format(
             entry_title
         )
@@ -164,7 +164,7 @@ class PyKeePass():
                 )
             )
             destination_group = self.create_group_path(group_path)
-        e = self.find_entry(
+        e = self.find_entry_by_title(
             tree=destination_group._element,
             entry_title=entry_title
         )

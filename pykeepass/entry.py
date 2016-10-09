@@ -61,16 +61,6 @@ class Entry(BaseElement):
             el = xmlfactory._create_string_element(key, value)
             self._element.append(el)
 
-    # Name is just a shortcut for title, so that both the Entry and Group can
-    # share the same path property implementation
-    @property
-    def name(self):
-        return self.title
-
-    @name.setter
-    def name(self, value):
-        self.title = value
-
     @property
     def title(self):
         return self.__get_string_field('Title')
@@ -206,7 +196,7 @@ class Entry(BaseElement):
             if p.name is not None: # dont make the root group appear
                 ppath += '{}/'.format(p.name)
             p = p.parentgroup
-        return '{}{}'.format(ppath, self.name)
+        return '{}{}'.format(ppath, self.title)
 
     def touch(self, modify=False):
         '''
