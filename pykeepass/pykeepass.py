@@ -48,7 +48,13 @@ class PyKeePass():
 
     @property
     def entries(self):
-        return self.__xpath('.//Entry', first_match_only=False)
+        res = self.__xpath(
+            './/Entry',
+            first_match_only=False
+        )
+        # FIXME this works only because there is no check implemented when
+        # creating a new Group via Entry.parentgroup and its tag is not Group
+        return [x for x in res if x.parentgroup._element.tag != 'History']
 
     def dump_xml(self, outfile):
         '''
