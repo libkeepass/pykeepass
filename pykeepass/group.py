@@ -1,5 +1,7 @@
+from __future__ import unicode_literals
 from baseelement import BaseElement
 from lxml.etree import Element
+from lxml.objectify import ObjectifiedElement
 import xmlfactory
 import entry
 
@@ -12,6 +14,10 @@ class Group(BaseElement):
             uuid = xmlfactory.create_uuid_element()
             element.append(uuid)
             element.append(name)
+        assert type(element) in [Element, ObjectifiedElement], \
+            'The provided element is not an LXML Element'
+        assert element.tag == 'Group', 'The provided element is not a Group '\
+            'element, but a {}'.format(element.tag)
         self._element = element
 
     @property

@@ -1,6 +1,8 @@
+from __future__ import unicode_literals
 from baseelement import BaseElement
 from copy import deepcopy
 from lxml.etree import Element
+from lxml.objectify import ObjectifiedElement
 import logging
 import xmlfactory
 import group
@@ -38,6 +40,10 @@ class Entry(BaseElement):
             element.append(username)
             element.append(password)
             element.append(times)
+        assert type(element) in [Element, ObjectifiedElement], \
+            'The provided element is not an LXML Element'
+        assert element.tag == 'Entry', 'The provided element is not an Entry '\
+            'element, but a {}'.format(element.tag)
 
         self._element = element
 
