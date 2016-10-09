@@ -45,6 +45,19 @@ class Group(BaseElement):
     def is_root_group(self):
         return self._element.getparent().tag == 'Root'
 
+    @property
+    def path(self):
+        # The root group is an orphan
+        if self.is_root_group or self.parentgroup is None:
+            return '/'
+        p = self.parentgroup
+        ppath = ''
+        while p is not None and not p.is_root_group:
+            if p.name is not None: # dont make the root group appear
+                ppath += '{}/'.format(p.name)
+            p = p.parentgroup
+        return '{}{}'.format(ppath, self.name)
+
     def append(self, entries):
         if type(entries) is list:
             for e in entries:
@@ -53,7 +66,7 @@ class Group(BaseElement):
             self._element.append(entries._element)
 
     def __str__(self):
-        return 'Group: {} at {}'.format(self.name, self.path)
+        return 'Group: "{}" at "{}"'.format(self.name, self.path)
 
     def __unicode__(self):
         return self.__str__()

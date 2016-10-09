@@ -171,8 +171,36 @@ class Entry(BaseElement):
         raise NotImplementedError()
 
     @property
+    def is_a_history_entry(self):
+        parent = self._element.getparent()
+        if parent is not None:
+            return parent.tag == 'History'
+        return False
+
+    @property
     def parentgroup(self):
-        return group.Group(element=self._element.getparent())
+        if self.is_a_history_entry:
+            ancestor = self._element.getparent().getparent()
+        else:
+            ancestor = self._element.getparent()
+        if ancestor is not None:
+            return group.Group(element=ancestor)
+
+    @property
+    def path(self):
+        # The root group is an orphan
+        if self.is_a_history_entry:
+            pentry = Entry(element=self._element.getparent().getparent()).title
+            return '[History of: {}]'.format(pentry)
+        if self.parentgroup is None:
+            return None
+        p = self.parentgroup
+        ppath = ''
+        while p is not None and not p.is_root_group:
+            if p.name is not None: # dont make the root group appear
+                ppath += '{}/'.format(p.name)
+            p = p.parentgroup
+        return '{}{}'.format(ppath, self.name)
 
     def touch(self, modify=False):
         '''
@@ -196,7 +224,7 @@ class Entry(BaseElement):
             self._element.append(history)
 
     def __str__(self):
-        return 'Entry {}: {} at {}'.format(self.title, self.username, self.path)
+        return 'Entry: "{}" at "{}"'.format(self.title, self.path)
 
     def __unicode__(self):
         return self.__str__()
