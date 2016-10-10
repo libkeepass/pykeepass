@@ -130,28 +130,106 @@ class PyKeePass():
         else:
             logger.error('Could not find group at {}'.format(group_path))
 
-    def find_entry_by_title(self, entry_title, tree=None):
-        xp = './/Entry/String/Key[text()="Title"]/../Value[text()="{}"]/../..'.format(
-            entry_title
-        )
-        return self.__xpath(xpath_str=xp, tree=tree)
-
-    def find_entries_by_username(self, username, tree=None):
-        xp = './/Entry/String/Key[text()="UserName"]/../Value[text()="{}"]/../..'.format(
-            username
-        )
-        return self.__xpath(tree=tree, xpath_str=xp, first_match_only=False)
-
-    def find_entries_by_password(self, password, regex=False, tree=None):
+    def __find_entry_by(self, key, value, regex=False, first_match_only=False, tree=None):
         if regex:
-            xp = './/Entry/String/Key[text()="Password"]/../Value[re:test(text(), "{}")]/../..'.format(
-                password
+            xp = './/Entry/String/Key[text()="{}"]/../Value[re:test(text(), "{}")]/../..'.format(
+                key, value
             )
         else:
-            xp = './/Entry/String/Key[text()="Password"]/../Value[text()="{}"]/../..'.format(
-                password
+            xp = './/Entry/String/Key[text()="{}"]/../Value[text()="{}"]/../..'.format(
+                key, value
             )
         return self.__xpath(tree=tree, xpath_str=xp, first_match_only=False)
+
+    def find_entry_by_title(self, title, regex=False, tree=None):
+        return self.__find_entry_by(
+            key='Title',
+            value=title,
+            regex=regex,
+            first_match_only=True,
+            tree=tree
+        )
+
+    def find_entries_by_title(self, title, regex=False, tree=None):
+        return self.__find_entry_by(
+            key='Title',
+            value=title,
+            regex=regex,
+            first_match_only=False,
+            tree=tree
+        )
+
+    def find_entries_by_username(self, username, regex=False, tree=None):
+        return self.__find_entry_by(
+            key='UserName',
+            value=username,
+            regex=regex,
+            first_match_only=False,
+            tree=tree
+        )
+
+    def find_entry_by_username(self, username, regex=False, tree=None):
+        return self.__find_entry_by(
+            key='UserName',
+            value=username,
+            regex=regex,
+            first_match_only=True,
+            tree=tree
+        )
+
+    def find_entry_by_password(self, password, regex=False, tree=None):
+        return self.__find_entry_by(
+            key='Password',
+            value=password,
+            regex=regex,
+            first_match_only=True,
+            tree=tree
+        )
+
+    def find_entries_by_password(self, password, regex=False, tree=None):
+        return self.__find_entry_by(
+            key='Password',
+            value=password,
+            regex=regex,
+            first_match_only=False,
+            tree=tree
+        )
+
+    def find_entries_by_url(self, url, regex=False, tree=None):
+        return self.__find_entry_by(
+            key='URL',
+            value=url,
+            regex=regex,
+            first_match_only=False,
+            tree=tree
+        )
+
+    def find_entry_by_url(self, url, regex=False, tree=None):
+        return self.__find_entry_by(
+            key='URL',
+            value=url,
+            regex=regex,
+            first_match_only=True,
+            tree=tree
+        )
+
+    def find_entries_by_notes(self, notes, regex=False, tree=None):
+        return self.__find_entry_by(
+            key='Notes',
+            value=notes,
+            regex=regex,
+            first_match_only=False,
+            tree=tree
+        )
+
+    def find_entry_by_notes(self, notes, regex=False, tree=None):
+        return self.__find_entry_by(
+            key='Notes',
+            value=notes,
+            regex=regex,
+            first_match_only=True,
+            tree=tree
+        )
 
     def add_entry(self, group_path, entry_title, entry_username,
                   entry_password, entry_url=None, entry_notes=None,
