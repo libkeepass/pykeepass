@@ -77,7 +77,7 @@ class PyKeePass():
         if len(res) > 0:
             return res[0] if first_match_only else res
 
-    def find_group_by_path(self, group_path_str=None, tree=None):
+    def find_groups_by_path(self, group_path_str=None, regex=False, tree=None):
         logger.info('Look for group {}'.format(group_path_str if group_path_str else 'ROOT'))
         if not tree:
             tree = self.kdb.tree
@@ -86,14 +86,21 @@ class PyKeePass():
         if group_path_str:
             for s in group_path_str.split('/'):
                 xp += '/Group/Name[text()="{}"]/..'.format(s)
-        return self.__xpath(xp, tree=tree)
+        return self.__xpath(xp, first_match_only=False, tree=tree)
+
+    def find_group_by_path(self, group_path_str, regex=False, tree=None):
+        res = self.find_groups_by_path(
+            group_path_str=group_path_str,
+            regex=regex,
+            tree=tree
+        )
+        if res is not None and len(res) > 0:
+            return res[0]
 
     def get_root_group(self, tree=None):
         return self.find_group_by_path()
 
     def find_groups_by_name(self, group_name, tree=None, regex=False):
-        '''
-        '''
         if regex:
             xp = './/Group/Name[re:test(text(), "{}")]/..'.format(group_name)
         else:
@@ -102,7 +109,7 @@ class PyKeePass():
 
     def find_group_by_name(self, group_name, tree=None):
         gname = os.path.dirname(group_name) if '/' in group_name else group_name
-        return self.find_groups_by_name(gname)
+        return self.find_groups_by_name(gname)[0]
 
     def create_group_path(self, group_path, tree=None):
         if not tree:
@@ -139,7 +146,7 @@ class PyKeePass():
             xp = './/Entry/String/Key[text()="{}"]/../Value[text()="{}"]/../..'.format(
                 key, value
             )
-        return self.__xpath(tree=tree, xpath_str=xp, first_match_only=False)
+        return self.__xpath(tree=tree, xpath_str=xp, first_match_only=first_match_only)
 
     def find_entry_by_title(self, title, regex=False, tree=None):
         return self.__find_entry_by(
