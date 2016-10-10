@@ -245,21 +245,25 @@ class PyKeePass():
         )
 
     def find_entry_by_path(self, path, regex=False, tree=None):
+        res = self.find_entries_by_path(path=path, regex=regex, tree=tree)
+        if len(res) > 0:
+            return res[0]
+
+    def find_entries_by_path(self, path, regex=False, tree=None):
         entry_title = os.path.basename(path)
         group_path = os.path.dirname(path)
         group = self.find_group_by_path(group_path, tree=tree, regex=regex)
         if group is not None:
             if regex:
-                res = [x for x in group.entries if re.match(entry_title, x.title)]
+                return [x for x in group.entries if re.match(entry_title, x.title)]
             else:
-                res = [x for x in group.entries if x.title == entry_title]
-            if len(res) > 0:
-                return res[0]
+                return [x for x in group.entries if x.title == entry_title]
 
     def add_entry(self, group_path, entry_title, entry_username,
                   entry_password, entry_url=None, entry_notes=None,
-                  entry_tags=None, entry_icon=None, force_creation=False):
-        destination_group = self.find_group_by_path(group_path)
+                  entry_tags=None, entry_icon=None, force_creation=False,
+                  regex=False):
+        destination_group = self.find_group_by_path(group_path, regex=regex)
         if not destination_group:
             logging.info(
                 'Could not find destination group {}. Create it.'.format(
@@ -269,11 +273,12 @@ class PyKeePass():
             destination_group = self.create_group_path(group_path)
         e = self.find_entry_by_title(
             tree=destination_group._element,
-            entry_title=entry_title
+            entry_title=entry_title,
+            regex=regex
         )
         if e and not force_creation:
             logger.warning(
-                'An entry {} already exists in {}. Update it.'.format(
+                'An entry "{}" already exists in "{}". Update it.'.format(
                     entry_title, group_path
                 )
             )
@@ -293,7 +298,7 @@ class PyKeePass():
             # Update mtime
             e.touch(modify=True)
         else:
-            logger.info('Found entry, update it.')
+            logger.info('Create a new entry')
             e = Entry(
                 title=entry_title,
                 username=entry_username,
