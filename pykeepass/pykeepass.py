@@ -9,6 +9,7 @@ from group import Group
 import libkeepass
 import logging
 import os
+import re
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -85,7 +86,10 @@ class PyKeePass():
         # if group_path_str is not set, assume we look for root dir
         if group_path_str:
             for s in group_path_str.split('/'):
-                xp += '/Group/Name[text()="{}"]/..'.format(s)
+                if regex:
+                    xp += '/Group/Name[re:test(text(), "{}")]/..'.format(s)
+                else:
+                    xp += '/Group/Name[text()="{}"]/..'.format(s)
         return self.__xpath(xp, first_match_only=False, tree=tree)
 
     def find_group_by_path(self, group_path_str, regex=False, tree=None):
@@ -109,7 +113,9 @@ class PyKeePass():
 
     def find_group_by_name(self, group_name, tree=None):
         gname = os.path.dirname(group_name) if '/' in group_name else group_name
-        return self.find_groups_by_name(gname)[0]
+        res = self.find_groups_by_name(gname)
+        if len(res) > 0:
+            return res[0]
 
     def create_group_path(self, group_path, tree=None):
         if not tree:
@@ -237,6 +243,18 @@ class PyKeePass():
             first_match_only=True,
             tree=tree
         )
+
+    def find_entry_by_path(self, path, regex=False, tree=None):
+        entry_title = os.path.basename(path)
+        group_path = os.path.dirname(path)
+        group = self.find_group_by_path(group_path, tree=tree, regex=regex)
+        if group is not None:
+            if regex:
+                res = [x for x in group.entries if re.match(entry_title, x.title)]
+            else:
+                res = [x for x in group.entries if x.title == entry_title]
+            if len(res) > 0:
+                return res[0]
 
     def add_entry(self, group_path, entry_title, entry_username,
                   entry_password, entry_url=None, entry_notes=None,
