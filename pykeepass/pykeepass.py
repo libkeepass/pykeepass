@@ -273,7 +273,7 @@ class PyKeePass():
             destination_group = self.create_group_path(group_path)
         e = self.find_entry_by_title(
             tree=destination_group._element,
-            entry_title=entry_title,
+            title=entry_title,
             regex=regex
         )
         if e and not force_creation:
