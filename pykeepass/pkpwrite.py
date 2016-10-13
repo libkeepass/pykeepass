@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import argparse
 import logging
 from pykeepass import PyKeePass
+from easypysmb import EasyPySMB
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -84,6 +85,23 @@ def parse_args():
     return parser.parse_args()
 
 
+def smb_retrieve(samba_path):
+    # smb://DOMAIN;USER:PASSWORD@SERVER:SHARE/PATH
+    logger.info('Retrieve database from Samba share')
+    e = EasyPySMB(samba_path)
+    fname = e.retrieve_file().name
+    e.close()
+    return fname
+
+
+def smb_send(db_file, samba_path):
+    logger.info('Upload {} to {}'.format(db_file, samba_path))
+    e = EasyPySMB(samba_path)
+    res = e.store_file(db_file)
+    e.close()
+    return res
+
+
 def write_entry(kdbx_file, kdbx_password, group_path,
                 entry_title, entry_username, entry_password, entry_url,
                 entry_notes, entry_tags, kdbx_keyfile=None,
@@ -93,7 +111,14 @@ def write_entry(kdbx_file, kdbx_password, group_path,
             entry_title, entry_username, entry_password, group_path
         )
     )
-    kp = PyKeePass(kdbx_file, password=kdbx_password, keyfile=kdbx_keyfile)
+    if kdbx_file.startswith('smb://'):
+        samba_db = True
+        smb_kdbx_file = smb_retrieve(kdbx_file)
+    kp = PyKeePass(
+        smb_kdbx_file if samba_db else kdbx_file,
+        password=kdbx_password,
+        keyfile=kdbx_keyfile
+    )
     kp.add_entry(
         group_path=group_path,
         entry_title=entry_title,
@@ -101,10 +126,23 @@ def write_entry(kdbx_file, kdbx_password, group_path,
         entry_password=entry_password,
         entry_url=entry_url,
         entry_notes=entry_notes,
-        entry_tags=entry_tags, force_creation=force_creation
+        entry_tags=entry_tags,
+        force_creation=force_creation
     )
-    file_written = kp.save(kdbx_file if not outfile else outfile)
-    logging.info('Wrote database to {}'.format(file_written.name))
+    if outfile:
+        if outfile.startswith('smb://'):
+            file_written = kp.save()
+            smb_send(file_written.name, outfile)
+            logging.info('Send database file to {}'.format(outfile))
+        else:
+            file_written = kp.save(kdbx_file)
+    else:
+        if samba_db:
+            file_written = kp.save()
+            smb_send(file_written.name, kdbx_file)
+            logging.info('Send database file to {}'.format(kdbx_file))
+        else:
+            file_written = kp.save(kdbx_file)
 
 
 def main():
