@@ -102,7 +102,7 @@ class PyKeePass():
             return res[0]
 
     def get_root_group(self, tree=None):
-        return self.find_group_by_path()
+        return self.find_group_by_path(group_path_str=None)
 
     def find_groups_by_name(self, group_name, tree=None, regex=False):
         if regex:

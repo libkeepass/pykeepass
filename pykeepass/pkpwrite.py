@@ -89,9 +89,9 @@ def smb_retrieve(samba_path):
     # smb://DOMAIN;USER:PASSWORD@SERVER:SHARE/PATH
     logger.info('Retrieve database from Samba share')
     e = EasyPySMB(samba_path)
-    fname = e.retrieve_file().name
+    f = e.retrieve_file()
     e.close()
-    return fname
+    return f.name
 
 
 def smb_send(db_file, samba_path):
@@ -129,20 +129,23 @@ def write_entry(kdbx_file, kdbx_password, group_path,
         entry_tags=entry_tags,
         force_creation=force_creation
     )
+
     if outfile:
         if outfile.startswith('smb://'):
             file_written = kp.save()
             smb_send(file_written.name, outfile)
-            logging.info('Send database file to {}'.format(outfile))
+            logging.info('Sent database file to {}'.format(outfile))
         else:
             file_written = kp.save(kdbx_file)
+            logging.info('KeePass DB written to {}'.format(file_written.name))
     else:
         if samba_db:
             file_written = kp.save()
             smb_send(file_written.name, kdbx_file)
-            logging.info('Send database file to {}'.format(kdbx_file))
+            logging.info('Sent database file to {}'.format(kdbx_file))
         else:
             file_written = kp.save(kdbx_file)
+            logging.info('KeePass DB written to {}'.format(file_written.name))
 
 
 def main():
