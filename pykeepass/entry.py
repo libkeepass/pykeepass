@@ -9,6 +9,16 @@ import group
 
 
 logger = logging.getLogger(__name__)
+reserved_keys = [
+    'Title',
+    'UserName',
+    'Password',
+    'URL',
+    'Tags',
+    'IconID',
+    'Times',
+    'History'
+]
 
 
 class Entry(BaseElement):
@@ -62,6 +72,13 @@ class Entry(BaseElement):
             logger.debug('No field named {}. Create it.'.format(key))
             el = xmlfactory._create_string_element(key, value)
             self._element.append(el)
+
+    def __get_string_field_keys(self, exclude_reserved=False):
+        results = [x.find('Key').text for x in self._element.findall('String')]
+        if exclude_reserved:
+            return [x for x in results if x not in reserved_keys]
+        else:
+            return results
 
     @property
     def title(self):
@@ -199,6 +216,30 @@ class Entry(BaseElement):
                 ppath += '{}/'.format(p.name)
             p = p.parentgroup
         return '{}{}'.format(ppath, self.title)
+
+    def set_custom_property(self, key, value):
+        assert key not in reserved_keys, '{} is a reserved key'.format(key)
+        return self.__set_string_field(key, value)
+
+    def get_custom_property(self, key):
+        assert key not in reserved_keys, '{} is a reserved key'.format(key)
+        return self.__get_string_field(key)
+
+    def delete_custom_property(self, key):
+        if key not in self.__get_string_field_keys(exclude_reserved=True):
+            raise AttributeError('No such key: {}'.format(key))
+        prop = self._element.xpath('String/Key[text()="{}"]/..'.format(key))
+        if len(prop) < 1:
+            raise AttributeError('Could not find property element')
+        self._element.remove(prop[0])
+
+    @property
+    def custom_properties(self):
+        keys = self.__get_string_field_keys(exclude_reserved=True)
+        props = {}
+        for k in keys:
+            props[k] = self.__get_string_field(k)
+        return props
 
     def touch(self, modify=False):
         '''
