@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import xmlfactory
+import lxml
 
 
 class BaseElement(object):
@@ -19,6 +20,9 @@ class BaseElement(object):
         else:
             el = xmlfactory.create_element(tag, value)
             self._element.append(el)
+
+    def dump_xml(self, pretty_print=False):
+        return lxml.etree.tostring(self._element, pretty_print=pretty_print)
 
     @property
     def uuid(self):
