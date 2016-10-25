@@ -12,7 +12,6 @@ import os
 import re
 
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
