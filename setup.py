@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='pykeepass',
-    version='2.4.2',
+    version='2.4.3',
     license='GPL3',
     description='Low-level library to interact with keepass databases '\
                 '(supports the v.4 format)',
