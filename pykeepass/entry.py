@@ -34,17 +34,17 @@ class Entry(BaseElement):
             password = xmlfactory.create_password_element(password)
             times = xmlfactory.create_times_element(expires, expiration)
             if url:
-                url = xmlfactory.create_url_element(url)
-                element.append(url)
+                url_el = xmlfactory.create_url_element(url)
+                element.append(url_el)
             if notes:
-                notes = xmlfactory.create_notes_element(notes)
-                element.append(notes)
+                notes_el = xmlfactory.create_notes_element(notes)
+                element.append(notes_el)
             if tags:
-                tags = xmlfactory.create_tags_element(tags)
-                element.append(tags)
+                tags_el = xmlfactory.create_tags_element(tags)
+                element.append(tags_el)
             if icon:
-                icon = xmlfactory.create_icon_element(icon)
-                element.append(icon)
+                icon_el = xmlfactory.create_icon_element(icon)
+                element.append(icon_el)
             element.append(title)
             element.append(uuid)
             element.append(username)
