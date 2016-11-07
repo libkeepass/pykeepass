@@ -17,9 +17,9 @@ def create_name_element(name):
 
 
 def create_icon_element(icon):
-    icon = Element('IconID')
-    icon.text = str(icon)
-    return icon
+    icon_el = Element('IconID')
+    icon_el.text = str(icon)
+    return icon_el
 
 
 def create_tags_element(tags):
