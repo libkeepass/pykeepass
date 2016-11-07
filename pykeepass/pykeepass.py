@@ -12,6 +12,7 @@ import os
 import re
 
 
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -26,12 +27,12 @@ class PyKeePass():
             filename = self.kdb_filename
         assert filename, 'Filename should not be empty'
         logger.info('Open file {}'.format(filename))
-        self.kdb = libkeepass.open(
+        return libkeepass.open(
             filename, password=password, keyfile=keyfile
         ).__enter__()
-        return self.kdb
 
     def save(self, filename=None):
+        # FIXME The *second* save operations creates gibberish passwords
         if not filename:
             filename = self.kdb_filename
         outfile = open(filename, 'w+').__enter__()
@@ -92,6 +93,9 @@ class PyKeePass():
         return self.__xpath(xp, first_match_only=False, tree=tree)
 
     def find_group_by_path(self, group_path_str, regex=False, tree=None):
+        # Remove leading '/'
+        if group_path_str:
+            group_path_str = group_path_str.lstrip('/')
         res = self.find_groups_by_path(
             group_path_str=group_path_str,
             regex=regex,
@@ -101,7 +105,7 @@ class PyKeePass():
             return res[0]
 
     def get_root_group(self, tree=None):
-        return self.find_group_by_path(group_path_str=None)
+        return self.find_group_by_path(group_path_str=None, tree=tree)
 
     def find_groups_by_name(self, group_name, tree=None, regex=False):
         if regex:
@@ -123,20 +127,27 @@ class PyKeePass():
         group = self.get_root_group(tree)
         path = ''
         for gn in group_path.split('/'):
-            group = self.__create_group_at_path(tree, path.rstrip('/'), gn)
+            # Create group if it does not already exist
+            gp = '{}/{}'.format(path.strip('/'), gn)
+            if not self.find_group_by_path(gp, tree=tree):
+                logger.info('Group {} does not exist. Create it.'.format(gn))
+                group = self.__create_group_at_path(path.rstrip('/'), gn, tree=tree)
+            else:
+                logger.info('Group {} already exists'.format(gp))
             path += gn + '/'
         return group
 
-    def __create_group_at_path(self, tree, group_path, group_name):
+    def __create_group_at_path(self, group_path, group_name, tree=None):
         logger.info(
             'Create group {} at {}'.format(
                 group_name,
                 group_path if group_path else 'root dir'
             )
         )
-        parent_group = self.find_group_by_path(group_path, tree)
+        # FIXME Skip this step if the group already exists!
+        parent_group = self.find_group_by_path(group_path, tree=tree)
         if parent_group:
-            group = Group(element=group_name)
+            group = Group(name=group_name)
             parent_group.append(group)
             return group
         else:
