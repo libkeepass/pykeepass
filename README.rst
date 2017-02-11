@@ -29,7 +29,7 @@ This library allows you to write entries to a KeePass database
    entry.notes = 'this is a test'
 
    # write a new entry
-   pk.create_entry(
+   pk.add_entry(
       group,
       'new_entry',
       'myusername',
