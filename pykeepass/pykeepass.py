@@ -272,7 +272,10 @@ class PyKeePass():
                   entry_password, entry_url=None, entry_notes=None,
                   entry_tags=None, entry_icon=None, force_creation=False,
                   regex=False):
-        destination_group = self.find_group_by_path(group_path, regex=regex)
+        if isinstance(group_path, Group):
+            destination_group = group_path
+        else:
+            destination_group = self.find_group_by_path(group_path, regex=regex)
         if not destination_group:
             logging.info(
                 'Could not find destination group {}. Create it.'.format(
