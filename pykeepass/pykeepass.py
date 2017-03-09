@@ -49,7 +49,7 @@ class PyKeePass():
     @property
     def entries(self):
         res = self.__xpath('.//Entry', first_match_only=False)
-        if res and len(res) > 0:
+        if res:
             return [x for x in res if not x.is_a_history_entry]
 
     def dump_xml(self, outfile):
