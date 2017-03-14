@@ -44,13 +44,11 @@ class PyKeePass():
 
     @property
     def groups(self):
-        return self.__xpath('.//Group', first_match_only=False)
+        return self.find_groups_by_name('.*', regex=True)
 
     @property
     def entries(self):
-        res = self.__xpath('.//Entry', first_match_only=False)
-        if res:
-            return [x for x in res if not x.is_a_history_entry]
+        return self.find_entries_by_title('.*', regex=True)
 
     def dump_xml(self, outfile):
         '''
@@ -116,11 +114,6 @@ class PyKeePass():
 
 
 
-    def find_group_by_name(self, group_name, tree=None):
-        gname = os.path.dirname(group_name) if '/' in group_name else group_name
-        res = self.find_groups_by_name(gname)
-        if len(res) > 0:
-            return res[0]
 
     def create_group_path(self, group_path, tree=None):
         if not tree:
