@@ -127,8 +127,9 @@ class PyKeePass():
 
             path += '/' + group_name
 
+    #---------- Entries ----------
 
-    def __find_entry_by(self, key, value, regex=False, first_match_only=False, tree=None):
+    def __find_entry_by(self, key, value, regex=False, tree=None, history=False, first=False):
         if regex:
             xp = './/Entry/String/Key[text()="{}"]/../Value[re:test(text(), "{}")]/../..'.format(
                 key, value
@@ -137,112 +138,81 @@ class PyKeePass():
             xp = './/Entry/String/Key[text()="{}"]/../Value[text()="{}"]/../..'.format(
                 key, value
             )
-        return self.__xpath(tree=tree, xpath_str=xp, first_match_only=first_match_only)
+        res = self.__xpath(tree=tree, xpath_str=xp)
+        if history == False:
+            res = [item for item in res if not item.is_a_history_entry]
 
-    def find_entry_by_title(self, title, regex=False, tree=None):
+        # return first object in list or None
+        if first:
+            res = res[0] if res else None
+
+        return res
+
+    def find_entries_by_title(self, title, regex=False, tree=None, history=False, first=False):
         return self.__find_entry_by(
             key='Title',
             value=title,
             regex=regex,
-            first_match_only=True,
-            tree=tree
+            tree=tree,
+            history=history,
+            first=first
         )
 
-    def find_entries_by_title(self, title, regex=False, tree=None):
-        return self.__find_entry_by(
-            key='Title',
-            value=title,
-            regex=regex,
-            first_match_only=False,
-            tree=tree
-        )
-
-    def find_entries_by_username(self, username, regex=False, tree=None):
+    def find_entries_by_username(self, username, regex=False, tree=None, history=False, first=False):
         return self.__find_entry_by(
             key='UserName',
             value=username,
             regex=regex,
-            first_match_only=False,
-            tree=tree
+            tree=tree,
+            history=history,
+            first=first
         )
 
-    def find_entry_by_username(self, username, regex=False, tree=None):
-        return self.__find_entry_by(
-            key='UserName',
-            value=username,
-            regex=regex,
-            first_match_only=True,
-            tree=tree
-        )
-
-    def find_entry_by_password(self, password, regex=False, tree=None):
+    def find_entries_by_password(self, password, regex=False, tree=None, history=False, first=False):
         return self.__find_entry_by(
             key='Password',
             value=password,
             regex=regex,
-            first_match_only=True,
-            tree=tree
+            tree=tree,
+            history=history,
+            first=first
         )
 
-    def find_entries_by_password(self, password, regex=False, tree=None):
-        return self.__find_entry_by(
-            key='Password',
-            value=password,
-            regex=regex,
-            first_match_only=False,
-            tree=tree
-        )
-
-    def find_entries_by_url(self, url, regex=False, tree=None):
+    def find_entries_by_url(self, url, regex=False, tree=None, history=False, first=False):
         return self.__find_entry_by(
             key='URL',
             value=url,
             regex=regex,
-            first_match_only=False,
-            tree=tree
+            tree=tree,
+            history=history,
+            first=first
         )
 
-    def find_entry_by_url(self, url, regex=False, tree=None):
-        return self.__find_entry_by(
-            key='URL',
-            value=url,
-            regex=regex,
-            first_match_only=True,
-            tree=tree
-        )
-
-    def find_entries_by_notes(self, notes, regex=False, tree=None):
+    def find_entries_by_notes(self, notes, regex=False, tree=None, history=False, first=False):
         return self.__find_entry_by(
             key='Notes',
             value=notes,
             regex=regex,
-            first_match_only=False,
-            tree=tree
+            tree=tree,
+            history=history,
+            first=first
         )
 
-    def find_entry_by_notes(self, notes, regex=False, tree=None):
-        return self.__find_entry_by(
-            key='Notes',
-            value=notes,
-            regex=regex,
-            first_match_only=True,
-            tree=tree
-        )
-
-    def find_entry_by_path(self, path, regex=False, tree=None):
-        res = self.find_entries_by_path(path=path, regex=regex, tree=tree)
-        if len(res) > 0:
-            return res[0]
-
-    def find_entries_by_path(self, path, regex=False, tree=None):
+    def find_entries_by_path(self, path, regex=False, tree=None, history=False, first=False):
         entry_title = os.path.basename(path)
         group_path = os.path.dirname(path)
-        group = self.find_group_by_path(group_path, tree=tree, regex=regex)
+        group = self.find_groups_by_path(group_path, tree=tree, regex=regex, first=True)
         if group is not None:
             if regex:
-                return [x for x in group.entries if re.match(entry_title, x.title)]
+                res = [x for x in group.entries if re.match(entry_title, x.title)]
             else:
-                return [x for x in group.entries if x.title == entry_title]
+                res = [x for x in group.entries if x.title == entry_title]
+
+        # return first object in list or None
+        if first:
+            res = res[0] if res else None
+
+        return res
 
     def add_entry(self, group_path, entry_title, entry_username,
                   entry_password, entry_url=None, entry_notes=None,
