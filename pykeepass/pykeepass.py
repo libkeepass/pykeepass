@@ -60,7 +60,7 @@ class PyKeePass():
         with open(outfile, 'w+') as f:
             f.write(self.kdb.pretty_print())
 
-    def __xpath(self, xpath_str, first_match_only=True, tree=None):
+    def __xpath(self, xpath_str, tree=None):
         if tree is None:
             tree = self.kdb.tree
         result = tree.xpath(
@@ -75,14 +75,30 @@ class PyKeePass():
                 res.append(Group(element=r))
             else:
                 res.append(r)
-        if len(res) > 0:
-            return res[0] if first_match_only else res
+        return res
 
-    def find_groups_by_path(self, group_path_str=None, regex=False, tree=None):
-        logger.info('Look for group {}'.format(group_path_str if group_path_str else 'ROOT'))
-        if not tree:
-            tree = self.kdb.tree
+    #---------- Groups ----------
+
+    def find_groups_by_name(self, group_name, tree=None, regex=False, first=False):
+        if regex:
+            xp = './/Group/Name[re:test(text(), "{}")]/..'.format(group_name)
+        else:
+            xp = './/Group/Name[text()="{}"]/..'.format(group_name)
+
+        res = self.__xpath(xp, tree=tree)
+
+        if first:
+            res = res[0] if res else None
+
+        return res
+
+    def find_groups_by_path(self, group_path_str=None, regex=False, tree=None, first=False):
+        logger.info('Looking for group {}'.format(group_path_str if group_path_str else 'Root'))
         xp = '/KeePassFile/Root/Group'
+
+        # remove leading /
+        group_path_str = group_path_str.lstrip('/')
+
         # if group_path_str is not set, assume we look for root dir
         if group_path_str:
             for s in group_path_str.split('/'):
@@ -90,29 +106,17 @@ class PyKeePass():
                     xp += '/Group/Name[re:test(text(), "{}")]/..'.format(s)
                 else:
                     xp += '/Group/Name[text()="{}"]/..'.format(s)
-        return self.__xpath(xp, first_match_only=False, tree=tree)
+        res = self.__xpath(xp, tree=tree)
+        
+        if first:
+            res = res[0] if res else None
 
-    def find_group_by_path(self, group_path_str, regex=False, tree=None):
-        # Remove leading '/'
-        if group_path_str:
-            group_path_str = group_path_str.lstrip('/')
-        res = self.find_groups_by_path(
-            group_path_str=group_path_str,
-            regex=regex,
-            tree=tree
-        )
-        if res is not None and len(res) > 0:
-            return res[0]
+        return res
+
 
     def get_root_group(self, tree=None):
         return self.find_group_by_path(group_path_str=None, tree=tree)
 
-    def find_groups_by_name(self, group_name, tree=None, regex=False):
-        if regex:
-            xp = './/Group/Name[re:test(text(), "{}")]/..'.format(group_name)
-        else:
-            xp = './/Group/Name[text()="{}"]/..'.format(group_name)
-        return self.__xpath(xp, tree=tree, first_match_only=False)
 
     def find_group_by_name(self, group_name, tree=None):
         gname = os.path.dirname(group_name) if '/' in group_name else group_name
