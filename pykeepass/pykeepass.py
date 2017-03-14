@@ -120,7 +120,6 @@ class PyKeePass():
             group = self.find_groups_by_path(path + '/' + group_name, first=True)
 
             if not group:
-                logging.info('doesnt exist, creating {0}'.format(path))
                 parent_group = self.find_groups_by_path(path, first=True)
                 group = Group(name=group_name)
                 parent_group.append(group)
