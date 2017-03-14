@@ -40,7 +40,7 @@ class PyKeePass():
 
     @property
     def root_group(self):
-        return self.get_root_group()
+        return self.find_groups_by_path('', tree=None, first=True)
 
     @property
     def groups(self):
@@ -114,8 +114,6 @@ class PyKeePass():
         return res
 
 
-    def get_root_group(self, tree=None):
-        return self.find_group_by_path(group_path_str=None, tree=tree)
 
 
     def find_group_by_name(self, group_name, tree=None):
