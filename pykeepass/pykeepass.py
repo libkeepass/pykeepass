@@ -111,42 +111,22 @@ class PyKeePass():
 
         return res
 
+    # creates a new group and all parent groups, if necessary
+    def add_group(self, group_path):
+        logger.info('Creating group {}'.format(group_path))
 
-
-
-
-    def create_group_path(self, group_path, tree=None):
-        if not tree:
-            tree = self.kdb.tree
-        logger.info('Create group {}'.format(group_path))
-        group = self.get_root_group(tree)
         path = ''
-        for gn in group_path.split('/'):
-            # Create group if it does not already exist
-            gp = '{}/{}'.format(path.strip('/'), gn)
-            if not self.find_group_by_path(gp, tree=tree):
-                logger.info('Group {} does not exist. Create it.'.format(gn))
-                group = self.__create_group_at_path(path.rstrip('/'), gn, tree=tree)
-            else:
-                logger.info('Group {} already exists'.format(gp))
-            path += gn + '/'
-        return group
+        for group_name in group_path.split('/'):
+            group = self.find_groups_by_path(path + '/' + group_name, first=True)
 
-    def __create_group_at_path(self, group_path, group_name, tree=None):
-        logger.info(
-            'Create group {} at {}'.format(
-                group_name,
-                group_path if group_path else 'root dir'
-            )
-        )
-        # FIXME Skip this step if the group already exists!
-        parent_group = self.find_group_by_path(group_path, tree=tree)
-        if parent_group:
-            group = Group(name=group_name)
-            parent_group.append(group)
-            return group
-        else:
-            logger.error('Could not find group at {}'.format(group_path))
+            if not group:
+                logging.info('doesnt exist, creating {0}'.format(path))
+                parent_group = self.find_groups_by_path(path, first=True)
+                group = Group(name=group_name)
+                parent_group.append(group)
+
+            path += '/' + group_name
+
 
     def __find_entry_by(self, key, value, regex=False, first_match_only=False, tree=None):
         if regex:
