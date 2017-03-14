@@ -214,56 +214,59 @@ class PyKeePass():
 
         return res
 
-    def add_entry(self, group_path, entry_title, entry_username,
-                  entry_password, entry_url=None, entry_notes=None,
-                  entry_tags=None, entry_icon=None, force_creation=False,
+    def add_entry(self, group_path, title, username,
+                  password, url=None, notes=None,
+                  tags=None, icon=None, force_creation=False,
                   regex=False):
         if isinstance(group_path, Group):
             destination_group = group_path
         else:
-            destination_group = self.find_group_by_path(group_path, regex=regex)
+            destination_group = self.find_groups_by_path(group_path, regex=regex, first=True)
         if not destination_group:
             logging.info(
                 'Could not find destination group {}. Create it.'.format(
                     group_path
                 )
             )
-            destination_group = self.create_group_path(group_path)
-        e = self.find_entry_by_title(
+            destination_group = self.add_group(group_path)
+        entries = self.find_entries_by_title(
             tree=destination_group._element,
-            title=entry_title,
+            title=title,
             regex=regex
         )
-        if e and not force_creation:
+        if entries and not force_creation:
             logger.warning(
                 'An entry "{}" already exists in "{}". Update it.'.format(
-                    entry_title, group_path
+                    title, group_path
                 )
             )
-            e.save_history()
-            e.title = entry_title
-            e.username = entry_username
-            e.password = entry_password
-            e.url = entry_url
-            if entry_notes:
-                e.notes = entry_notes
-            if entry_url:
-                e.url = entry_url
-            if entry_icon:
-                e.icon = entry_icon
-            if entry_tags:
-                e.tags = entry_tags
+            entry = entries[0]
+            entry.save_history()
+            entry.title = title
+            entry.username = username
+            entry.password = password
+            entry.url = url
+            if notes:
+                entry.notes = notes
+            if url:
+                entry.url = url
+            if icon:
+                entry.icon = icon
+            if tags:
+                entry.tags = tags
             # Update mtime
-            e.touch(modify=True)
+            entry.touch(modify=True)
         else:
             logger.info('Create a new entry')
-            e = Entry(
-                title=entry_title,
-                username=entry_username,
-                password=entry_password,
-                notes=entry_notes,
-                url=entry_url,
-                tags=entry_tags,
-                icon=entry_icon
+            entry = Entry(
+                title=title,
+                username=username,
+                password=password,
+                notes=notes,
+                url=url,
+                tags=tags,
+                icon=icon
             )
-            destination_group.append(e)
+            destination_group.append(entry)
+
+        return entry
