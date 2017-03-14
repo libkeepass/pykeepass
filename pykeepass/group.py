@@ -74,6 +74,9 @@ class Group(BaseElement):
         else:
             self._element.append(entries._element)
 
+    def delete(self):
+        self._element.getparent().remove(self._element)
+
     def __str__(self):
         return 'Group: "{}" at "{}"'.format(self.name, self.path)
 
