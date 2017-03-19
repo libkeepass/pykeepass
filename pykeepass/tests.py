@@ -6,6 +6,8 @@ from entry import Entry
 from datetime import datetime
 
 """
+These functions are still missing tests:
+
 - save
 - read
 - __xpath
