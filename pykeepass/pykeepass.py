@@ -9,7 +9,6 @@ from group import Group
 import libkeepass
 import logging
 import os
-import re
 
 
 logger = logging.getLogger(__name__)
