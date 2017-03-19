@@ -94,8 +94,8 @@ class PyKeePass():
         logger.info('Looking for group {}'.format(group_path_str if group_path_str else 'Root'))
         xp = '/KeePassFile/Root/Group'
 
-        # remove leading /
-        group_path_str = group_path_str.lstrip('/')
+        # remove leading and trailing /
+        group_path_str = group_path_str.lstrip('/').rstrip('/')
 
         # if group_path_str is not set, assume we look for root dir
         if group_path_str:
@@ -125,6 +125,8 @@ class PyKeePass():
                 parent_group.append(group)
 
             path += '/' + group_name
+
+        return group
 
     #---------- Entries ----------
 
