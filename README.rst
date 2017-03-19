@@ -44,24 +44,24 @@ Finding Entries
 
 The supported find commands are listed below
 
-* find_entries_by_title(title, regex=False, tree=None, history=False, first=False)
-* find_entries_by_username(username, regex=False, tree=None, history=False, first=False)
-* find_entries_by_password(password, regex=False, tree=None, history=False, first=False)
-* find_entries_by_url(url, regex=False, tree=None, history=False, first=False)
-* find_entries_by_notes(notes, regex=False, tree=None, history=False, first=False)
-* find_entries_by_path(path, regex=False, tree=None, history=False, first=False)
+* **find_entries_by_title** (title, regex=False, tree=None, history=False, first=False)
+* **find_entries_by_username** (username, regex=False, tree=None, history=False, first=False)
+* **find_entries_by_password** (password, regex=False, tree=None, history=False, first=False)
+* **find_entries_by_url** (url, regex=False, tree=None, history=False, first=False)
+* **find_entries_by_notes** (notes, regex=False, tree=None, history=False, first=False)
+* **find_entries_by_path** (path, regex=False, tree=None, history=False, first=False)
 
-where `title`, `username`, `password`, `url`, `notes` and `path` are strings.  These functions have an optional `regex` boolean argument which means to interpret the string as an `XSLT style regular expression`_.
+where ``title``, ``username``, ``password``, ``url``, ``notes`` and ``path`` are strings.  These functions have an optional ``regex`` boolean argument which means to interpret the string as an `XSLT style regular expression`_.
 
 .. _xslt: https://www.xml.com/pub/a/2003/06/04/tr.html
 
-The `history` (default `False`) boolean controls whether history entries should be included in the search results.
+The ``history`` (default ``False``) boolean controls whether history entries should be included in the search results.
 
-The `first` (default `False`) boolean controls whether to return the first matched item, or a list of matched items.
-* if `first=False`, the function returns a list of `Entry` s or `[]` if there are no matches
-* if `first=True`, the function returns the first `Entry` match, or `None` if there are no matches
+The ``first`` (default ``False``) boolean controls whether to return the first matched item, or a list of matched items.
+* if ``first=False``, the function returns a list of ``Entry`` s or ``[]`` if there are no matches
+* if ``first=True``, the function returns the first ``Entry`` match, or ``None`` if there are no matches
 
-* entries
+* **entries**
 
 a flattened list of all entries in the database
 
@@ -85,22 +85,22 @@ a flattened list of all entries in the database
 Finding Groups
 ----------------------
 
-* find_groups_by_name(name, tree=None, regex=False, first=False)
-* find_groups_by_path(path, tree=None, regex=False, first=False)
+* **find_groups_by_name** (name, tree=None, regex=False, first=False)
+* **find_groups_by_path** (path, tree=None, regex=False, first=False)
 
-where `name` and `path` are strings.  These functions have an optional `regex` boolean argument which means to interpret the string as an `XSLT style regular expression`_.
+where ``name`` and ``path`` are strings.  These functions have an optional ``regex`` boolean argument which means to interpret the string as an `XSLT style regular expression`_.
 
 .. _xslt: https://www.xml.com/pub/a/2003/06/04/tr.html
 
-The `first` (default `False`) boolean controls whether to return the first matched item, or a list of matched items.
-* if `first=False`, the function returns a list of `Group` s or `[]` if there are no matches
-* if `first=True`, the function returns the first `Group` match, or `None` if there are no matches
+The ``first`` (default ``False``) boolean controls whether to return the first matched item, or a list of matched items.
+* if ``first=False``, the function returns a list of ``Group`` s or ``[]`` if there are no matches
+* if ``first=True``, the function returns the first ``Group`` match, or ``None`` if there are no matches
 
-* root_group
+* **root_group**
 
-the `Root` group to the database
+the ``Root`` group to the database
 
-* groups
+* **groups**
 
 a flattened list of all groups in the database
 
@@ -119,3 +119,6 @@ a flattened list of all groups in the database
 
    >>> kp.find_groups_by_name('social', first=True).subgroups
        [Group: "social/foo_subgroup"]
+
+   >>> kp.root_group
+       Group: "/"
