@@ -40,16 +40,15 @@ class PyKeePass():
 
     @property
     def root_group(self):
-        return self.get_root_group()
+        return self.find_groups_by_path('', tree=None, first=True)
 
     @property
     def groups(self):
-        return self.__xpath('.//Group', first_match_only=False)
+        return self.find_groups_by_name('.*', regex=True)
 
     @property
     def entries(self):
-        res = self.__xpath('.//Entry', first_match_only=False)
-        return [x for x in res if not x.is_a_history_entry]
+        return self.find_entries_by_title('.*', regex=True)
 
     def dump_xml(self, outfile):
         '''
@@ -59,7 +58,7 @@ class PyKeePass():
         with open(outfile, 'w+') as f:
             f.write(self.kdb.pretty_print())
 
-    def __xpath(self, xpath_str, first_match_only=True, tree=None):
+    def __xpath(self, xpath_str, tree=None):
         if tree is None:
             tree = self.kdb.tree
         result = tree.xpath(
@@ -74,14 +73,30 @@ class PyKeePass():
                 res.append(Group(element=r))
             else:
                 res.append(r)
-        if len(res) > 0:
-            return res[0] if first_match_only else res
+        return res
 
-    def find_groups_by_path(self, group_path_str=None, regex=False, tree=None):
-        logger.info('Look for group {}'.format(group_path_str if group_path_str else 'ROOT'))
-        if not tree:
-            tree = self.kdb.tree
+    #---------- Groups ----------
+
+    def find_groups_by_name(self, group_name, tree=None, regex=False, first=False):
+        if regex:
+            xp = './/Group/Name[re:test(text(), "{}")]/..'.format(group_name)
+        else:
+            xp = './/Group/Name[text()="{}"]/..'.format(group_name)
+
+        res = self.__xpath(xp, tree=tree)
+
+        if first:
+            res = res[0] if res else None
+
+        return res
+
+    def find_groups_by_path(self, group_path_str=None, regex=False, tree=None, first=False):
+        logger.info('Looking for group {}'.format(group_path_str if group_path_str else 'Root'))
         xp = '/KeePassFile/Root/Group'
+
+        # remove leading /
+        group_path_str = group_path_str.lstrip('/')
+
         # if group_path_str is not set, assume we look for root dir
         if group_path_str:
             for s in group_path_str.split('/'):
@@ -89,70 +104,31 @@ class PyKeePass():
                     xp += '/Group/Name[re:test(text(), "{}")]/..'.format(s)
                 else:
                     xp += '/Group/Name[text()="{}"]/..'.format(s)
-        return self.__xpath(xp, first_match_only=False, tree=tree)
+        res = self.__xpath(xp, tree=tree)
+        
+        if first:
+            res = res[0] if res else None
 
-    def find_group_by_path(self, group_path_str, regex=False, tree=None):
-        # Remove leading '/'
-        if group_path_str:
-            group_path_str = group_path_str.lstrip('/')
-        res = self.find_groups_by_path(
-            group_path_str=group_path_str,
-            regex=regex,
-            tree=tree
-        )
-        if res is not None and len(res) > 0:
-            return res[0]
+        return res
 
-    def get_root_group(self, tree=None):
-        return self.find_group_by_path(group_path_str=None, tree=tree)
+    # creates a new group and all parent groups, if necessary
+    def add_group(self, group_path):
+        logger.info('Creating group {}'.format(group_path))
 
-    def find_groups_by_name(self, group_name, tree=None, regex=False):
-        if regex:
-            xp = './/Group/Name[re:test(text(), "{}")]/..'.format(group_name)
-        else:
-            xp = './/Group/Name[text()="{}"]/..'.format(group_name)
-        return self.__xpath(xp, tree=tree, first_match_only=False)
-
-    def find_group_by_name(self, group_name, tree=None):
-        gname = os.path.dirname(group_name) if '/' in group_name else group_name
-        res = self.find_groups_by_name(gname)
-        if len(res) > 0:
-            return res[0]
-
-    def create_group_path(self, group_path, tree=None):
-        if not tree:
-            tree = self.kdb.tree
-        logger.info('Create group {}'.format(group_path))
-        group = self.get_root_group(tree)
         path = ''
-        for gn in group_path.split('/'):
-            # Create group if it does not already exist
-            gp = '{}/{}'.format(path.strip('/'), gn)
-            if not self.find_group_by_path(gp, tree=tree):
-                logger.info('Group {} does not exist. Create it.'.format(gn))
-                group = self.__create_group_at_path(path.rstrip('/'), gn, tree=tree)
-            else:
-                logger.info('Group {} already exists'.format(gp))
-            path += gn + '/'
-        return group
+        for group_name in group_path.split('/'):
+            group = self.find_groups_by_path(path + '/' + group_name, first=True)
 
-    def __create_group_at_path(self, group_path, group_name, tree=None):
-        logger.info(
-            'Create group {} at {}'.format(
-                group_name,
-                group_path if group_path else 'root dir'
-            )
-        )
-        # FIXME Skip this step if the group already exists!
-        parent_group = self.find_group_by_path(group_path, tree=tree)
-        if parent_group:
-            group = Group(name=group_name)
-            parent_group.append(group)
-            return group
-        else:
-            logger.error('Could not find group at {}'.format(group_path))
+            if not group:
+                parent_group = self.find_groups_by_path(path, first=True)
+                group = Group(name=group_name)
+                parent_group.append(group)
 
-    def __find_entry_by(self, key, value, regex=False, first_match_only=False, tree=None):
+            path += '/' + group_name
+
+    #---------- Entries ----------
+
+    def __find_entry_by(self, key, value, regex=False, tree=None, history=False, first=False):
         if regex:
             xp = './/Entry/String/Key[text()="{}"]/../Value[re:test(text(), "{}")]/../..'.format(
                 key, value
@@ -161,163 +137,135 @@ class PyKeePass():
             xp = './/Entry/String/Key[text()="{}"]/../Value[text()="{}"]/../..'.format(
                 key, value
             )
-        return self.__xpath(tree=tree, xpath_str=xp, first_match_only=first_match_only)
+        res = self.__xpath(tree=tree, xpath_str=xp)
+        if history == False:
+            res = [item for item in res if not item.is_a_history_entry]
 
-    def find_entry_by_title(self, title, regex=False, tree=None):
+        # return first object in list or None
+        if first:
+            res = res[0] if res else None
+
+        return res
+
+    def find_entries_by_title(self, title, regex=False, tree=None, history=False, first=False):
         return self.__find_entry_by(
             key='Title',
             value=title,
             regex=regex,
-            first_match_only=True,
-            tree=tree
+            tree=tree,
+            history=history,
+            first=first
         )
 
-    def find_entries_by_title(self, title, regex=False, tree=None):
-        return self.__find_entry_by(
-            key='Title',
-            value=title,
-            regex=regex,
-            first_match_only=False,
-            tree=tree
-        )
-
-    def find_entries_by_username(self, username, regex=False, tree=None):
+    def find_entries_by_username(self, username, regex=False, tree=None, history=False, first=False):
         return self.__find_entry_by(
             key='UserName',
             value=username,
             regex=regex,
-            first_match_only=False,
-            tree=tree
+            tree=tree,
+            history=history,
+            first=first
         )
 
-    def find_entry_by_username(self, username, regex=False, tree=None):
-        return self.__find_entry_by(
-            key='UserName',
-            value=username,
-            regex=regex,
-            first_match_only=True,
-            tree=tree
-        )
-
-    def find_entry_by_password(self, password, regex=False, tree=None):
+    def find_entries_by_password(self, password, regex=False, tree=None, history=False, first=False):
         return self.__find_entry_by(
             key='Password',
             value=password,
             regex=regex,
-            first_match_only=True,
-            tree=tree
+            tree=tree,
+            history=history,
+            first=first
         )
 
-    def find_entries_by_password(self, password, regex=False, tree=None):
-        return self.__find_entry_by(
-            key='Password',
-            value=password,
-            regex=regex,
-            first_match_only=False,
-            tree=tree
-        )
-
-    def find_entries_by_url(self, url, regex=False, tree=None):
+    def find_entries_by_url(self, url, regex=False, tree=None, history=False, first=False):
         return self.__find_entry_by(
             key='URL',
             value=url,
             regex=regex,
-            first_match_only=False,
-            tree=tree
+            tree=tree,
+            history=history,
+            first=first
         )
 
-    def find_entry_by_url(self, url, regex=False, tree=None):
-        return self.__find_entry_by(
-            key='URL',
-            value=url,
-            regex=regex,
-            first_match_only=True,
-            tree=tree
-        )
-
-    def find_entries_by_notes(self, notes, regex=False, tree=None):
+    def find_entries_by_notes(self, notes, regex=False, tree=None, history=False, first=False):
         return self.__find_entry_by(
             key='Notes',
             value=notes,
             regex=regex,
-            first_match_only=False,
-            tree=tree
+            tree=tree,
+            history=history,
+            first=first
         )
 
-    def find_entry_by_notes(self, notes, regex=False, tree=None):
-        return self.__find_entry_by(
-            key='Notes',
-            value=notes,
-            regex=regex,
-            first_match_only=True,
-            tree=tree
-        )
-
-    def find_entry_by_path(self, path, regex=False, tree=None):
-        res = self.find_entries_by_path(path=path, regex=regex, tree=tree)
-        if len(res) > 0:
-            return res[0]
-
-    def find_entries_by_path(self, path, regex=False, tree=None):
+    def find_entries_by_path(self, path, regex=False, tree=None, history=False, first=False):
         entry_title = os.path.basename(path)
         group_path = os.path.dirname(path)
-        group = self.find_group_by_path(group_path, tree=tree, regex=regex)
+        group = self.find_groups_by_path(group_path, tree=tree, regex=regex, first=True)
         if group is not None:
             if regex:
-                return [x for x in group.entries if re.match(entry_title, x.title)]
+                res = [x for x in group.entries if re.match(entry_title, x.title)]
             else:
-                return [x for x in group.entries if x.title == entry_title]
+                res = [x for x in group.entries if x.title == entry_title]
 
-    def add_entry(self, group_path, entry_title, entry_username,
-                  entry_password, entry_url=None, entry_notes=None,
-                  entry_tags=None, entry_icon=None, force_creation=False,
+        # return first object in list or None
+        if first:
+            res = res[0] if res else None
+
+        return res
+
+    def add_entry(self, group_path, title, username,
+                  password, url=None, notes=None,
+                  tags=None, icon=None, force_creation=False,
                   regex=False):
         if isinstance(group_path, Group):
             destination_group = group_path
         else:
-            destination_group = self.find_group_by_path(group_path, regex=regex)
+            destination_group = self.find_groups_by_path(group_path, regex=regex, first=True)
         if not destination_group:
             logging.info(
                 'Could not find destination group {}. Create it.'.format(
                     group_path
                 )
             )
-            destination_group = self.create_group_path(group_path)
-        e = self.find_entry_by_title(
+            destination_group = self.add_group(group_path)
+        entries = self.find_entries_by_title(
             tree=destination_group._element,
-            title=entry_title,
+            title=title,
             regex=regex
         )
-        if e and not force_creation:
+        if entries and not force_creation:
             logger.warning(
                 'An entry "{}" already exists in "{}". Update it.'.format(
-                    entry_title, group_path
+                    title, group_path
                 )
             )
-            e.save_history()
-            e.title = entry_title
-            e.username = entry_username
-            e.password = entry_password
-            e.url = entry_url
-            if entry_notes:
-                e.notes = entry_notes
-            if entry_url:
-                e.url = entry_url
-            if entry_icon:
-                e.icon = entry_icon
-            if entry_tags:
-                e.tags = entry_tags
+            entry = entries[0]
+            entry.save_history()
+            entry.title = title
+            entry.username = username
+            entry.password = password
+            entry.url = url
+            if notes:
+                entry.notes = notes
+            if url:
+                entry.url = url
+            if icon:
+                entry.icon = icon
+            if tags:
+                entry.tags = tags
             # Update mtime
-            e.touch(modify=True)
+            entry.touch(modify=True)
         else:
             logger.info('Create a new entry')
-            e = Entry(
-                title=entry_title,
-                username=entry_username,
-                password=entry_password,
-                notes=entry_notes,
-                url=entry_url,
-                tags=entry_tags,
-                icon=entry_icon
+            entry = Entry(
+                title=title,
+                username=username,
+                password=password,
+                notes=notes,
+                url=url,
+                tags=tags,
+                icon=icon
             )
-            destination_group.append(e)
+            destination_group.append(entry)
+
+        return entry

@@ -262,8 +262,11 @@ class Entry(BaseElement):
             history.append(archive)
             self._element.append(history)
 
+    def delete(self):
+        self._element.getparent().remove(self._element)
+
     def __str__(self):
-        return 'Entry: "{}" at "{}"'.format(self.title, self.path)
+        return 'Entry: "{}"'.format(self.path)
 
     def __unicode__(self):
         return self.__str__()
