@@ -66,6 +66,7 @@ The ``first`` (default ``False``) boolean controls whether to return the first m
 a flattened list of all entries in the database
 
 .. code:: python
+
    >>> kp.entries
        [Entry: "foo_entry", Entry: "foobar_entry", Entry: "social/gmail", Entry: "social/facebook"]
 
@@ -105,6 +106,7 @@ the ``Root`` group to the database
 a flattened list of all groups in the database
 
 .. code:: python
+
    >>> kp.groups
        [Group: "foo", Group "foobar", Group: "social", Group: "social/foo_subgroup"]
        
