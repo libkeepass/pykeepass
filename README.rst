@@ -124,3 +124,41 @@ a flattened list of all groups in the database
 
    >>> kp.root_group
        Group: "/"
+
+
+Adding Entries
+--------------
+* **add_entry** (destination_group, title, username, password, url=None, notes=None, tags=None, icon=None, force_creation=False)
+
+This function adds a new entry to the existing group ``destination_group``.
+
+``destination_group`` is a ``Group`` instance.  ``title``, ``username``, ``password``, ``url``, ``notes``, ``tags``, ``icon`` are strings.
+
+.. code:: python
+
+   # add a new entry to the Root group
+   >>> kp.add_entry(kp.root_group, 'testing', 'foo_user', 'passw0rd')
+       Entry: "testing"
+
+   # add a new entry to the social group
+   >>> group = find_groups_by_name('social', first=True)
+   >>> kp.add_entry(group, 'testing', 'foo_user', 'passw0rd')
+       Entry: "testing"
+
+Adding Groups
+--------------
+* **add_group** (destination_group, group_name)
+
+This function adds a new group to the existing group ``destination_group``.
+
+``destination_group`` is a ``Group`` instance.  ``group_name`` is a string.
+
+.. code:: python
+
+   # add a new group to the Root group
+   >>> group = kp.add_group(kp.root_group, 'social')
+
+   # add a new subgroup
+   >>> kp.add_group(group, 'gmail')
+       Group: "social/gmail"
+       

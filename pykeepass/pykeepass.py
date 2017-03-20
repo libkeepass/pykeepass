@@ -104,26 +104,18 @@ class PyKeePass():
                 else:
                     xp += '/Group/Name[text()="{}"]/..'.format(s)
         res = self.__xpath(xp, tree=tree)
-        
+
         if first:
             res = res[0] if res else None
 
         return res
 
     # creates a new group and all parent groups, if necessary
-    def add_group(self, group_path):
-        logger.info('Creating group {}'.format(group_path))
+    def add_group(self, destination_group, group_name):
+        logger.info('Creating group {}'.format(group_name))
 
-        path = ''
-        for group_name in group_path.split('/'):
-            group = self.find_groups_by_path(path + '/' + group_name, first=True)
-
-            if not group:
-                parent_group = self.find_groups_by_path(path, first=True)
-                group = Group(name=group_name)
-                parent_group.append(group)
-
-            path += '/' + group_name
+        group = Group(name=group_name)
+        destination_group.append(group)
 
         return group
 
@@ -214,29 +206,17 @@ class PyKeePass():
 
         return res
 
-    def add_entry(self, group_path, title, username,
+    def add_entry(self, destination_group, title, username,
                   password, url=None, notes=None,
-                  tags=None, icon=None, force_creation=False,
-                  regex=False):
-        if isinstance(group_path, Group):
-            destination_group = group_path
-        else:
-            destination_group = self.find_groups_by_path(group_path, regex=regex, first=True)
-        if not destination_group:
-            logging.info(
-                'Could not find destination group {}. Create it.'.format(
-                    group_path
-                )
-            )
-            destination_group = self.add_group(group_path)
+                  tags=None, icon=None, force_creation=False):
+
         entries = self.find_entries_by_title(
             tree=destination_group._element,
             title=title,
-            regex=regex
         )
         if entries and not force_creation:
             logger.warning(
-                'An entry "{}" already exists in "{}". Update it.'.format(
+                'An entry "{}" already exists in "{}". Updating it.'.format(
                     title, group_path
                 )
             )
@@ -257,7 +237,7 @@ class PyKeePass():
             # Update mtime
             entry.touch(modify=True)
         else:
-            logger.info('Create a new entry')
+            logger.info('Creating a new entry')
             entry = Entry(
                 title=title,
                 username=username,

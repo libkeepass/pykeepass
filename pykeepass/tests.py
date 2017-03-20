@@ -6,15 +6,15 @@ from entry import Entry
 from datetime import datetime
 
 """
-These functions are still missing tests:
+Missing Tests:
 
-- save
-- read
-- __xpath
+- save()
+- read()
 - add entry
   - update entry - force_creation
   - update mtime
-- root group
+- root_group
+- Group object tests
 """
 
 class EntryFunctionTests(unittest.TestCase):
@@ -28,32 +28,39 @@ class EntryFunctionTests(unittest.TestCase):
     def test_find_entries_by_title(self):
         results = self.pk.find_entries_by_title('root_entry')
         self.assertEqual(len(results), 1)
-        self.assertEqual('root_entry', results[0].title)
+        results = self.pk.find_entries_by_title('root_entry', first=True)
+        self.assertEqual('root_entry', results.title)
 
     def test_find_entries_by_username(self):
         results = self.pk.find_entries_by_username('foobar_user')
         self.assertEqual(len(results), 2)
-        self.assertTrue('foobar_user' in [entry.username for entry in results])
+        results = self.pk.find_entries_by_username('foobar_user', first=True)
+        self.assertEqual('foobar_user', results.username)
 
     def test_find_entries_by_password(self):
         results = self.pk.find_entries_by_password('passw0rd')
         self.assertEqual(len(results), 2)
-        self.assertTrue('group_entry' in [entry.title for entry in results])
+        results = self.pk.find_entries_by_password('passw0rd', first=True)
+        self.assertEqual('passw0rd', results.password)
 
     def test_find_entries_by_url(self):
         results = self.pk.find_entries_by_url('http://example.com')
         self.assertEqual(len(results), 2)
-        self.assertTrue('group_entry' in [entry.title for entry in results])
+        results = self.pk.find_entries_by_url('http://example.com', first=True)
+        self.assertEqual('http://example.com', results.url)
 
     def test_find_entries_by_notes(self):
         results = self.pk.find_entries_by_notes('entry notes')
         self.assertEqual(len(results), 2)
-        self.assertTrue('group_entry' in [entry.title for entry in results])
+        results = self.pk.find_entries_by_notes('entry notes', first=True)
+        self.assertEqual('entry notes', results.notes)
 
     def test_find_entries_by_path(self):
         results = self.pk.find_entries_by_path('foobar_group/group_entry')
-        self.assertIsInstance(results[0], Entry)
-        self.assertEqual('group_entry', results[0].title)
+        self.assertEqual(len(results), 1)
+        results = self.pk.find_entries_by_path('foobar_group/group_entry', first=True)
+        self.assertIsInstance(results, Entry)
+        self.assertEqual('group_entry', results.title)
 
     #---------- Adding/Deleting entries -----------
 
@@ -69,14 +76,15 @@ class EntryFunctionTests(unittest.TestCase):
                                   icons.KEY)
         results = self.pk.find_entries_by_title(unique_str+'title')
         self.assertEqual(len(results), 1)
+        results = self.pk.find_entries_by_title(unique_str+'title', first=True)
 
-        self.assertEqual(results[0].title, unique_str+'title')
-        self.assertEqual(results[0].username, unique_str+'user')
-        self.assertEqual(results[0].password, unique_str+'pass')
-        self.assertEqual(results[0].url, unique_str+'url')
-        self.assertEqual(results[0].notes, unique_str+'notes')
-        self.assertEqual(results[0].tags, [unique_str+'tags'])
-        self.assertEqual(results[0].icon, icons.KEY)
+        self.assertEqual(results.title, unique_str+'title')
+        self.assertEqual(results.username, unique_str+'user')
+        self.assertEqual(results.password, unique_str+'pass')
+        self.assertEqual(results.url, unique_str+'url')
+        self.assertEqual(results.notes, unique_str+'notes')
+        self.assertEqual(results.tags, [unique_str+'tags'])
+        self.assertEqual(results.icon, icons.KEY)
 
 
 class GroupFunctionTests(unittest.TestCase):
@@ -90,13 +98,14 @@ class GroupFunctionTests(unittest.TestCase):
     def test_find_groups_by_name(self):
         results = self.pk.find_groups_by_name('subgroup')
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].name, 'subgroup')
+        results = self.pk.find_groups_by_name('subgroup', first=True)
+        self.assertEqual(results.name, 'subgroup')
 
     def test_find_groups_by_path(self):
         results = self.pk.find_groups_by_path('/foobar_group/subgroup')
-
         self.assertIsInstance(results[0], Group)
-        self.assertEqual(results[0].name, 'subgroup')
+        results = self.pk.find_groups_by_path('/foobar_group/subgroup', first=True)
+        self.assertEqual(results.name, 'subgroup')
 
     def test_groups(self):
         results = self.pk.groups
@@ -106,12 +115,15 @@ class GroupFunctionTests(unittest.TestCase):
     #---------- Adding/Deleting Groups -----------
 
     def test_add_group(self):
-        path = 'base_group/test_add_group'
-        self.pk.add_group(path)
+        base_group_name = 'base_group'
+        sub_group_name = 'sub_group'
+        base_group = self.pk.add_group(self.pk.root_group, base_group_name)
+        self.pk.add_group(base_group, sub_group_name)
 
-        results = self.pk.find_groups_by_path(path)
-        self.assertIsInstance(results[0], Group)
-        self.assertEqual(results[0].name, 'test_add_group')
+        results = self.pk.find_groups_by_path(base_group_name + '/' + sub_group_name,
+                                              first=True)
+        self.assertIsInstance(results, Group)
+        self.assertEqual(results.name, sub_group_name)
 
 class EntryTests(unittest.TestCase):
 
