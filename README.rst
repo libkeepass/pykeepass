@@ -17,14 +17,14 @@ Simple Example
 
    # get the entries in a group
    >>> group.entries
-       [Entry: "social/facebook", Entry: "social/twitter"]
+   [Entry: "social/facebook", Entry: "social/twitter"]
 
    # find any entry by its title
    >>> entry = kp.find_entries_by_title('facebook', first=True)
 
    # retrieve the associated password
    >>> entry.password
-       's3cure_p455w0rd'
+   's3cure_p455w0rd'
 
    # update an entry
    >>> entry.notes = 'primary facebook account'
@@ -68,20 +68,20 @@ a flattened list of all entries in the database
 .. code:: python
 
    >>> kp.entries
-       [Entry: "foo_entry", Entry: "foobar_entry", Entry: "social/gmail", Entry: "social/facebook"]
+   [Entry: "foo_entry", Entry: "foobar_entry", Entry: "social/gmail", Entry: "social/facebook"]
 
    >>> kp.find_entries_by_name('gmail', first=True)
-       Entry: "social/gmail"
+   Entry: "social/gmail"
 
    >>> kp.find_entries_by_name('foo.*', regex=True)
-       [Entry: "foo_entry", Entry: "foobar_entry"]
+   [Entry: "foo_entry", Entry: "foobar_entry"]
 
    >>> entry = kp.find_entries_by_url('.*facebook.*', regex=True, first=True)
    >>> entry.url
-       'facebook.com'
+   'facebook.com'
 
    >>> kp.find_groups_by_name('social', first=True).entries
-       [Entry: "social/gmail", Entry: "social/facebook"]
+   [Entry: "social/gmail", Entry: "social/facebook"]
 
 Finding Groups
 ----------------------
@@ -108,22 +108,22 @@ a flattened list of all groups in the database
 .. code:: python
 
    >>> kp.groups
-       [Group: "foo", Group "foobar", Group: "social", Group: "social/foo_subgroup"]
+   [Group: "foo", Group "foobar", Group: "social", Group: "social/foo_subgroup"]
        
    >>> kp.find_groups_by_name('foo', first=True)
-       Group: "foo"
+   Group: "foo"
 
    >>> kp.find_groups_by_name('foo.*', regex=True)
-       [Group: "foo", Group "foobar"]
+   [Group: "foo", Group "foobar"]
 
    >>> kp.find_groups_by_path('social/.*', regex=True)
-       [Group: "social/foo_subgroup"]
+   [Group: "social/foo_subgroup"]
 
    >>> kp.find_groups_by_name('social', first=True).subgroups
-       [Group: "social/foo_subgroup"]
+   [Group: "social/foo_subgroup"]
 
    >>> kp.root_group
-       Group: "/"
+   Group: "/"
 
 
 Adding Entries
@@ -138,12 +138,12 @@ This function adds a new entry to the existing group ``destination_group``.
 
    # add a new entry to the Root group
    >>> kp.add_entry(kp.root_group, 'testing', 'foo_user', 'passw0rd')
-       Entry: "testing"
+   Entry: "testing"
 
    # add a new entry to the social group
    >>> group = find_groups_by_name('social', first=True)
    >>> kp.add_entry(group, 'testing', 'foo_user', 'passw0rd')
-       Entry: "testing"
+   Entry: "testing"
 
 Adding Groups
 --------------
@@ -160,5 +160,5 @@ This function adds a new group to the existing group ``destination_group``.
 
    # add a new subgroup
    >>> kp.add_group(group, 'gmail')
-       Group: "social/gmail"
+   Group: "social/gmail"
        
