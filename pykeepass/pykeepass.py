@@ -194,11 +194,14 @@ class PyKeePass():
         entry_title = os.path.basename(path)
         group_path = os.path.dirname(path)
         group = self.find_groups_by_path(group_path, tree=tree, regex=regex, first=True)
+
         if group is not None:
             if regex:
                 res = [x for x in group.entries if re.match(entry_title, x.title)]
             else:
                 res = [x for x in group.entries if x.title == entry_title]
+        else:
+            return None
 
         # return first object in list or None
         if first:
