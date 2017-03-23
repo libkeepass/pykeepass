@@ -119,6 +119,9 @@ class PyKeePass():
 
         return group
 
+    def delete_group(self, group):
+        group.delete()
+
     #---------- Entries ----------
 
     def __find_entry_by(self, key, value, regex=False, tree=None, history=False, first=False):
@@ -253,3 +256,6 @@ class PyKeePass():
             destination_group.append(entry)
 
         return entry
+
+    def delete_entry(self, entry):
+        entry.delete()
