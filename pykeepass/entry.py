@@ -24,7 +24,7 @@ reserved_keys = [
 class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
-                 notes=None, tags=None, expires=None, expiration=None,
+                 notes=None, tags=None, expires=False, expiration=None,
                  icon=None, element=None):
         if element is None:
             element = Element('Entry')
