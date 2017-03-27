@@ -204,7 +204,7 @@ class PyKeePass():
             else:
                 res = [x for x in group.entries if x.title == entry_title]
         else:
-            return None
+            return
 
         # return first object in list or None
         if first:

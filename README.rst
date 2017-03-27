@@ -34,7 +34,7 @@ Simple Example
 
    # create a new entry
    >>> kp.add_entry(group, 'gmail', 'myusername', 'myPassw0rdXX')
-   [Entry: "email/gmail"]
+   Entry: "email/gmail"
 
    # save database
    >>> kp.save()
