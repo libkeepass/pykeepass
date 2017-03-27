@@ -9,12 +9,13 @@ from group import Group
 import libkeepass
 import logging
 import os
+import re
 
 
 logger = logging.getLogger(__name__)
 
 
-class PyKeePass():
+class PyKeePass(object):
 
     def __init__(self, filename, password=None, keyfile=None):
         self.kdb_filename = filename
@@ -76,7 +77,8 @@ class PyKeePass():
 
     #---------- Groups ----------
 
-    def find_groups_by_name(self, group_name, tree=None, regex=False, first=False):
+    def find_groups_by_name(self, group_name, tree=None, regex=False,
+                            first=False):
         if regex:
             xp = './/Group/Name[re:test(text(), "{}")]/..'.format(group_name)
         else:
@@ -89,8 +91,10 @@ class PyKeePass():
 
         return res
 
-    def find_groups_by_path(self, group_path_str=None, regex=False, tree=None, first=False):
-        logger.info('Looking for group {}'.format(group_path_str if group_path_str else 'Root'))
+    def find_groups_by_path(self, group_path_str=None, regex=False, tree=None,
+                            first=False):
+        logger.info('Looking for group {}'.format(
+            group_path_str if group_path_str else 'Root'))
         xp = '/KeePassFile/Root/Group'
 
         # remove leading and trailing /
@@ -121,7 +125,8 @@ class PyKeePass():
 
     #---------- Entries ----------
 
-    def __find_entry_by(self, key, value, regex=False, tree=None, history=False, first=False):
+    def __find_entry_by(self, key, value, regex=False, tree=None,
+                        history=False, first=False):
         if regex:
             xp = './/Entry/String/Key[text()="{}"]/../Value[re:test(text(), "{}")]/../..'.format(
                 key, value
@@ -140,7 +145,8 @@ class PyKeePass():
 
         return res
 
-    def find_entries_by_title(self, title, regex=False, tree=None, history=False, first=False):
+    def find_entries_by_title(self, title, regex=False, tree=None,
+                              history=False, first=False):
         return self.__find_entry_by(
             key='Title',
             value=title,
@@ -150,7 +156,8 @@ class PyKeePass():
             first=first
         )
 
-    def find_entries_by_username(self, username, regex=False, tree=None, history=False, first=False):
+    def find_entries_by_username(self, username, regex=False, tree=None,
+                                 history=False, first=False):
         return self.__find_entry_by(
             key='UserName',
             value=username,
@@ -160,7 +167,8 @@ class PyKeePass():
             first=first
         )
 
-    def find_entries_by_password(self, password, regex=False, tree=None, history=False, first=False):
+    def find_entries_by_password(self, password, regex=False, tree=None,
+                                 history=False, first=False):
         return self.__find_entry_by(
             key='Password',
             value=password,
@@ -170,7 +178,8 @@ class PyKeePass():
             first=first
         )
 
-    def find_entries_by_url(self, url, regex=False, tree=None, history=False, first=False):
+    def find_entries_by_url(self, url, regex=False, tree=None,
+                            history=False, first=False):
         return self.__find_entry_by(
             key='URL',
             value=url,
@@ -180,7 +189,8 @@ class PyKeePass():
             first=first
         )
 
-    def find_entries_by_notes(self, notes, regex=False, tree=None, history=False, first=False):
+    def find_entries_by_notes(self, notes, regex=False, tree=None,
+                              history=False, first=False):
         return self.__find_entry_by(
             key='Notes',
             value=notes,
@@ -190,13 +200,17 @@ class PyKeePass():
             first=first
         )
 
-    def find_entries_by_path(self, path, regex=False, tree=None, history=False, first=False):
+    def find_entries_by_path(self, path, regex=False, tree=None,
+                             history=False, first=False):
         entry_title = os.path.basename(path)
         group_path = os.path.dirname(path)
-        group = self.find_groups_by_path(group_path, tree=tree, regex=regex, first=True)
+        group = self.find_groups_by_path(
+            group_path, tree=tree, regex=regex, first=True
+        )
         if group is not None:
             if regex:
-                res = [x for x in group.entries if re.match(entry_title, x.title)]
+                res = [x for x in group.entries if \
+                       re.match(entry_title, x.title)]
             else:
                 res = [x for x in group.entries if x.title == entry_title]
 
@@ -209,15 +223,13 @@ class PyKeePass():
     def add_entry(self, destination_group, title, username,
                   password, url=None, notes=None,
                   tags=None, icon=None, force_creation=False):
-
         entries = self.find_entries_by_title(
-            tree=destination_group._element,
-            title=title,
+            tree=destination_group._element, title=title
         )
         if entries and not force_creation:
             logger.warning(
                 'An entry "{}" already exists in "{}". Updating it.'.format(
-                    title, group_path
+                    title, destination_group
                 )
             )
             entry = entries[0]
