@@ -14,7 +14,7 @@ import os
 logger = logging.getLogger(__name__)
 
 
-class PyKeePass():
+class PyKeePass(object):
 
     def __init__(self, filename, password=None, keyfile=None):
         self.kdb_filename = filename
@@ -223,7 +223,7 @@ class PyKeePass():
         if entries and not force_creation:
             logger.warning(
                 'An entry "{}" already exists in "{}". Updating it.'.format(
-                    title, group_path
+                    title, destination_group
                 )
             )
             entry = entries[0]

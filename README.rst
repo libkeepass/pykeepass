@@ -3,6 +3,8 @@ pykeepass
 
 This library allows you to write entries to a KeePass database
 
+*pykeepass does not currently support Python 3*
+
 Simple Example
 --------------
 .. code:: python
@@ -175,7 +177,7 @@ Adding Groups
    # add a new group to the Root group
    >>> group = kp.add_group(kp.root_group, 'social')
 
-   # add a new group
+   # add a new group to the social group
    >>> kp.add_group(group, 'gmail')
    Group: "social/gmail"
    
