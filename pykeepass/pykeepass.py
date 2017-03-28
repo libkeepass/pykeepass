@@ -9,6 +9,7 @@ from group import Group
 import libkeepass
 import logging
 import os
+import re
 
 
 logger = logging.getLogger(__name__)
@@ -76,7 +77,8 @@ class PyKeePass(object):
 
     #---------- Groups ----------
 
-    def find_groups_by_name(self, group_name, tree=None, regex=False, first=False):
+    def find_groups_by_name(self, group_name, regex=False, tree=None,
+                            first=False):
         if regex:
             xp = './/Group/Name[re:test(text(), "{}")]/..'.format(group_name)
         else:
@@ -89,8 +91,10 @@ class PyKeePass(object):
 
         return res
 
-    def find_groups_by_path(self, group_path_str=None, regex=False, tree=None, first=False):
-        logger.info('Looking for group {}'.format(group_path_str if group_path_str else 'Root'))
+    def find_groups_by_path(self, group_path_str=None, regex=False, tree=None,
+                            first=False):
+        logger.info('Looking for group {}'.format(
+            group_path_str if group_path_str else 'Root'))
         xp = '/KeePassFile/Root/Group'
 
         # remove leading and trailing /
@@ -124,7 +128,8 @@ class PyKeePass(object):
 
     #---------- Entries ----------
 
-    def __find_entry_by(self, key, value, regex=False, tree=None, history=False, first=False):
+    def __find_entry_by(self, key, value, regex=False, tree=None,
+                        history=False, first=False):
         if regex:
             xp = './/Entry/String/Key[text()="{}"]/../Value[re:test(text(), "{}")]/../..'.format(
                 key, value
@@ -143,7 +148,8 @@ class PyKeePass(object):
 
         return res
 
-    def find_entries_by_title(self, title, regex=False, tree=None, history=False, first=False):
+    def find_entries_by_title(self, title, regex=False, tree=None,
+                              history=False, first=False):
         return self.__find_entry_by(
             key='Title',
             value=title,
@@ -153,7 +159,8 @@ class PyKeePass(object):
             first=first
         )
 
-    def find_entries_by_username(self, username, regex=False, tree=None, history=False, first=False):
+    def find_entries_by_username(self, username, regex=False, tree=None,
+                                 history=False, first=False):
         return self.__find_entry_by(
             key='UserName',
             value=username,
@@ -163,7 +170,8 @@ class PyKeePass(object):
             first=first
         )
 
-    def find_entries_by_password(self, password, regex=False, tree=None, history=False, first=False):
+    def find_entries_by_password(self, password, regex=False, tree=None,
+                                 history=False, first=False):
         return self.__find_entry_by(
             key='Password',
             value=password,
@@ -173,7 +181,8 @@ class PyKeePass(object):
             first=first
         )
 
-    def find_entries_by_url(self, url, regex=False, tree=None, history=False, first=False):
+    def find_entries_by_url(self, url, regex=False, tree=None, history=False,
+                            first=False):
         return self.__find_entry_by(
             key='URL',
             value=url,
@@ -183,7 +192,8 @@ class PyKeePass(object):
             first=first
         )
 
-    def find_entries_by_notes(self, notes, regex=False, tree=None, history=False, first=False):
+    def find_entries_by_notes(self, notes, regex=False, tree=None, history=False,
+                              first=False):
         return self.__find_entry_by(
             key='Notes',
             value=notes,
@@ -193,10 +203,14 @@ class PyKeePass(object):
             first=first
         )
 
-    def find_entries_by_path(self, path, regex=False, tree=None, history=False, first=False):
+    def find_entries_by_path(self, path, regex=False, tree=None, history=False,
+                             first=False):
         entry_title = os.path.basename(path)
         group_path = os.path.dirname(path)
-        group = self.find_groups_by_path(group_path, tree=tree, regex=regex, first=True)
+        group = self.find_groups_by_path(group_path,
+                                         tree=tree,
+                                         regex=regex,
+                                         first=True)
 
         if group is not None:
             if regex:
