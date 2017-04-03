@@ -77,7 +77,7 @@ class PyKeePass(object):
 
     #---------- Groups ----------
 
-    def find_groups_by_name(self, group_name, tree=None, regex=False,
+    def find_groups_by_name(self, group_name, regex=False, tree=None,
                             first=False):
         if regex:
             xp = './/Group/Name[re:test(text(), "{}")]/..'.format(group_name)
@@ -122,6 +122,9 @@ class PyKeePass(object):
         destination_group.append(group)
 
         return group
+
+    def delete_group(self, group):
+        group.delete()
 
     #---------- Entries ----------
 
@@ -178,8 +181,8 @@ class PyKeePass(object):
             first=first
         )
 
-    def find_entries_by_url(self, url, regex=False, tree=None,
-                            history=False, first=False):
+    def find_entries_by_url(self, url, regex=False, tree=None, history=False,
+                            first=False):
         return self.__find_entry_by(
             key='URL',
             value=url,
@@ -189,8 +192,8 @@ class PyKeePass(object):
             first=first
         )
 
-    def find_entries_by_notes(self, notes, regex=False, tree=None,
-                              history=False, first=False):
+    def find_entries_by_notes(self, notes, regex=False, tree=None, history=False,
+                              first=False):
         return self.__find_entry_by(
             key='Notes',
             value=notes,
@@ -200,19 +203,22 @@ class PyKeePass(object):
             first=first
         )
 
-    def find_entries_by_path(self, path, regex=False, tree=None,
-                             history=False, first=False):
+    def find_entries_by_path(self, path, regex=False, tree=None, history=False,
+                             first=False):
         entry_title = os.path.basename(path)
         group_path = os.path.dirname(path)
-        group = self.find_groups_by_path(
-            group_path, tree=tree, regex=regex, first=True
-        )
+        group = self.find_groups_by_path(group_path,
+                                         tree=tree,
+                                         regex=regex,
+                                         first=True)
+
         if group is not None:
             if regex:
-                res = [x for x in group.entries if \
-                       re.match(entry_title, x.title)]
+                res = [x for x in group.entries if re.match(entry_title, x.title)]
             else:
                 res = [x for x in group.entries if x.title == entry_title]
+        else:
+            return
 
         # return first object in list or None
         if first:
@@ -223,8 +229,10 @@ class PyKeePass(object):
     def add_entry(self, destination_group, title, username,
                   password, url=None, notes=None,
                   tags=None, icon=None, force_creation=False):
+
         entries = self.find_entries_by_title(
-            tree=destination_group._element, title=title
+            tree=destination_group._element,
+            title=title,
         )
         if entries and not force_creation:
             logger.warning(
@@ -262,3 +270,6 @@ class PyKeePass(object):
             destination_group.append(entry)
 
         return entry
+
+    def delete_entry(self, entry):
+        entry.delete()
