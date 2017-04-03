@@ -38,6 +38,13 @@ class PyKeePass(object):
         self.kdb.write_to(outfile)
         return outfile
 
+    # set the master password
+    def set_password(self, password):
+        if password:
+            self.kdb.keys[0] = libkeepass.crypto.sha256(password.encode('utf-8'))
+        else:
+            logger.error("You must specify a password")
+
     @property
     def root_group(self):
         return self.find_groups_by_path('', tree=None, first=True)
