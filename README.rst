@@ -190,3 +190,16 @@ Adding Groups
    # save the database
    >>> kp.save()
        
+Miscellaneous
+-------------
+**read** (filename, password=None, keyfile=None)
+
+where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.
+
+**save** (filename=None)
+
+where ``filename`` is the path of the file to save to.  If ``filename`` is not given, the path given in ``read`` will be used.
+
+**set_password** (password)
+
+set a master password on the database.  ``password`` is a string.

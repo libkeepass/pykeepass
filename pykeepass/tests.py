@@ -1,6 +1,8 @@
 import unittest
 import pykeepass
 import icons
+import shutil
+import os
 from group import Group
 from entry import Entry
 from datetime import datetime
@@ -17,11 +19,13 @@ Missing Tests:
 - Group object tests
 """
 
+base_dir = os.path.dirname(os.path.realpath(__file__))
+
 class EntryFunctionTests(unittest.TestCase):
 
     # get some things ready before testing
     def setUp(self):
-        self.kp = pykeepass.PyKeePass('./test.kdbx', password='passw0rd')
+        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd')
 
     #---------- Finding entries -----------
 
@@ -95,7 +99,7 @@ class GroupFunctionTests(unittest.TestCase):
 
     # get some things ready before testing
     def setUp(self):
-        self.kp = pykeepass.PyKeePass('./test.kdbx', password='passw0rd')
+        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd')
 
     #---------- Finding groups -----------
 
@@ -156,6 +160,24 @@ class EntryTests(unittest.TestCase):
         entry.set_custom_property('foo', 'bar')
         self.assertEqual(entry.get_custom_property('foo'), 'bar')
         self.assertIn('foo', entry.custom_properties)
+
+class PyKeePassTests(unittest.TestCase):
+    def setUp(self):
+        shutil.copy(base_dir + '/test.kdbx', base_dir + '/change_pass.kdbx')
+        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd')
+        self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_pass.kdbx', password='passw0rd')
+
+    def test_set_password(self):
+        self.kp_pass.set_password('f00bar')
+        self.kp_pass.save()
+        self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_pass.kdbx', password='f00bar')
+
+        results = self.kp.find_entries_by_username('foobar_user', first=True)
+        self.assertEqual('foobar_user', results.username)
+
+
+    def tearDown(self):
+        os.remove(base_dir + '/change_pass.kdbx')
 
 
 if __name__ == '__main__':
