@@ -1,11 +1,12 @@
 from __future__ import unicode_literals
-from baseelement import BaseElement
+from __future__ import absolute_import
+from pykeepass.baseelement import BaseElement
 from copy import deepcopy
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
 import logging
-import xmlfactory
-import group
+import pykeepass.xmlfactory as xmlfactory
+import pykeepass.group
 
 
 logger = logging.getLogger(__name__)
@@ -199,7 +200,7 @@ class Entry(BaseElement):
         else:
             ancestor = self._element.getparent()
         if ancestor is not None:
-            return group.Group(element=ancestor)
+            return pykeepass.group.Group(element=ancestor)
 
     @property
     def path(self):
@@ -283,3 +284,5 @@ class Entry(BaseElement):
              other.notes, other.icon, other.tags, other.atime, other.ctime,
              other.mtime, other.expires, other.uuid)
         )
+
+

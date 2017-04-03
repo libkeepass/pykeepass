@@ -3,8 +3,6 @@ pykeepass
 
 This library allows you to write entries to a KeePass database
 
-*pykeepass does not currently support Python 3*
-
 Simple Example
 --------------
 .. code:: python

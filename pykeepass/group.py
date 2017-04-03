@@ -1,13 +1,15 @@
 from __future__ import unicode_literals
-from baseelement import BaseElement
+from __future__ import absolute_import
+from pykeepass.baseelement import BaseElement
 from lxml.etree import Element
 from lxml.etree import _Element
 from lxml.objectify import ObjectifiedElement
-import entry
-import xmlfactory
+import pykeepass.xmlfactory as xmlfactory
+import pykeepass.entry
 
 
 class Group(BaseElement):
+
     def __init__(self, name=None, element=None):
         if element is None:
             element = Element('Group')
@@ -38,7 +40,7 @@ class Group(BaseElement):
         # ... but that may become out of sync and what is supposed to happen
         # when an entry is updated?!
         # On the other side this would make things like "e in g.entries" work
-        return [entry.Entry(element=x) for x in self._element.findall('Entry')]
+        return [pykeepass.entry.Entry(element=x) for x in self._element.findall('Entry')]
 
     @property
     def subgroups(self):
