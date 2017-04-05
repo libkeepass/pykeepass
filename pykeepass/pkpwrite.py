@@ -41,6 +41,7 @@ def parse_args():
     parser.add_argument(
         '-D', '--destination',
         help='Group where to write the new entry to (path)',
+        default='',
         required=False
     )
     parser.add_argument(
@@ -111,6 +112,7 @@ def write_entry(kdbx_file, kdbx_password, group_path,
             entry_title, entry_username, entry_password, group_path
         )
     )
+    samba_db = False
     if kdbx_file.startswith('smb://'):
         samba_db = True
         smb_kdbx_file = smb_retrieve(kdbx_file)
@@ -119,14 +121,15 @@ def write_entry(kdbx_file, kdbx_password, group_path,
         password=kdbx_password,
         keyfile=kdbx_keyfile
     )
+    dest_group = kp.find_groups_by_path(group_path, first=True)
     kp.add_entry(
-        group_path=group_path,
-        entry_title=entry_title,
-        entry_username=entry_username,
-        entry_password=entry_password,
-        entry_url=entry_url,
-        entry_notes=entry_notes,
-        entry_tags=entry_tags,
+        destination_group=dest_group,
+        title=entry_title,
+        username=entry_username,
+        password=entry_password,
+        url=entry_url,
+        notes=entry_notes,
+        tags=entry_tags,
         force_creation=force_creation
     )
 
