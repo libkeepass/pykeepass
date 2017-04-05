@@ -36,6 +36,7 @@ Simple Example
 
    # create a new entry
    >>> kp.add_entry(group, 'gmail', 'myusername', 'myPassw0rdXX')
+   Entry: "email/gmail"
 
    # save database
    >>> kp.save()
@@ -46,12 +47,17 @@ Finding Entries
 
 The supported find commands are listed below
 
-* **find_entries_by_title** (title, regex=False, tree=None, history=False, first=False)
-* **find_entries_by_username** (username, regex=False, tree=None, history=False, first=False)
-* **find_entries_by_password** (password, regex=False, tree=None, history=False, first=False)
-* **find_entries_by_url** (url, regex=False, tree=None, history=False, first=False)
-* **find_entries_by_notes** (notes, regex=False, tree=None, history=False, first=False)
-* **find_entries_by_path** (path, regex=False, tree=None, history=False, first=False)
+**find_entries_by_title** (title, regex=False, tree=None, history=False, first=False)
+
+**find_entries_by_username** (username, regex=False, tree=None, history=False, first=False)
+
+**find_entries_by_password** (password, regex=False, tree=None, history=False, first=False)
+
+**find_entries_by_url** (url, regex=False, tree=None, history=False, first=False)
+
+**find_entries_by_notes** (notes, regex=False, tree=None, history=False, first=False)
+
+**find_entries_by_path** (path, regex=False, tree=None, history=False, first=False)
 
 where ``title``, ``username``, ``password``, ``url``, ``notes`` and ``path`` are strings.  These functions have an optional ``regex`` boolean argument which means to interpret the string as an `XSLT style`_ regular expression.
 
@@ -60,10 +66,11 @@ where ``title``, ``username``, ``password``, ``url``, ``notes`` and ``path`` are
 The ``history`` (default ``False``) boolean controls whether history entries should be included in the search results.
 
 The ``first`` (default ``False``) boolean controls whether to return the first matched item, or a list of matched items.
+
 * if ``first=False``, the function returns a list of ``Entry`` s or ``[]`` if there are no matches
 * if ``first=True``, the function returns the first ``Entry`` match, or ``None`` if there are no matches
 
-* **entries**
+**entries**
 
 a flattened list of all entries in the database
 
@@ -88,22 +95,24 @@ a flattened list of all entries in the database
 Finding Groups
 ----------------------
 
-* **find_groups_by_name** (name, tree=None, regex=False, first=False)
-* **find_groups_by_path** (path, tree=None, regex=False, first=False)
+**find_groups_by_name** (name, tree=None, regex=False, first=False)
+
+**find_groups_by_path** (path, tree=None, regex=False, first=False)
 
 where ``name`` and ``path`` are strings.  These functions have an optional ``regex`` boolean argument which means to interpret the string as an `XSLT style`_ regular expression.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
 
 The ``first`` (default ``False``) boolean controls whether to return the first matched item, or a list of matched items.
+
 * if ``first=False``, the function returns a list of ``Group`` s or ``[]`` if there are no matches
 * if ``first=True``, the function returns the first ``Group`` match, or ``None`` if there are no matches
 
-* **root_group**
+**root_group**
 
 the ``Root`` group to the database
 
-* **groups**
+**groups**
 
 a flattened list of all groups in the database
 
@@ -130,11 +139,10 @@ a flattened list of all groups in the database
 
 Adding Entries
 --------------
-* **add_entry** (destination_group, title, username, password, url=None, notes=None, tags=None, icon=None, force_creation=False)
+**add_entry** (destination_group, title, username, password, url=None, notes=None, tags=None, icon=None, force_creation=False)
 
-This function adds a new entry to the existing group ``destination_group``.
-
-``destination_group`` is a ``Group`` instance.  ``title``, ``username``, ``password``, ``url``, ``notes``, ``tags``, ``icon`` are strings.
+**delete_entry** (entry)
+``destination_group`` is a ``Group`` instance.  ``entry`` is an ``Entry`` instance. ``title``, ``username``, ``password``, ``url``, ``notes``, ``tags``, ``icon`` are strings.
 
 .. code:: python
 
@@ -144,23 +152,54 @@ This function adds a new entry to the existing group ``destination_group``.
 
    # add a new entry to the social group
    >>> group = find_groups_by_name('social', first=True)
-   >>> kp.add_entry(group, 'testing', 'foo_user', 'passw0rd')
+   >>> entry = kp.add_entry(group, 'testing', 'foo_user', 'passw0rd')
    Entry: "testing"
+   
+   # save the database
+   >>> kp.save()
+   
+   # delete an entry
+   >>> kp.delete_entry(entry)
+   
+   # save the database
+   >>> kp.save()
 
 Adding Groups
 --------------
-* **add_group** (destination_group, group_name)
+**add_group** (destination_group, group_name)
 
-This function adds a new group to the existing group ``destination_group``.
+**delete_group** (group)
 
-``destination_group`` is a ``Group`` instance.  ``group_name`` is a string.
+``destination_group`` and ``group`` are instances of ``Group``.  ``group_name`` is a string
 
 .. code:: python
 
    # add a new group to the Root group
    >>> group = kp.add_group(kp.root_group, 'social')
 
-   # add a new subgroup
+   # add a new group to the social group
    >>> kp.add_group(group, 'gmail')
    Group: "social/gmail"
+   
+   # save the database
+   >>> kp.save()
+   
+   # delete a group
+   >>> kp.delete_group(group)
+   
+   # save the database
+   >>> kp.save()
        
+Miscellaneous
+-------------
+**read** (filename, password=None, keyfile=None)
+
+where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.
+
+**save** (filename=None)
+
+where ``filename`` is the path of the file to save to.  If ``filename`` is not given, the path given in ``read`` will be used.
+
+**set_password** (password)
+
+set a master password on the database.  ``password`` is a string.
