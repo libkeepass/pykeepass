@@ -4,8 +4,9 @@
 
 from __future__ import print_function
 from __future__ import unicode_literals
-from entry import Entry
-from group import Group
+from __future__ import absolute_import
+from pykeepass.entry import Entry
+from pykeepass.group import Group
 import libkeepass
 import logging
 import os
@@ -32,11 +33,12 @@ class PyKeePass(object):
 
     def save(self, filename=None):
         # FIXME The *second* save operations creates gibberish passwords
+        # FIXME the save operation should be moved to libkeepass at some point
+        #       we shouldn't need to open another fd here just to write
         if not filename:
             filename = self.kdb_filename
-        outfile = open(filename, 'w+').__enter__()
-        self.kdb.write_to(outfile)
-        return outfile
+        with open(filename, 'wb+') as outfile:
+            self.kdb.write_to(outfile)
 
     # set the master password
     def set_password(self, password):

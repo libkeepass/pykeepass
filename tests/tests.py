@@ -1,10 +1,10 @@
 import unittest
-import pykeepass
-import icons
+from pykeepass import pykeepass
+from pykeepass import icons
 import shutil
 import os
-from group import Group
-from entry import Entry
+from pykeepass.group import Group
+from pykeepass.entry import Entry
 from datetime import datetime
 
 """

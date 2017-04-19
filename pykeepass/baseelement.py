@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
-import xmlfactory
+from __future__ import absolute_import
+import pykeepass.xmlfactory as xmlfactory
 import lxml
 
 
