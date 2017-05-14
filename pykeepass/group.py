@@ -78,7 +78,7 @@ class Group(BaseElement):
         self._element.getparent().remove(self._element)
 
     def __str__(self):
-        return 'Group: "{}"'.format(self.path)
+        return 'Group: "{}"'.format(self.path).encode('utf-8')
 
     def __unicode__(self):
         return self.__str__()
