@@ -21,6 +21,7 @@ Missing Tests:
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 
+
 class EntryFunctionTests(unittest.TestCase):
 
     # get some things ready before testing
@@ -94,6 +95,18 @@ class EntryFunctionTests(unittest.TestCase):
         results = self.kp.find_entries_by_title(unique_str+'title', first=True)
         self.assertIsNone(results)
 
+    # ---------- Entries representation -----------
+
+    def test_print_entries(self):
+        self.assertIsInstance(self.kp.entries.__repr__(), str)
+        print(self.kp.entries)
+
+
+class EntryFunctionTestsUsingKeyFile(EntryFunctionTests):
+
+    def setUp(self):
+        self.kp = pykeepass.PyKeePass(base_dir + '/test_keyfile.kdbx', keyfile='Test_key.key')
+
 
 class GroupFunctionTests(unittest.TestCase):
 
@@ -118,7 +131,7 @@ class GroupFunctionTests(unittest.TestCase):
     def test_groups(self):
         results = self.kp.groups
 
-        self.assertEqual(len(results), 4)
+        self.assertEqual(len(results), 5)
 
     #---------- Adding/Deleting Groups -----------
 
@@ -137,6 +150,13 @@ class GroupFunctionTests(unittest.TestCase):
         results = self.kp.find_groups_by_path(base_group_name + '/' + sub_group_name,
                                               first=True)
         self.assertIsNone(results)
+
+        # ---------- Groups representation -----------
+
+    def test_print_groups(self):
+        self.assertIsInstance(self.kp.groups.__repr__(), str)
+        print(self.kp.groups)
+
 
 class EntryTests(unittest.TestCase):
 
@@ -160,6 +180,7 @@ class EntryTests(unittest.TestCase):
         entry.set_custom_property('foo', 'bar')
         self.assertEqual(entry.get_custom_property('foo'), 'bar')
         self.assertIn('foo', entry.custom_properties)
+
 
 class PyKeePassTests(unittest.TestCase):
     def setUp(self):
