@@ -100,6 +100,11 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertIsInstance(self.kp.entries.__repr__(), str)
         print(self.kp.entries)
 
+    def test_print_entries_non_ascii(self):
+        kp02 = pykeepass.PyKeePass('test02.kdbx', password='123')
+        self.assertIsInstance(kp02.entries.__repr__(), str)
+        print(kp02.entries)
+
 
 class GroupFunctionTests(unittest.TestCase):
 
@@ -149,6 +154,11 @@ class GroupFunctionTests(unittest.TestCase):
     def test_print_groups(self):
         self.assertIsInstance(self.kp.groups.__repr__(), str)
         print(self.kp.groups)
+
+    def test_print_groups_non_ascii(self):
+        kp02 = pykeepass.PyKeePass('test02.kdbx', password='123')
+        self.assertIsInstance(kp02.groups.__repr__(), str)
+        print(kp02.groups)
 
 
 class EntryTests(unittest.TestCase):
