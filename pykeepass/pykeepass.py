@@ -25,10 +25,15 @@ class PyKeePass(object):
     def read(self, filename=None, password=None, keyfile=None):
         if not filename:
             filename = self.kdb_filename
+        credentials = {}
+        if password:
+            credentials['password'] = password
+        if keyfile:
+            credentials['keyfile'] = keyfile
         assert filename, 'Filename should not be empty'
         logger.info('Open file {}'.format(filename))
         return libkeepass.open(
-            filename, password=password, keyfile=keyfile
+            filename, **credentials
         ).__enter__()
 
     def save(self, filename=None):
