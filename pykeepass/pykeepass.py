@@ -129,10 +129,13 @@ class PyKeePass(object):
         return res
 
     # creates a new group and all parent groups, if necessary
-    def add_group(self, destination_group, group_name):
+    def add_group(self, destination_group, group_name, icon=None):
         logger.info('Creating group {}'.format(group_name))
 
-        group = Group(name=group_name)
+        if icon:
+            group = Group(name=group_name, icon=icon)
+        else:
+            group = Group(name=group_name)
         destination_group.append(group)
 
         return group
