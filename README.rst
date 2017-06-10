@@ -164,7 +164,7 @@ Adding Entries
 
 Adding Groups
 --------------
-**add_group** (destination_group, group_name)
+**add_group** (destination_group, group_name, icon=None)
 
 **delete_group** (group)
 
