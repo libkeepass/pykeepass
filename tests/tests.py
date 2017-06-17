@@ -99,7 +99,6 @@ class EntryFunctionTests(unittest.TestCase):
 
     def test_print_entries(self):
         self.assertIsInstance(self.kp.entries.__repr__(), str)
-        print(self.kp.entries)
 
 
 class EntryFunctionTestsUsingKeyFile(EntryFunctionTests):
@@ -155,7 +154,6 @@ class GroupFunctionTests(unittest.TestCase):
 
     def test_print_groups(self):
         self.assertIsInstance(self.kp.groups.__repr__(), str)
-        print(self.kp.groups)
 
 
 class EntryTests(unittest.TestCase):
