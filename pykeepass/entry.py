@@ -33,7 +33,7 @@ class Entry(BaseElement):
             uuid = xmlfactory.create_uuid_element()
             username = xmlfactory.create_username_element(username)
             password = xmlfactory.create_password_element(password)
-            times = xmlfactory.create_times_element(expires, expiration)
+            times = xmlfactory.create_times_element(expires, expiry_time)
             if url:
                 url_el = xmlfactory.create_url_element(url)
                 element.append(url_el)

@@ -1,4 +1,5 @@
 from datetime import datetime
+from dateutil import tz
 from pykeepass import icons
 from pykeepass import pykeepass
 from pykeepass.entry import Entry
@@ -10,13 +11,15 @@ import unittest
 """
 Missing Tests:
 
-- save()
-- read()
 - add entry
-  - update entry - force_creation
-  - update mtime
+  - force_creation
 - root_group
-- Group object tests
+- Group attribute tests
+- Entry attribute tests
+  - ctime - get/set
+  - atime - get/set
+  - mtime - get/set
+  - expiry_time - get/set
 """
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -71,14 +74,16 @@ class EntryFunctionTests(unittest.TestCase):
 
     def test_add_delete_entry(self):
         unique_str = 'test_add_entry_'
+        expiry_time = datetime.now()
         entry = self.kp.add_entry(self.kp.root_group,
                                   unique_str+'title',
                                   unique_str+'user',
                                   unique_str+'pass',
-                                  unique_str+'url',
-                                  unique_str+'notes',
-                                  unique_str+'tags',
-                                  icons.KEY)
+                                  url=unique_str+'url',
+                                  notes=unique_str+'notes',
+                                  tags=unique_str+'tags',
+                                  expiry_time=expiry_time,
+                                  icon=icons.KEY)
         results = self.kp.find_entries_by_title(unique_str+'title')
         self.assertEqual(len(results), 1)
         results = self.kp.find_entries_by_title(unique_str+'title', first=True)
@@ -89,13 +94,15 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertEqual(results.url, unique_str+'url')
         self.assertEqual(results.notes, unique_str+'notes')
         self.assertEqual(results.tags, [unique_str+'tags'])
+        # convert naive datetime to utc
+        expiry_time_utc = expiry_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC'))
         self.assertEqual(results.icon, icons.KEY)
 
         self.kp.delete_entry(entry)
         results = self.kp.find_entries_by_title(unique_str+'title', first=True)
         self.assertIsNone(results)
 
-    #---------- Entries exception -----------
+    #---------- Entries name collision exception -----------
 
     def test_raise_exception_entry(self):
         unique_str = 'test_add_entry_'
@@ -103,10 +110,10 @@ class EntryFunctionTests(unittest.TestCase):
                                   unique_str+'title',
                                   unique_str+'user',
                                   unique_str+'pass',
-                                  unique_str+'url',
-                                  unique_str+'notes',
-                                  unique_str+'tags',
-                                  icons.KEY)
+                                  url=unique_str+'url',
+                                  notes=unique_str+'notes',
+                                  tags=unique_str+'tags',
+                                  icon=icons.KEY)
         self.assertRaises(Exception, entry)
 
     # ---------- Entries representation -----------
@@ -167,9 +174,15 @@ class EntryTests(unittest.TestCase):
 
     def test_fields(self):
         time = datetime.now()
-        entry = Entry('title', 'username', 'password',
-                    'url', 'notes', 'tags',
-                    True, time, icons.KEY)
+        entry = Entry('title',
+                      'username',
+                      'password',
+                      url='url',
+                      notes='notes',
+                      tags='tags',
+                      expires=True,
+                      expiry_time=time,
+                      icon=icons.KEY)
 
         self.assertEqual(entry.title, 'title')
         self.assertEqual(entry.username, 'username')
@@ -177,9 +190,8 @@ class EntryTests(unittest.TestCase):
         self.assertEqual(entry.url, 'url')
         self.assertEqual(entry.notes, 'notes')
         self.assertEqual(entry.expires, True)
-        # convert `time` to utc (sans microseconds) before test
         self.assertEqual(entry.expiry_time,
-                         (time + (datetime.utcnow() - datetime.now())).replace(microsecond=0))
+                         time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
         self.assertEqual(entry.is_a_history_entry, False)
 
         entry.set_custom_property('foo', 'bar')

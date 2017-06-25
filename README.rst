@@ -43,8 +43,6 @@ Simple Example
 Finding Entries
 ----------------------
 
-The supported find commands are listed below
-
 **find_entries_by_title** (title, regex=False, tree=None, history=False, first=False)
 
 **find_entries_by_username** (username, regex=False, tree=None, history=False, first=False)
@@ -137,10 +135,13 @@ a flattened list of all groups in the database
 
 Adding Entries
 --------------
-**add_entry** (destination_group, title, username, password, url=None, notes=None, tags=None, icon=None, force_creation=False)
+**add_entry** (destination_group, title, username, password, url=None, notes=None, tags=None, expiry_time=None, icon=None, force_creation=False)
 
 **delete_entry** (entry)
-``destination_group`` is a ``Group`` instance.  ``entry`` is an ``Entry`` instance. ``title``, ``username``, ``password``, ``url``, ``notes``, ``tags``, ``icon`` are strings.
+
+where ``destination_group`` is a ``Group`` instance.  ``entry`` is an ``Entry`` instance. ``title``, ``username``, ``password``, ``url``, ``notes``, ``tags``, ``icon`` are strings. ``expiry_time`` is a ``datetime`` instance.
+
+If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is not set), the timezone is retrieved from ``dateutil.tz.gettz()``.
 
 .. code:: python
 
