@@ -267,7 +267,9 @@ class Entry(BaseElement):
         self._element.getparent().remove(self._element)
 
     def __str__(self):
-        return str('Entry: "{}"'.format(self.path).encode('utf-8'))
+        return str(
+            'Entry: "{} ({})"'.format(self.path, self.username).encode('utf-8')
+        )
 
     def __unicode__(self):
         return self.__str__()
