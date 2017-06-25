@@ -7,7 +7,8 @@ from lxml.objectify import ObjectifiedElement
 import logging
 import pykeepass.xmlfactory as xmlfactory
 import pykeepass.group
-
+from datetime import datetime
+import dateutil.parser, dateutil.tz as tz
 
 logger = logging.getLogger(__name__)
 reserved_keys = [
@@ -25,7 +26,7 @@ reserved_keys = [
 class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
-                 notes=None, tags=None, expires=False, expiration=None,
+                 notes=None, tags=None, expires=False, expiry_time=None,
                  icon=None, element=None):
         if element is None:
             element = Element('Entry')
@@ -146,6 +147,13 @@ class Entry(BaseElement):
             prop = times.find(prop)
             if prop is not None:
                 return prop.text
+
+    def __set_times_property(self, prop, value):
+        times = self._element.find('Times')
+        if times is not None:
+            prop = times.find(prop)
+            if prop is not None:
+                prop._setText(value)
 
     @property
     def expires(self):
@@ -271,9 +279,9 @@ class Entry(BaseElement):
         '''
         Update last access time of an entry
         '''
-        self._element.Times.LastAccessTime = xmlfactory._dateformat()
+        self._element.Times.LastAccessTime = datetime.utcnow()
         if modify:
-            self._element.Times.LastModificationTime = xmlfactory._dateformat()
+            self._element.Times.LastModificationTime = datetime.utcnow()
 
     def save_history(self):
         '''
