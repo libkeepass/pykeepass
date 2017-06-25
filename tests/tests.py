@@ -1,11 +1,11 @@
-import unittest
-from pykeepass import pykeepass
-from pykeepass import icons
-import shutil
-import os
-from pykeepass.group import Group
-from pykeepass.entry import Entry
 from datetime import datetime
+from pykeepass import icons
+from pykeepass import pykeepass
+from pykeepass.entry import Entry
+from pykeepass.group import Group
+import os
+import shutil
+import unittest
 
 """
 Missing Tests:
