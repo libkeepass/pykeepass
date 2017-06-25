@@ -26,7 +26,7 @@ class EntryFunctionTests(unittest.TestCase):
 
     # get some things ready before testing
     def setUp(self):
-        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd')
+        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
 
     #---------- Finding entries -----------
 
@@ -99,20 +99,12 @@ class EntryFunctionTests(unittest.TestCase):
 
     def test_print_entries(self):
         self.assertIsInstance(self.kp.entries.__repr__(), str)
-        print(self.kp.entries)
-
-
-class EntryFunctionTestsUsingKeyFile(EntryFunctionTests):
-
-    def setUp(self):
-        self.kp = pykeepass.PyKeePass(base_dir + '/test_keyfile.kdbx', keyfile='Test_key.key')
-
 
 class GroupFunctionTests(unittest.TestCase):
 
     # get some things ready before testing
     def setUp(self):
-        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd')
+        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
 
     #---------- Finding groups -----------
 
@@ -155,7 +147,6 @@ class GroupFunctionTests(unittest.TestCase):
 
     def test_print_groups(self):
         self.assertIsInstance(self.kp.groups.__repr__(), str)
-        print(self.kp.groups)
 
 
 class EntryTests(unittest.TestCase):
@@ -185,13 +176,13 @@ class EntryTests(unittest.TestCase):
 class PyKeePassTests(unittest.TestCase):
     def setUp(self):
         shutil.copy(base_dir + '/test.kdbx', base_dir + '/change_pass.kdbx')
-        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd')
-        self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_pass.kdbx', password='passw0rd')
+        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
+        self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_pass.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
 
     def test_set_password(self):
         self.kp_pass.set_password('f00bar')
         self.kp_pass.save()
-        self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_pass.kdbx', password='f00bar')
+        self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_pass.kdbx', password='f00bar', keyfile=base_dir + '/test.key')
 
         results = self.kp.find_entries_by_username('foobar_user', first=True)
         self.assertEqual('foobar_user', results.username)
