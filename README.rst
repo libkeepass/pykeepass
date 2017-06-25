@@ -118,7 +118,7 @@ a flattened list of all groups in the database
 
    >>> kp.groups
    [Group: "foo", Group "foobar", Group: "social", Group: "social/foo_subgroup"]
-       
+
    >>> kp.find_groups_by_name('foo', first=True)
    Group: "foo"
 
@@ -152,13 +152,13 @@ Adding Entries
    >>> group = find_groups_by_name('social', first=True)
    >>> entry = kp.add_entry(group, 'testing', 'foo_user', 'passw0rd')
    Entry: "testing"
-   
+
    # save the database
    >>> kp.save()
-   
+
    # delete an entry
    >>> kp.delete_entry(entry)
-   
+
    # save the database
    >>> kp.save()
 
@@ -178,16 +178,16 @@ Adding Groups
    # add a new group to the social group
    >>> kp.add_group(group, 'gmail')
    Group: "social/gmail"
-   
+
    # save the database
    >>> kp.save()
-   
+
    # delete a group
    >>> kp.delete_group(group)
-   
+
    # save the database
    >>> kp.save()
-       
+
 Miscellaneous
 -------------
 **read** (filename, password=None, keyfile=None)
