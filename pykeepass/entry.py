@@ -154,28 +154,53 @@ class Entry(BaseElement):
             return d == 'True'
 
     @property
+    def expired(self):
+        return self.expires and (datetime.utcnow() > self.expiry_time)
+
+
+    @property
     def expiry_time(self):
         d = self.__get_times_property('ExpiryTime')
         if d is not None:
-            return xmlfactory._date_from_str(d)
+            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
+
+    @expiry_time.setter
+    def expiry_time(self, value):
+        self.__set_times_property('ExpiryTime',
+                                  xmlfactory.datetime_to_utc(value).isoformat())
 
     @property
     def ctime(self):
         d = self.__get_times_property('CreationTime')
         if d is not None:
-            return xmlfactory._date_from_str(d)
+            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
+
+    @ctime.setter
+    def ctime(self, value):
+        self.__set_times_property('LastAccessTime',
+                                  xmlfactory.datetime_to_utc(value).isoformat())
 
     @property
     def atime(self):
         d = self.__get_times_property('LastAccessTime')
         if d is not None:
-            return xmlfactory._date_from_str(d)
+            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
+
+    @atime.setter
+    def atime(self, value):
+        self.__set_times_property('LastAccessTime',
+                                  xmlfactory.datetime_to_utc(value).isoformat())
 
     @property
     def mtime(self):
         d = self.__get_times_property('LastModificationTime')
         if d is not None:
-            return xmlfactory._date_from_str(d)
+            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
+
+    @mtime.setter
+    def mtime(self, value):
+        self.__set_times_property('LastModificationTime',
+                                  xmlfactory.datetime_to_utc(value).isoformat())
 
     @property
     def history(self):
