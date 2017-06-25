@@ -156,12 +156,22 @@ class PyKeePass(object):
                 key, value
             )
         res = self.__xpath(tree=tree, xpath_str=xp)
-        if history == False:
+        if history is False:
             res = [item for item in res if not item.is_a_history_entry]
 
         # return first object in list or None
         if first:
             res = res[0] if res else None
+
+        return res
+
+    def __find_exact_entry(self, title, username, tree=None, history=False):
+        xp = ('.//Entry/String/Key[text()="Title"]/../Value[text()="{}"]'
+              '/../../String/Key[text()="UserName"]/../Value[text()="{}"]/../..').format(
+            title, username)
+        res = self.__xpath(tree=tree, xpath_str=xp)
+        if history is False:
+            res = [item for item in res if not item.is_a_history_entry]
 
         return res
 
@@ -247,32 +257,18 @@ class PyKeePass(object):
                   password, url=None, notes=None,
                   tags=None, icon=None, force_creation=False):
 
-        entries = self.find_entries_by_title(
-            tree=destination_group._element,
+        entries = self.__find_exact_entry(
             title=title,
+            username=username,
+            tree=destination_group._element,
         )
+
         if entries and not force_creation:
-            logger.warning(
-                'An entry "{}" already exists in "{}". Updating it.'.format(
+            raise Exception(
+                'An entry "{}" already exists in "{}"'.format(
                     title, destination_group
                 )
             )
-            entry = entries[0]
-            entry.save_history()
-            entry.title = title
-            entry.username = username
-            entry.password = password
-            entry.url = url
-            if notes:
-                entry.notes = notes
-            if url:
-                entry.url = url
-            if icon:
-                entry.icon = icon
-            if tags:
-                entry.tags = tags
-            # Update mtime
-            entry.touch(modify=True)
         else:
             logger.info('Creating a new entry')
             entry = Entry(

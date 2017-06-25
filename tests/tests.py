@@ -95,6 +95,20 @@ class EntryFunctionTests(unittest.TestCase):
         results = self.kp.find_entries_by_title(unique_str+'title', first=True)
         self.assertIsNone(results)
 
+    #---------- Entries exception -----------
+
+    def test_raise_exception_entry(self):
+        unique_str = 'test_add_entry_'
+        entry = self.kp.add_entry(self.kp.root_group,
+                                  unique_str+'title',
+                                  unique_str+'user',
+                                  unique_str+'pass',
+                                  unique_str+'url',
+                                  unique_str+'notes',
+                                  unique_str+'tags',
+                                  icons.KEY)
+        self.assertRaises(Exception, entry)
+
     # ---------- Entries representation -----------
 
     def test_print_entries(self):
