@@ -201,3 +201,8 @@ where ``filename`` is the path of the file to save to.  If ``filename`` is not g
 **set_password** (password)
 
 set a master password on the database.  ``password`` is a string.
+
+Tests
+-------------
+
+To run them issue `$ python -m unittest tests.tests`
