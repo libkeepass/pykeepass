@@ -205,4 +205,4 @@ set a master password on the database.  ``password`` is a string.
 Tests
 -------------
 
-To run them issue `$ python -m unittest tests.tests`
+To run them issue :code:`$ python -m unittest tests.tests`
