@@ -254,7 +254,7 @@ class PyKeePass(object):
         return res
 
     def add_entry(self, destination_group, title, username,
-                  password, url=None, notes=None,
+                  password, url=None, notes=None, expiry_time=None,
                   tags=None, icon=None, force_creation=False):
 
         entries = self.__find_exact_entry(
@@ -278,6 +278,8 @@ class PyKeePass(object):
                 notes=notes,
                 url=url,
                 tags=tags,
+                expires=True if expiry_time else False,
+                expiry_time=expiry_time,
                 icon=icon
             )
             destination_group.append(entry)

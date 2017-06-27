@@ -12,7 +12,7 @@ setup(
     author_email='philipp@schmitt.co',
     url='https://github.com/pschmitt/pykeepass',
     packages=find_packages(),
-    install_requires=['libkeepass', 'easypysmb'],
+    install_requires=['libkeepass', 'easypysmb', 'python-dateutil'],
     entry_points={
         'console_scripts': ['pkpwrite=pykeepass.pkpwrite:main']
     }

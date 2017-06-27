@@ -7,7 +7,8 @@ from lxml.objectify import ObjectifiedElement
 import logging
 import pykeepass.xmlfactory as xmlfactory
 import pykeepass.group
-
+from datetime import datetime
+import dateutil.parser, dateutil.tz as tz
 
 logger = logging.getLogger(__name__)
 reserved_keys = [
@@ -25,7 +26,7 @@ reserved_keys = [
 class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
-                 notes=None, tags=None, expires=False, expiration=None,
+                 notes=None, tags=None, expires=False, expiry_time=None,
                  icon=None, element=None):
         if element is None:
             element = Element('Entry')
@@ -33,7 +34,7 @@ class Entry(BaseElement):
             uuid = xmlfactory.create_uuid_element()
             username = xmlfactory.create_username_element(username)
             password = xmlfactory.create_password_element(password)
-            times = xmlfactory.create_times_element(expires, expiration)
+            times = xmlfactory.create_times_element(expires, expiry_time)
             if url:
                 url_el = xmlfactory.create_url_element(url)
                 element.append(url_el)
@@ -147,6 +148,13 @@ class Entry(BaseElement):
             if prop is not None:
                 return prop.text
 
+    def __set_times_property(self, prop, value):
+        times = self._element.find('Times')
+        if times is not None:
+            prop = times.find(prop)
+            if prop is not None:
+                prop._setText(value)
+
     @property
     def expires(self):
         d = self.__get_times_property('Expires')
@@ -154,28 +162,53 @@ class Entry(BaseElement):
             return d == 'True'
 
     @property
+    def expired(self):
+        return self.expires and (datetime.utcnow() > self.expiry_time)
+
+
+    @property
     def expiry_time(self):
         d = self.__get_times_property('ExpiryTime')
         if d is not None:
-            return xmlfactory._date_from_str(d)
+            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
+
+    @expiry_time.setter
+    def expiry_time(self, value):
+        self.__set_times_property('ExpiryTime',
+                                  xmlfactory.datetime_to_utc(value).isoformat())
 
     @property
     def ctime(self):
         d = self.__get_times_property('CreationTime')
         if d is not None:
-            return xmlfactory._date_from_str(d)
+            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
+
+    @ctime.setter
+    def ctime(self, value):
+        self.__set_times_property('LastAccessTime',
+                                  xmlfactory.datetime_to_utc(value).isoformat())
 
     @property
     def atime(self):
         d = self.__get_times_property('LastAccessTime')
         if d is not None:
-            return xmlfactory._date_from_str(d)
+            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
+
+    @atime.setter
+    def atime(self, value):
+        self.__set_times_property('LastAccessTime',
+                                  xmlfactory.datetime_to_utc(value).isoformat())
 
     @property
     def mtime(self):
         d = self.__get_times_property('LastModificationTime')
         if d is not None:
-            return xmlfactory._date_from_str(d)
+            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
+
+    @mtime.setter
+    def mtime(self, value):
+        self.__set_times_property('LastModificationTime',
+                                  xmlfactory.datetime_to_utc(value).isoformat())
 
     @property
     def history(self):
@@ -246,9 +279,9 @@ class Entry(BaseElement):
         '''
         Update last access time of an entry
         '''
-        self._element.Times.LastAccessTime = xmlfactory._dateformat()
+        self._element.Times.LastAccessTime = datetime.utcnow()
         if modify:
-            self._element.Times.LastModificationTime = xmlfactory._dateformat()
+            self._element.Times.LastModificationTime = datetime.utcnow()
 
     def save_history(self):
         '''

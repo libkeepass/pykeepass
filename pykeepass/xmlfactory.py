@@ -1,4 +1,5 @@
 from datetime import datetime
+import dateutil.parser, dateutil.tz as tz
 from lxml.etree import Element
 import base64
 import uuid
@@ -55,8 +56,12 @@ def create_notes_element(notes):
 
 
 def create_times_element(expires=False, expiry_time=None):
-    now_str = _dateformat()
-    expiry_time_str = _dateformat(expiry_time)
+    now_str = datetime.utcnow().isoformat()
+    if expiry_time:
+        # add timezone info if it doesnt exist
+        expiry_time_str = datetime_to_utc(expiry_time).isoformat()
+    else:
+        expiry_time_str = datetime.utcnow().isoformat()
 
     times_el = Element('Times')
     ctime_el = Element('CreationTime')
@@ -116,17 +121,9 @@ def _create_string_element(key, value):
     string.append(value_el)
     return string
 
-
-def _date_from_str(date):
-    dformat = '%Y-%m-%dT%H:%M:%SZ'
-    return datetime.strptime(date, dformat)
-
-def _dateformat(time=None):
-    dformat = '%Y-%m-%dT%H:%M:%SZ'
-    if not time:
-        time = datetime.utcnow()
-    else:
-        # Convert local datetime to utc
-        UTC_OFFSET_TIMEDELTA = datetime.utcnow() - datetime.now()
-        time = time + UTC_OFFSET_TIMEDELTA
-    return datetime.strftime(time, format=dformat)
+# convert naive datetimes to utc
+# use current timezone if timezone not set
+def datetime_to_utc(dt):
+    if not dt.tzinfo:
+        dt = dt.replace(tzinfo=tz.gettz())
+    return dt.astimezone(tz.gettz('UTC'))
