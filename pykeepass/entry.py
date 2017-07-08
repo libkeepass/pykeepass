@@ -61,12 +61,12 @@ class Entry(BaseElement):
 
         self._element = element
 
-    def __get_string_field(self, key):
+    def _get_string_field(self, key):
         results = self._element.xpath('String/Key[text()="{}"]/../Value'.format(key))
         if results:
             return results[0].text
 
-    def __set_string_field(self, key, value):
+    def _set_string_field(self, key, value):
         results = self._element.xpath('String/Key[text()="{}"]/..'.format(key))
         if results:
             results[0].Value = value
@@ -75,7 +75,7 @@ class Entry(BaseElement):
             el = xmlfactory._create_string_element(key, value)
             self._element.append(el)
 
-    def __get_string_field_keys(self, exclude_reserved=False):
+    def _get_string_field_keys(self, exclude_reserved=False):
         results = [x.find('Key').text for x in self._element.findall('String')]
         if exclude_reserved:
             return [x for x in results if x not in reserved_keys]
@@ -84,43 +84,43 @@ class Entry(BaseElement):
 
     @property
     def title(self):
-        return self.__get_string_field('Title')
+        return self._get_string_field('Title')
 
     @title.setter
     def title(self, value):
-        return self.__set_string_field('Title', value)
+        return self._set_string_field('Title', value)
 
     @property
     def username(self):
-        return self.__get_string_field('UserName')
+        return self._get_string_field('UserName')
 
     @username.setter
     def username(self, value):
-        return self.__set_string_field('UserName', value)
+        return self._set_string_field('UserName', value)
 
     @property
     def password(self):
-        return self.__get_string_field('Password')
+        return self._get_string_field('Password')
 
     @password.setter
     def password(self, value):
-        return self.__set_string_field('Password', value)
+        return self._set_string_field('Password', value)
 
     @property
     def url(self):
-        return self.__get_string_field('URL')
+        return self._get_string_field('URL')
 
     @url.setter
     def url(self, value):
-        return self.__set_string_field('URL', value)
+        return self._set_string_field('URL', value)
 
     @property
     def notes(self):
-        return self.__get_string_field('Notes')
+        return self._get_string_field('Notes')
 
     @notes.setter
     def notes(self, value):
-        return self.__set_string_field('Notes', value)
+        return self._set_string_field('Notes', value)
 
     @property
     def icon(self):
@@ -141,14 +141,14 @@ class Entry(BaseElement):
         v = ';'.join(value if type(value) is list else [value])
         return self._set_subelement_text('Tags', v)
 
-    def __get_times_property(self, prop):
+    def _get_times_property(self, prop):
         times = self._element.find('Times')
         if times is not None:
             prop = times.find(prop)
             if prop is not None:
                 return prop.text
 
-    def __set_times_property(self, prop, value):
+    def _set_times_property(self, prop, value):
         times = self._element.find('Times')
         if times is not None:
             prop = times.find(prop)
@@ -157,7 +157,7 @@ class Entry(BaseElement):
 
     @property
     def expires(self):
-        d = self.__get_times_property('Expires')
+        d = self._get_times_property('Expires')
         if d is not None:
             return d == 'True'
 
@@ -168,46 +168,46 @@ class Entry(BaseElement):
 
     @property
     def expiry_time(self):
-        d = self.__get_times_property('ExpiryTime')
+        d = self._get_times_property('ExpiryTime')
         if d is not None:
             return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
 
     @expiry_time.setter
     def expiry_time(self, value):
-        self.__set_times_property('ExpiryTime',
+        self._set_times_property('ExpiryTime',
                                   xmlfactory.datetime_to_utc(value).isoformat())
 
     @property
     def ctime(self):
-        d = self.__get_times_property('CreationTime')
+        d = self._get_times_property('CreationTime')
         if d is not None:
             return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
 
     @ctime.setter
     def ctime(self, value):
-        self.__set_times_property('LastAccessTime',
+        self._set_times_property('LastAccessTime',
                                   xmlfactory.datetime_to_utc(value).isoformat())
 
     @property
     def atime(self):
-        d = self.__get_times_property('LastAccessTime')
+        d = self._get_times_property('LastAccessTime')
         if d is not None:
             return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
 
     @atime.setter
     def atime(self, value):
-        self.__set_times_property('LastAccessTime',
+        self._set_times_property('LastAccessTime',
                                   xmlfactory.datetime_to_utc(value).isoformat())
 
     @property
     def mtime(self):
-        d = self.__get_times_property('LastModificationTime')
+        d = self._get_times_property('LastModificationTime')
         if d is not None:
             return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
 
     @mtime.setter
     def mtime(self, value):
-        self.__set_times_property('LastModificationTime',
+        self._set_times_property('LastModificationTime',
                                   xmlfactory.datetime_to_utc(value).isoformat())
 
     @property
@@ -253,14 +253,14 @@ class Entry(BaseElement):
 
     def set_custom_property(self, key, value):
         assert key not in reserved_keys, '{} is a reserved key'.format(key)
-        return self.__set_string_field(key, value)
+        return self._set_string_field(key, value)
 
     def get_custom_property(self, key):
         assert key not in reserved_keys, '{} is a reserved key'.format(key)
-        return self.__get_string_field(key)
+        return self._get_string_field(key)
 
     def delete_custom_property(self, key):
-        if key not in self.__get_string_field_keys(exclude_reserved=True):
+        if key not in self._get_string_field_keys(exclude_reserved=True):
             raise AttributeError('No such key: {}'.format(key))
         prop = self._element.xpath('String/Key[text()="{}"]/..'.format(key))
         if len(prop) < 1:
@@ -269,10 +269,10 @@ class Entry(BaseElement):
 
     @property
     def custom_properties(self):
-        keys = self.__get_string_field_keys(exclude_reserved=True)
+        keys = self._get_string_field_keys(exclude_reserved=True)
         props = {}
         for k in keys:
-            props[k] = self.__get_string_field(k)
+            props[k] = self._get_string_field(k)
         return props
 
     def touch(self, modify=False):
