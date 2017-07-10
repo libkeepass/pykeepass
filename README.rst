@@ -43,21 +43,23 @@ Simple Example
 Finding Entries
 ----------------------
 
-**find_entries_by_title** (title, regex=False, tree=None, history=False, first=False)
+**find_entries_by_title** (title, regex=False, flags=None, tree=None, history=False, first=False)
 
-**find_entries_by_username** (username, regex=False, tree=None, history=False, first=False)
+**find_entries_by_username** (username, regex=False, flags=None, tree=None, history=False, first=False)
 
-**find_entries_by_password** (password, regex=False, tree=None, history=False, first=False)
+**find_entries_by_password** (password, regex=False, flags=None, tree=None, history=False, first=False)
 
-**find_entries_by_url** (url, regex=False, tree=None, history=False, first=False)
+**find_entries_by_url** (url, regex=False, flags=None, tree=None, history=False, first=False)
 
-**find_entries_by_notes** (notes, regex=False, tree=None, history=False, first=False)
+**find_entries_by_notes** (notes, regex=False, flags=None, tree=None, history=False, first=False)
 
-**find_entries_by_path** (path, regex=False, tree=None, history=False, first=False)
+**find_entries_by_path** (path, regex=False, flags=None, tree=None, history=False, first=False)
 
-where ``title``, ``username``, ``password``, ``url``, ``notes`` and ``path`` are strings.  These functions have an optional ``regex`` boolean argument which means to interpret the string as an `XSLT style`_ regular expression.
+where ``title``, ``username``, ``password``, ``url``, ``notes`` and ``path`` are strings.  These functions have optional ``regex`` boolean and ``flags`` string arguments, which means to interpret the string as an `XSLT style`_ regular expression with `flags`_.
+
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
+.. _optional flags: https://www.w3.org/TR/xpath-functions/#flags 
 
 The ``history`` (default ``False``) boolean controls whether history entries should be included in the search results.
 
@@ -91,13 +93,14 @@ a flattened list of all entries in the database
 Finding Groups
 ----------------------
 
-**find_groups_by_name** (name, tree=None, regex=False, first=False)
+**find_groups_by_name** (name, tree=None, regex=False, flags=None, first=False)
 
-**find_groups_by_path** (path, tree=None, regex=False, first=False)
+**find_groups_by_path** (path, tree=None, regex=False, flags=None, first=False)
 
-where ``name`` and ``path`` are strings.  These functions have an optional ``regex`` boolean argument which means to interpret the string as an `XSLT style`_ regular expression.
+where ``name`` and ``path`` are strings.  These functions have optional ``regex`` boolean and ``flags`` string arguments, which means to interpret the string as an `XSLT style`_ regular expression with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
+.. _optional flags: https://www.w3.org/TR/xpath-functions/#flags 
 
 The ``first`` (default ``False``) boolean controls whether to return the first matched item, or a list of matched items.
 

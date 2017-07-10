@@ -36,19 +36,19 @@ class EntryFunctionTests(unittest.TestCase):
     def test_find_entries_by_title(self):
         results = self.kp.find_entries_by_title('root_entry')
         self.assertEqual(len(results), 1)
-        results = self.kp.find_entries_by_title('root_entry', first=True)
+        results = self.kp.find_entries_by_title('Root_entry', regex=True, flags='i', first=True)
         self.assertEqual('root_entry', results.title)
 
     def test_find_entries_by_username(self):
         results = self.kp.find_entries_by_username('foobar_user')
         self.assertEqual(len(results), 2)
-        results = self.kp.find_entries_by_username('foobar_user', first=True)
+        results = self.kp.find_entries_by_username('Foobar_user', regex=True, flags='i', first=True)
         self.assertEqual('foobar_user', results.username)
 
     def test_find_entries_by_password(self):
         results = self.kp.find_entries_by_password('passw0rd')
         self.assertEqual(len(results), 2)
-        results = self.kp.find_entries_by_password('passw0rd', first=True)
+        results = self.kp.find_entries_by_password('Passw0rd', regex=True, flags='i', first=True)
         self.assertEqual('passw0rd', results.password)
 
     def test_find_entries_by_url(self):
@@ -60,15 +60,22 @@ class EntryFunctionTests(unittest.TestCase):
     def test_find_entries_by_notes(self):
         results = self.kp.find_entries_by_notes('entry notes')
         self.assertEqual(len(results), 2)
-        results = self.kp.find_entries_by_notes('entry notes', first=True)
+        results = self.kp.find_entries_by_notes('Entry notes', regex=True, flags='i', first=True)
         self.assertEqual('entry notes', results.notes)
 
     def test_find_entries_by_path(self):
         results = self.kp.find_entries_by_path('foobar_group/group_entry')
         self.assertEqual(len(results), 1)
-        results = self.kp.find_entries_by_path('foobar_group/group_entry', first=True)
+        results = self.kp.find_entries_by_path('foobar_group/Group_entry', regex=True, flags='i', first=True)
         self.assertIsInstance(results, Entry)
         self.assertEqual('group_entry', results.title)
+
+    def test_find_entry_by(self):
+        results = self.kp._find_entry_by('Title', 'Root_entry', regex=True)
+        self.assertEqual(len(results), 0)
+        results = self.kp._find_entry_by('Title', 'Root_entry', regex=True, flags='i', first=True)
+        self.assertEqual('root_entry', results.title)
+
 
     #---------- Adding/Deleting entries -----------
 

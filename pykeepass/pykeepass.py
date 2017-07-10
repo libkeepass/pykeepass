@@ -91,10 +91,10 @@ class PyKeePass(object):
 
     #---------- Groups ----------
 
-    def find_groups_by_name(self, group_name, regex=False, tree=None,
-                            first=False):
+    def find_groups_by_name(self, group_name, regex=False, flags=None,
+                            tree=None, first=False):
         if regex:
-            xp = './/Group/Name[re:test(text(), "{}")]/..'.format(group_name)
+            xp = './/Group/Name[re:match(text(), "{}", "{}")]/..'.format(group_name, flags)
         else:
             xp = './/Group/Name[text()="{}"]/..'.format(group_name)
 
@@ -105,8 +105,8 @@ class PyKeePass(object):
 
         return res
 
-    def find_groups_by_path(self, group_path_str=None, regex=False, tree=None,
-                            first=False):
+    def find_groups_by_path(self, group_path_str=None, regex=False, flags=None,
+                            tree=None, first=False):
         logger.info('Looking for group {}'.format(
             group_path_str if group_path_str else 'Root'))
         xp = '/KeePassFile/Root/Group'
@@ -118,7 +118,7 @@ class PyKeePass(object):
         if group_path_str:
             for s in group_path_str.split('/'):
                 if regex:
-                    xp += '/Group/Name[re:test(text(), "{}")]/..'.format(s)
+                    xp += '/Group/Name[re:match(text(), "{}", "{}")]/..'.format(s, flags)
                 else:
                     xp += '/Group/Name[text()="{}"]/..'.format(s)
         res = self._xpath(xp, tree=tree)
@@ -145,11 +145,11 @@ class PyKeePass(object):
 
     #---------- Entries ----------
 
-    def _find_entry_by(self, key, value, regex=False, tree=None,
-                        history=False, first=False):
+    def _find_entry_by(self, key, value, regex=False, flags=None,
+                       tree=None, history=False, first=False):
         if regex:
-            xp = './/Entry/String/Key[text()="{}"]/../Value[re:test(text(), "{}")]/../..'.format(
-                key, value
+            xp = './/Entry/String/Key[text()="{}"]/../Value[re:match(text(), "{}", "{}")]/../..'.format(
+                key, value, flags
             )
         else:
             xp = './/Entry/String/Key[text()="{}"]/../Value[text()="{}"]/../..'.format(
@@ -175,73 +175,83 @@ class PyKeePass(object):
 
         return res
 
-    def find_entries_by_title(self, title, regex=False, tree=None,
-                              history=False, first=False):
+    def find_entries_by_title(self, title, regex=False, flags=None,
+                              tree=None, history=False, first=False):
         return self._find_entry_by(
             key='Title',
             value=title,
             regex=regex,
+            flags=flags,
             tree=tree,
             history=history,
             first=first
         )
 
-    def find_entries_by_username(self, username, regex=False, tree=None,
-                                 history=False, first=False):
+    def find_entries_by_username(self, username, regex=False, flags=None,
+                                 tree=None, history=False, first=False):
         return self._find_entry_by(
             key='UserName',
             value=username,
             regex=regex,
+            flags=flags,
             tree=tree,
             history=history,
             first=first
         )
 
-    def find_entries_by_password(self, password, regex=False, tree=None,
-                                 history=False, first=False):
+    def find_entries_by_password(self, password, regex=False, flags=None,
+                                 tree=None, history=False, first=False):
         return self._find_entry_by(
             key='Password',
             value=password,
             regex=regex,
+            flags=flags,
             tree=tree,
             history=history,
             first=first
         )
 
-    def find_entries_by_url(self, url, regex=False, tree=None, history=False,
-                            first=False):
+    def find_entries_by_url(self, url, regex=False, flags=None,
+                            tree=None, history=False, first=False):
         return self._find_entry_by(
             key='URL',
             value=url,
             regex=regex,
+            flags=flags,
             tree=tree,
             history=history,
             first=first
         )
 
-    def find_entries_by_notes(self, notes, regex=False, tree=None, history=False,
-                              first=False):
+    def find_entries_by_notes(self, notes, regex=False, flags=None,
+                              tree=None, history=False, first=False):
         return self._find_entry_by(
             key='Notes',
             value=notes,
             regex=regex,
+            flags=flags,
             tree=tree,
             history=history,
             first=first
         )
 
-    def find_entries_by_path(self, path, regex=False, tree=None, history=False,
-                             first=False):
+    def find_entries_by_path(self, path, regex=False, flags=None,
+                             tree=None, history=False, first=False):
+        ##FIXME we should adapt this function to use _xpath instead of using
+        #  find_group_by_path and then iterating with ugly regex code
         entry_title = os.path.basename(path)
         group_path = os.path.dirname(path)
         group = self.find_groups_by_path(group_path,
                                          tree=tree,
                                          regex=regex,
+                                         flags=flags,
                                          first=True)
 
         if group is not None:
             if regex:
-                res = [x for x in group.entries if re.match(entry_title, x.title)]
+                res = [x for x in group.entries
+                       if re.match(('(?{})'.format(flags) if flags else None) + entry_title,
+                                   x.title)]
             else:
                 res = [x for x in group.entries if x.title == entry_title]
         else:
