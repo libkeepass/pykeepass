@@ -17,7 +17,7 @@ Simple Example
 
    # get the entries in a group
    >>> group.entries
-   [Entry: "social/facebook", Entry: "social/twitter"]
+   [Entry: "social/facebook (myusername)", Entry: "social/twitter (myusername)"]
 
    # find any entry by its title
    >>> entry = kp.find_entries_by_title('facebook', first=True)
@@ -34,7 +34,7 @@ Simple Example
 
    # create a new entry
    >>> kp.add_entry(group, 'gmail', 'myusername', 'myPassw0rdXX')
-   Entry: "email/gmail"
+   Entry: "email/gmail (myusername)"
 
    # save database
    >>> kp.save()
@@ -75,20 +75,20 @@ a flattened list of all entries in the database
 .. code:: python
 
    >>> kp.entries
-   [Entry: "foo_entry", Entry: "foobar_entry", Entry: "social/gmail", Entry: "social/facebook"]
+   [Entry: "foo_entry (myusername)", Entry: "foobar_entry (myusername)", Entry: "social/gmail (myusername)", Entry: "social/facebook (myusername)"]
 
    >>> kp.find_entries_by_name('gmail', first=True)
-   Entry: "social/gmail"
+   Entry: "social/gmail (myusername)"
 
    >>> kp.find_entries_by_name('foo.*', regex=True)
-   [Entry: "foo_entry", Entry: "foobar_entry"]
+   [Entry: "foo_entry (myusername)", Entry: "foobar_entry (myusername)"]
 
    >>> entry = kp.find_entries_by_url('.*facebook.*', regex=True, first=True)
    >>> entry.url
    'facebook.com'
 
    >>> kp.find_groups_by_name('social', first=True).entries
-   [Entry: "social/gmail", Entry: "social/facebook"]
+   [Entry: "social/gmail (myusername)", Entry: "social/facebook (myusername)"]
 
 Finding Groups
 ----------------------
@@ -150,12 +150,12 @@ If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is no
 
    # add a new entry to the Root group
    >>> kp.add_entry(kp.root_group, 'testing', 'foo_user', 'passw0rd')
-   Entry: "testing"
+   Entry: "testing (foo_user)"
 
    # add a new entry to the social group
    >>> group = find_groups_by_name('social', first=True)
    >>> entry = kp.add_entry(group, 'testing', 'foo_user', 'passw0rd')
-   Entry: "testing"
+   Entry: "testing (foo_user)"
 
    # save the database
    >>> kp.save()
