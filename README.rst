@@ -59,7 +59,7 @@ where ``title``, ``username``, ``password``, ``url``, ``notes`` and ``path`` are
 
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
-.. _optional flags: https://www.w3.org/TR/xpath-functions/#flags 
+.. _flags: https://www.w3.org/TR/xpath-functions/#flags 
 
 The ``history`` (default ``False``) boolean controls whether history entries should be included in the search results.
 
@@ -100,7 +100,7 @@ Finding Groups
 where ``name`` and ``path`` are strings.  These functions have optional ``regex`` boolean and ``flags`` string arguments, which means to interpret the string as an `XSLT style`_ regular expression with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
-.. _optional flags: https://www.w3.org/TR/xpath-functions/#flags 
+.. _flags: https://www.w3.org/TR/xpath-functions/#flags 
 
 The ``first`` (default ``False``) boolean controls whether to return the first matched item, or a list of matched items.
 
