@@ -68,6 +68,10 @@ The ``first`` (default ``False``) boolean controls whether to return the first m
 * if ``first=False``, the function returns a list of ``Entry`` s or ``[]`` if there are no matches
 * if ``first=True``, the function returns the first ``Entry`` match, or ``None`` if there are no matches
 
+**find_entry_by_uuid** (uuid, tree=None, history=False)
+
+This returns one entry except if ``history`` is set.
+
 **entries**
 
 a flattened list of all entries in the database
