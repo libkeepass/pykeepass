@@ -70,6 +70,12 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertIsInstance(results, Entry)
         self.assertEqual('group_entry', results.title)
 
+    def test_find_entry_by_uuid(self):
+        results = self.kp.find_entry_by_uuid('CC5F7ECD2A0048CA9621C222A347B0BB')
+        self.assertIsInstance(results, Entry)
+        self.assertEqual('zF9+zSoASMqWIcIio0ewuw==', results.uuid)
+        self.assertEqual('foobar_user', results.username)
+
     def test_find_entry_by(self):
         results = self.kp._find_entry_by('Title', 'Root_entry', regex=True)
         self.assertEqual(len(results), 0)
@@ -83,30 +89,30 @@ class EntryFunctionTests(unittest.TestCase):
         unique_str = 'test_add_entry_'
         expiry_time = datetime.now()
         entry = self.kp.add_entry(self.kp.root_group,
-                                  unique_str+'title',
-                                  unique_str+'user',
-                                  unique_str+'pass',
-                                  url=unique_str+'url',
-                                  notes=unique_str+'notes',
-                                  tags=unique_str+'tags',
+                                  unique_str + 'title',
+                                  unique_str + 'user',
+                                  unique_str + 'pass',
+                                  url=unique_str + 'url',
+                                  notes=unique_str + 'notes',
+                                  tags=unique_str + 'tags',
                                   expiry_time=expiry_time,
                                   icon=icons.KEY)
-        results = self.kp.find_entries_by_title(unique_str+'title')
+        results = self.kp.find_entries_by_title(unique_str + 'title')
         self.assertEqual(len(results), 1)
-        results = self.kp.find_entries_by_title(unique_str+'title', first=True)
+        results = self.kp.find_entries_by_title(unique_str + 'title', first=True)
 
-        self.assertEqual(results.title, unique_str+'title')
-        self.assertEqual(results.username, unique_str+'user')
-        self.assertEqual(results.password, unique_str+'pass')
-        self.assertEqual(results.url, unique_str+'url')
-        self.assertEqual(results.notes, unique_str+'notes')
-        self.assertEqual(results.tags, [unique_str+'tags'])
+        self.assertEqual(results.title, unique_str + 'title')
+        self.assertEqual(results.username, unique_str + 'user')
+        self.assertEqual(results.password, unique_str + 'pass')
+        self.assertEqual(results.url, unique_str + 'url')
+        self.assertEqual(results.notes, unique_str + 'notes')
+        self.assertEqual(results.tags, [unique_str + 'tags'])
         # convert naive datetime to utc
         expiry_time_utc = expiry_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC'))
         self.assertEqual(results.icon, icons.KEY)
 
         self.kp.delete_entry(entry)
-        results = self.kp.find_entries_by_title(unique_str+'title', first=True)
+        results = self.kp.find_entries_by_title(unique_str + 'title', first=True)
         self.assertIsNone(results)
 
     #---------- Entries name collision exception -----------
@@ -114,12 +120,12 @@ class EntryFunctionTests(unittest.TestCase):
     def test_raise_exception_entry(self):
         unique_str = 'test_add_entry_'
         entry = self.kp.add_entry(self.kp.root_group,
-                                  unique_str+'title',
-                                  unique_str+'user',
-                                  unique_str+'pass',
-                                  url=unique_str+'url',
-                                  notes=unique_str+'notes',
-                                  tags=unique_str+'tags',
+                                  unique_str + 'title',
+                                  unique_str + 'user',
+                                  unique_str + 'pass',
+                                  url=unique_str + 'url',
+                                  notes=unique_str + 'notes',
+                                  tags=unique_str + 'tags',
                                   icon=icons.KEY)
         self.assertRaises(Exception, entry)
 

@@ -5,13 +5,15 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import absolute_import
-from pykeepass.entry import Entry
-from pykeepass.group import Group
+import base64
 import libkeepass
 import logging
 import os
 import re
+from uuid import UUID
 
+from pykeepass.entry import Entry
+from pykeepass.group import Group
 
 logger = logging.getLogger(__name__)
 
@@ -260,6 +262,19 @@ class PyKeePass(object):
         # return first object in list or None
         if first:
             res = res[0] if res else None
+
+        return res
+
+    def find_entry_by_uuid(self, uuid, tree=None, history=False):
+
+        uuid_base64 = base64.b64encode(UUID(uuid).bytes).decode()
+
+        xp = './/Entry/UUID[text()="{}"]/..'.format(uuid_base64)
+
+        res = self._xpath(tree=tree, xpath_str=xp)
+
+        if history is False:
+            res = res[0]
 
         return res
 
