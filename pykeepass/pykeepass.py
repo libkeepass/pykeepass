@@ -34,6 +34,9 @@ class PyKeePass(object):
             credentials['keyfile'] = keyfile
         assert filename, 'Filename should not be empty'
         logger.info('Open file {}'.format(filename))
+ 
+        # cf. issue 44
+        # src.: https://github.com/pschmitt/pykeepass/issues/44
         return libkeepass.open(
             filename, **credentials
         ).__enter__()
@@ -44,6 +47,9 @@ class PyKeePass(object):
         #       we shouldn't need to open another fd here just to write
         if not filename:
             filename = self.kdb_filename
+
+        # cf. issue 44
+        # src.: https://github.com/pschmitt/pykeepass/issues/44
         with open(filename, 'wb+') as outfile:
             self.kdb.write_to(outfile)
 
