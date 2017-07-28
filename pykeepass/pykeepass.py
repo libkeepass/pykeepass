@@ -39,13 +39,14 @@ class PyKeePass(object):
         ).__enter__()
 
     def save(self, filename=None):
-        # FIXME The *second* save operations creates gibberish passwords
-        # FIXME the save operation should be moved to libkeepass at some point
-        #       we shouldn't need to open another fd here just to write
         if not filename:
             filename = self.kdb_filename
         with open(filename, 'wb+') as outfile:
+            # fix issue 43
+            # src.: https://github.com/pschmitt/pykeepass/issues/43
+            self.kdb.unprotect()
             self.kdb.write_to(outfile)
+            self.kdb._decrypt(outfile)
 
     # set the master password
     def set_password(self, password):

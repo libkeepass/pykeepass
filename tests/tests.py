@@ -88,6 +88,9 @@ class EntryFunctionTests(unittest.TestCase):
     def test_add_delete_entry(self):
         unique_str = 'test_add_entry_'
         expiry_time = datetime.now()
+
+        self.kp.save()
+
         entry = self.kp.add_entry(self.kp.root_group,
                                   unique_str + 'title',
                                   unique_str + 'user',
@@ -97,6 +100,9 @@ class EntryFunctionTests(unittest.TestCase):
                                   tags=unique_str + 'tags',
                                   expiry_time=expiry_time,
                                   icon=icons.KEY)
+
+        self.kp.save()
+
         results = self.kp.find_entries_by_title(unique_str + 'title')
         self.assertEqual(len(results), 1)
         results = self.kp.find_entries_by_title(unique_str + 'title', first=True)
