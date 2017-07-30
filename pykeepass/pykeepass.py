@@ -47,12 +47,18 @@ class PyKeePass(object):
         with open(filename, 'wb+') as outfile:
             self.kdb.write_to(outfile)
 
-    # set the master password
-    def set_password(self, password):
-        if password:
-            self.kdb.keys[0] = libkeepass.crypto.sha256(password.encode('utf-8'))
+    # clear and set the database credentials
+    def set_credentials(self, password=None, keyfile=None):
+        if password or keyfile:
+            credentials = {}
+            if password:
+                credentials['password'] = password
+            if keyfile:
+                credentials['keyfile'] = keyfile
+            self.kdb.clear_credentials()
+            self.kdb.add_credentials(**credentials)
         else:
-            logger.error("You must specify a password")
+            logger.error("You must specify a password or keyfile")
 
     @property
     def root_group(self):
