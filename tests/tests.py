@@ -219,7 +219,7 @@ class PyKeePassTests(unittest.TestCase):
         self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_creds.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
 
     def test_set_credentials(self):
-        self.kp_pass.set_credentials(password='f00bar', keyfile='/tmp/change.key')
+        self.kp_pass.set_credentials(password='f00bar', keyfile=base_dir + '/change.key')
         self.kp_pass.save()
         self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_creds.kdbx', password='f00bar', keyfile=base_dir + '/change.key')
 
