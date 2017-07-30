@@ -69,7 +69,7 @@ class Entry(BaseElement):
     def _set_string_field(self, key, value):
         results = self._element.xpath('String/Key[text()="{}"]/..'.format(key))
         if results:
-            results[0].Value = value
+            results[0].text = value
         else:
             logger.debug('No field named {}. Create it.'.format(key))
             el = xmlfactory._create_string_element(key, value)
