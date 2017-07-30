@@ -206,9 +206,9 @@ where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is 
 
 where ``filename`` is the path of the file to save to.  If ``filename`` is not given, the path given in ``read`` will be used.
 
-**set_password** (password)
+**set_credentials** (password=None, keyfile=None)
 
-set a master password on the database.  ``password`` is a string.
+clear current database credentials and set to the ones given.  ``password`` and ``keyfile`` are strings.  At least one of ``password`` and ``keyfile`` is required
 
 Tests
 -------------

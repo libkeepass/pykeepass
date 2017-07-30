@@ -214,21 +214,21 @@ class EntryTests(unittest.TestCase):
 
 class PyKeePassTests(unittest.TestCase):
     def setUp(self):
-        shutil.copy(base_dir + '/test.kdbx', base_dir + '/change_pass.kdbx')
+        shutil.copy(base_dir + '/test.kdbx', base_dir + '/change_creds.kdbx')
         self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
-        self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_pass.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
+        self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_creds.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
 
-    def test_set_password(self):
-        self.kp_pass.set_password('f00bar')
+    def test_set_credentials(self):
+        self.kp_pass.set_credentials(password='f00bar', keyfile=base_dir + '/change.key')
         self.kp_pass.save()
-        self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_pass.kdbx', password='f00bar', keyfile=base_dir + '/test.key')
+        self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_creds.kdbx', password='f00bar', keyfile=base_dir + '/change.key')
 
         results = self.kp.find_entries_by_username('foobar_user', first=True)
         self.assertEqual('foobar_user', results.username)
 
 
     def tearDown(self):
-        os.remove(base_dir + '/change_pass.kdbx')
+        os.remove(base_dir + '/change_creds.kdbx')
 
 
 if __name__ == '__main__':
