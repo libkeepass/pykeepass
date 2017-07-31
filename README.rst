@@ -30,7 +30,7 @@ Simple Example
    >>> entry.notes = 'primary facebook account'
 
    # create a new group
-   >>> group = kp.add_group('email')
+   >>> group = kp.add_group(kp.root_group, 'email')
 
    # create a new entry
    >>> kp.add_entry(group, 'gmail', 'myusername', 'myPassw0rdXX')
