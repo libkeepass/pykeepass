@@ -185,7 +185,7 @@ class Entry(BaseElement):
 
     @ctime.setter
     def ctime(self, value):
-        self._set_times_property('LastAccessTime',
+        self._set_times_property('CreationTime',
                                   xmlfactory.datetime_to_utc(value).isoformat())
 
     @property
