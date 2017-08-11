@@ -3,9 +3,9 @@ from setuptools import find_packages, setup
 
 setup(
     name='pykeepass',
-    version='2.7.1',
+    version='2.7.2',
     license='GPL3',
-    description='Low-level library to interact with keepass databases '\
+    description='Low-level library to interact with keepass databases '
                 '(supports the v.4 format)',
     long_description=open('README.rst').read(),
     author='Philipp Schmitt',
