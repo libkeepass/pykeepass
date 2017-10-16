@@ -81,10 +81,10 @@ a flattened list of all entries in the database
    >>> kp.entries
    [Entry: "foo_entry (myusername)", Entry: "foobar_entry (myusername)", Entry: "social/gmail (myusername)", Entry: "social/facebook (myusername)"]
 
-   >>> kp.find_entries_by_name('gmail', first=True)
+   >>> kp.find_entries_by_title('gmail', first=True)
    Entry: "social/gmail (myusername)"
 
-   >>> kp.find_entries_by_name('foo.*', regex=True)
+   >>> kp.find_entries_by_title('foo.*', regex=True)
    [Entry: "foo_entry (myusername)", Entry: "foobar_entry (myusername)"]
 
    >>> entry = kp.find_entries_by_url('.*facebook.*', regex=True, first=True)
