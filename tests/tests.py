@@ -77,11 +77,24 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertEqual('foobar_user', results.username)
 
     def test_find_entry_by(self):
-        results = self.kp._find_entry_by('Title', 'Root_entry', regex=True)
+        results = self.kp.find_entry_by(Title='Root_entry', regex=True)
         self.assertEqual(len(results), 0)
-        results = self.kp._find_entry_by('Title', 'Root_entry', regex=True, flags='i', first=True)
+        results = self.kp.find_entry_by(Title='Root_entry', regex=True, flags='i', first=True)
         self.assertEqual('root_entry', results.title)
 
+    def test_find_entry_by_multiple_args(self):
+        results = self.kp.find_entry_by(
+            UserName='foobar_user',
+            URL='http://example.com',
+            regex=True,
+            flags='i',
+            first=True
+            )
+        self.assertEqual('root_entry', results.title)
+
+    def test_find_entry_by_bad_kwargs(self):
+        with self.assertRaises(TypeError):
+            self.kp.find_entry_by(BadKwargs='Root_entry', regex=True)
 
     #---------- Adding/Deleting entries -----------
 

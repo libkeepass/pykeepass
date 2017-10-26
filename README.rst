@@ -22,6 +22,9 @@ Simple Example
    # find any entry by its title
    >>> entry = kp.find_entries_by_title('facebook', first=True)
 
+   # find entry by multiple arguments
+   >>> entry = kp.find_entries_by(Title='gmail', UserName='myusername', Password='myPassw0rdXX', first=True)
+
    # retrieve the associated password
    >>> entry.password
    's3cure_p455w0rd'
@@ -71,6 +74,10 @@ The ``first`` (default ``False``) boolean controls whether to return the first m
 **find_entry_by_uuid** (uuid, tree=None, history=False)
 
 This returns one entry except if ``history`` is set.
+
+**find_entry_by** (regex=False, flags=None, tree=None, history=False, first=False, \**kwargs)
+
+where \**kwargs accept multiple keyword arguments in ``Title``, ``UserName``, ``Password``, ``URL``, ``Notes``.
 
 **entries**
 
