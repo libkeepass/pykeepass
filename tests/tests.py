@@ -77,15 +77,15 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertEqual('foobar_user', results.username)
 
     def test_find_entry_by(self):
-        results = self.kp.find_entry_by(Title='Root_entry', regex=True)
+        results = self.kp.find_entry_by(title='Root_entry', regex=True)
         self.assertEqual(len(results), 0)
-        results = self.kp.find_entry_by(Title='Root_entry', regex=True, flags='i', first=True)
+        results = self.kp.find_entry_by(title='Root_entry', regex=True, flags='i', first=True)
         self.assertEqual('root_entry', results.title)
 
     def test_find_entry_by_multiple_args(self):
         results = self.kp.find_entry_by(
-            UserName='foobar_user',
-            URL='http://example.com',
+            username='foobar_user',
+            url='http://example.com',
             regex=True,
             flags='i',
             first=True

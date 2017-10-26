@@ -155,15 +155,16 @@ class PyKeePass(object):
 
     def find_entry_by(self, regex=False, flags=None,
                        tree=None, history=False, first=False, **kwargs):
-        key_list = ['Title', 'UserName', 'Password', 'URL', 'Notes']
+        keys_dict = {'title':'Title', 'username':'UserName', 'password':'Password', 'url':'URL', 'notes':'Notes'}
         xp = './/Entry'
         for key, value in kwargs.items():
-            if key not in key_list:
+            if key not in keys_dict.keys():
                 raise TypeError(
                     '{} is an invalid keyword argument for this function'.format(
                         key
                     )
                 )
+            key = keys_dict[key]
             if regex:
                 xp += '/String/Key[text()="{key}"]/../Value[re:test(text(), "{value}", "{flags}")]/../..'.format(
                     key=key,
@@ -186,7 +187,7 @@ class PyKeePass(object):
     def find_entries_by_title(self, title, regex=False, flags=None,
                               tree=None, history=False, first=False):
         return self.find_entry_by(
-            Title=title,
+            title=title,
             regex=regex,
             flags=flags,
             tree=tree,
@@ -197,7 +198,7 @@ class PyKeePass(object):
     def find_entries_by_username(self, username, regex=False, flags=None,
                                  tree=None, history=False, first=False):
         return self.find_entry_by(
-            UserName=username,
+            username=username,
             regex=regex,
             flags=flags,
             tree=tree,
@@ -208,7 +209,7 @@ class PyKeePass(object):
     def find_entries_by_password(self, password, regex=False, flags=None,
                                  tree=None, history=False, first=False):
         return self.find_entry_by(
-            Password=password,
+            password=password,
             regex=regex,
             flags=flags,
             tree=tree,
@@ -219,7 +220,7 @@ class PyKeePass(object):
     def find_entries_by_url(self, url, regex=False, flags=None,
                             tree=None, history=False, first=False):
         return self.find_entry_by(
-            URL=url,
+            url=url,
             regex=regex,
             flags=flags,
             tree=tree,
@@ -230,7 +231,7 @@ class PyKeePass(object):
     def find_entries_by_notes(self, notes, regex=False, flags=None,
                               tree=None, history=False, first=False):
         return self.find_entry_by(
-            Notes=notes,
+            notes=notes,
             regex=regex,
             flags=flags,
             tree=tree,
@@ -284,8 +285,8 @@ class PyKeePass(object):
                   tags=None, icon=None, force_creation=False):
 
         entries = self.find_entry_by(
-            Title=title,
-            UserName=username,
+            title=title,
+            username=username,
             tree=destination_group._element,
         )
 
