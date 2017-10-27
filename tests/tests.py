@@ -70,17 +70,22 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertIsInstance(results, Entry)
         self.assertEqual('group_entry', results.title)
 
-    def test_find_entry_by_uuid(self):
-        results = self.kp.find_entry_by_uuid('CC5F7ECD2A0048CA9621C222A347B0BB')
+    def test_find_entries_by_uuid(self):
+        results = self.kp.find_entries_by_uuid('zF9+zSoASMqWIcIio0ewuw==')[0]
         self.assertIsInstance(results, Entry)
         self.assertEqual('zF9+zSoASMqWIcIio0ewuw==', results.uuid)
         self.assertEqual('foobar_user', results.username)
 
-    def test_find_entry_by(self):
-        results = self.kp._find_entry_by('Title', 'Root_entry', regex=True)
+    def test_find_entries(self):
+        results = self.kp.find_entries(title='Root_entry', regex=True)
         self.assertEqual(len(results), 0)
-        results = self.kp._find_entry_by('Title', 'Root_entry', regex=True, flags='i', first=True)
+        results = self.kp.find_entries(title='Root_entry', regex=True, flags='i', first=True)
         self.assertEqual('root_entry', results.title)
+        results = self.kp.find_entries(notes="entry notes", url="http://example.com")
+        self.assertEqual(len(results), 2)
+        self.assertTrue(self.kp.find_entries(title='root_entry', first=True) in results)
+        self.assertTrue(self.kp.find_entries(title='group_entry', first=True) in results)
+
 
 
     #---------- Adding/Deleting entries -----------
@@ -150,6 +155,12 @@ class GroupFunctionTests(unittest.TestCase):
 
     def test_find_groups_by_path(self):
         results = self.kp.find_groups_by_path('/foobar_group/subgroup')
+        self.assertIsInstance(results[0], Group)
+        results = self.kp.find_groups_by_path('/foobar_group/subgroup', first=True)
+        self.assertEqual(results.name, 'subgroup')
+
+    def test_find_groups(self):
+        results = self.kp.find_groups(path='/foobar_group/subgroup')
         self.assertIsInstance(results[0], Group)
         results = self.kp.find_groups_by_path('/foobar_group/subgroup', first=True)
         self.assertEqual(results.name, 'subgroup')
