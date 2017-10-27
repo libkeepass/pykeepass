@@ -1,4 +1,4 @@
-from datetime import datetime, 
+from datetime import datetime, timedelta
 from dateutil import tz
 from pykeepass import icons
 from pykeepass import pykeepass
