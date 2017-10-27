@@ -226,6 +226,12 @@ class PyKeePassTests(unittest.TestCase):
         results = self.kp.find_entries_by_username('foobar_user', first=True)
         self.assertEqual('foobar_user', results.username)
 
+    def test_dump_xml(self):
+        self.kp.dump_xml('db_dump.xml')
+        with open('db_dump.xml') as f:
+            first_line = f.readline()
+            self.assertEqual(first_line, '<?xml version=\'1.0\' encoding=\'utf-8\' standalone=\'yes\'?>\n')
+
 
     def tearDown(self):
         os.remove(base_dir + '/change_creds.kdbx')
