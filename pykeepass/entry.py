@@ -69,11 +69,12 @@ class Entry(BaseElement):
     def _set_string_field(self, key, value):
         results = self._element.xpath('String/Key[text()="{}"]/..'.format(key))
         if results:
-            results[0].text = value
+            logger.debug('There is field named {}. Remove it and create again.'.format(key))
+            self._element.remove(results[0])
         else:
             logger.debug('No field named {}. Create it.'.format(key))
-            el = xmlfactory._create_string_element(key, value)
-            self._element.append(el)
+        el = xmlfactory._create_string_element(key, value)
+        self._element.append(el)
 
     def _get_string_field_keys(self, exclude_reserved=False):
         results = [x.find('Key').text for x in self._element.findall('String')]
