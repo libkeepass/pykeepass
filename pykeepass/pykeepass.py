@@ -77,7 +77,7 @@ class PyKeePass(object):
         Dump the content of the database to a file
         NOTE The file is unencrypted!
         '''
-        with open(outfile, 'w+') as f:
+        with open(outfile, 'wb') as f:
             f.write(self.kdb.pretty_print())
 
     def _xpath(self, xpath_str, tree=None):
