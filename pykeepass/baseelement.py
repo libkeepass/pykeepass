@@ -17,10 +17,9 @@ class BaseElement(object):
     def _set_subelement_text(self, tag, value):
         v = self._element.find(tag)
         if v is not None:
-            v = str(value)
-        else:
-            el = xmlfactory.create_element(tag, value)
-            self._element.append(el)
+            self._element.remove(v)
+        el = xmlfactory.create_element(tag, value)
+        self._element.append(el)
 
     def dump_xml(self, pretty_print=False):
         return lxml.etree.tostring(self._element, pretty_print=pretty_print)

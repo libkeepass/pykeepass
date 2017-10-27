@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil import tz
 from pykeepass import icons
 from pykeepass import pykeepass
@@ -202,14 +202,54 @@ class EntryTests(unittest.TestCase):
         self.assertEqual(entry.password, 'password')
         self.assertEqual(entry.url, 'url')
         self.assertEqual(entry.notes, 'notes')
+        self.assertEqual(entry.tags, ['tags'])
         self.assertEqual(entry.expires, True)
         self.assertEqual(entry.expiry_time,
                          time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
+        self.assertEqual(entry.icon, icons.KEY)
         self.assertEqual(entry.is_a_history_entry, False)
 
+    def test_set_and_get_fields(self):
+        time = datetime.now()
+        changed_time = datetime.now() + timedelta(hours=9)
+        changed_string = 'changed_'
+        entry = Entry('title',
+                      'username',
+                      'password',
+                      url='url',
+                      notes='notes',
+                      tags='tags',
+                      expires=True,
+                      expiry_time=time,
+                      icon=icons.KEY)
+        entry.title = changed_string + 'title'
+        entry.username = changed_string + 'username'
+        entry.password = changed_string + 'password'
+        entry.url = changed_string + 'url'
+        entry.notes = changed_string + 'notes'
+#        entry.expires = False
+#        entry.expiry_time = changed_time
+        entry.icon = icons.GLOBE
         entry.set_custom_property('foo', 'bar')
+
+        self.assertEqual(entry.title, changed_string + 'title')
+        self.assertEqual(entry.username, changed_string + 'username')
+        self.assertEqual(entry.password, changed_string + 'password')
+        self.assertEqual(entry.url, changed_string + 'url')
+        self.assertEqual(entry.notes, changed_string + 'notes')
+#        self.assertEqual(entry.expires, False)
+#        self.assertEqual(entry.expiry_time,
+#                         changed_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
+        self.assertEqual(entry.icon, icons.GLOBE)
         self.assertEqual(entry.get_custom_property('foo'), 'bar')
         self.assertIn('foo', entry.custom_properties)
+
+        entry.tags = 'changed_tags'
+        self.assertEqual(entry.tags, ['changed_tags'])
+        entry.tags = 'changed;tags'
+        self.assertEqual(entry.tags, ['changed', 'tags'])
+        entry.tags = ['changed', 'again', 'tags']
+        self.assertEqual(entry.tags, ['changed', 'again', 'tags'])
 
 
 class PyKeePassTests(unittest.TestCase):
