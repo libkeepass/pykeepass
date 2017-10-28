@@ -83,6 +83,7 @@ class PyKeePass(object):
     def _xpath(self, xpath_str, tree=None):
         if tree is None:
             tree = self.kdb.tree
+        print(xpath_str)
         result = tree.xpath(
             xpath_str, namespaces={'re': 'http://exslt.org/regular-expressions'}
         )
@@ -97,44 +98,69 @@ class PyKeePass(object):
                 res.append(r)
         return res
 
-    #---------- Groups ----------
 
-    def find_groups(self, regex=False, flags=None, tree=None, first=False, **kwargs):
+    def _find(self, keys_xp, regex=False, flags=None, tree=None,
+              history=False, first=False, **kwargs):
 
+        print('regex:', regex)
         regex_string = '[re:test(text(), "{}", "{}")]'
         match_string = '[text()="{}"]'
-        keys_xp = {
-            'path': '/Group/Name{}/..',
-            'name': '//Group/Name{}/..',
-            'uuid': '//Group/UUID{}/..',
-        }
 
-        xp = []
+        group_xp = '/Group/Name{}/..'
+        entry_xp = '/Entry/String/Key[text()="Title"]/../Value{}/../..'
+
+        xp_searchpath = []
+        xp_attribs = []
 
         # resolve path before handling any other keys
         if 'path' in kwargs.keys():
-            xp = ['/KeePassFile/Root/Group']
-            # remove leading and trailing /
-            path = kwargs['path'].lstrip('/').rstrip('/')
-            if path:
-                for element in path.split('/'):
+            xp_searchpath = ['/KeePassFile/Root/Group']
+            # split provided path into group and entry
+            group_path = os.path.dirname(kwargs['path']).lstrip('/')
+            entry = os.path.basename(kwargs['path'])
+            print('group_path', group_path)
+            print('entry', entry)
+            # build xpath from group_path and entry
+            if group_path:
+                for element in group_path.split('/'):
                     if regex:
-                        xp.append((keys_xp['path'].format(regex_string)).format(element, flags))
+                        xp_searchpath.append((group_xp.format(regex_string)).format(element, flags))
                     else:
-                        xp.append((keys_xp['path'].format(match_string)).format(element))
+                        xp_searchpath.append((group_xp.format(match_string)).format(element))
+            if entry:
+                if regex:
+                    xp_searchpath.append((entry_xp.format(regex_string)).format(entry, flags))
+                else:
+                    xp_searchpath.append((entry_xp.format(match_string)).format(entry))
+
             kwargs.pop('path')
 
+        # build xpath to filter results with specified attributes
         for key, value in kwargs.items():
             if key not in keys_xp.keys():
                 raise TypeError('Invalid keyword argument "{}"'.format(key))
 
             if regex:
-                xp.append((keys_xp[key].format(regex_string)).format(value, flags))
+                xp_attribs.append((keys_xp[key].format(regex_string)).format(value, flags))
             else:
-                xp.append((keys_xp[key].format(match_string)).format(value, flags))
+                xp_attribs.append((keys_xp[key].format(match_string)).format(value, flags))
 
-        res = self._xpath('/..'.join(xp), tree=tree)
+        res = self._xpath(''.join(xp_searchpath) + '/..'.join(xp_attribs), tree=tree)
 
+
+        return res
+
+    #---------- Groups ----------
+
+    def find_groups(self, first=False, **kwargs):
+
+        keys_xp = {
+            'name': '//Group/Name{}/..',
+            'uuid': '//Group/UUID{}/..',
+        }
+
+        res = self._find(keys_xp, **kwargs)
+        # return first object in list or None
         if first:
             res = res[0] if res else None
 
@@ -179,13 +205,9 @@ class PyKeePass(object):
 
     #---------- Entries ----------
 
-    def find_entries(self, regex=False, flags=None,
-                       tree=None, history=False, first=False, **kwargs):
+    def find_entries(self, history=False, first=False, **kwargs):
 
-        regex_string = '[re:test(text(), "{}", "{}")]'
-        match_string = '[text()="{}"]'
         keys_xp = {
-            # 'path': '/Group/Name{}/..',
             'title': '//Entry/String/Key[text()="Title"]/../Value{}/../..',
             'username': '//Entry/String/Key[text()="UserName"]/../Value{}/../..',
             'password': '//Entry/String/Key[text()="Password"]/../Value{}/../..',
@@ -194,28 +216,23 @@ class PyKeePass(object):
             'uuid': '//Entry/UUID{}/..',
         }
 
-        xp = []
-        # resolve path before handling any other keys
-        # if 'path' in kwargs.keys():
-        for key, value in kwargs.items():
-            if key not in keys_xp.keys():
-                raise TypeError('Invalid keyword argument "{}"'.format(key))
 
-            if regex:
-                xp.append((keys_xp[key].format(regex_string)).format(value, flags))
-            else:
-                xp.append((keys_xp[key].format(match_string)).format(value, flags))
-
-        res = self._xpath('/..'.join(xp), tree=tree)
-
+        res = self._find(keys_xp, **kwargs)
         if history is False:
-            res = [item for item in res if not item.is_a_history_entry]
+            res = [item for item in res if item._element.getparent().tag != 'History']
 
         # return first object in list or None
         if first:
             res = res[0] if res else None
 
+
+        ## FIXME we should figure out how to filter history entries using xpath
+        ##       then move this to the _find() function
+        # if history is False:
+        #     res = [item for item in res if not item.is_a_history_entry]
+
         return res
+
 
     def find_entries_by_title(self, title, regex=False, flags=None,
                               tree=None, history=False, first=False):
@@ -250,6 +267,7 @@ class PyKeePass(object):
             first=first
         )
 
+
     def find_entries_by_url(self, url, regex=False, flags=None,
                             tree=None, history=False, first=False):
         return self.find_entries(
@@ -260,6 +278,7 @@ class PyKeePass(object):
             history=history,
             first=first
         )
+
 
     def find_entries_by_notes(self, notes, regex=False, flags=None,
                               tree=None, history=False, first=False):
@@ -272,33 +291,18 @@ class PyKeePass(object):
             first=first
         )
 
+
     def find_entries_by_path(self, path, regex=False, flags=None,
                              tree=None, history=False, first=False):
-        ##FIXME we should adapt this function to use _xpath instead of using
-        #  find_group_by_path and then iterating with ugly regex code
-        entry_title = os.path.basename(path)
-        group_path = os.path.dirname(path)
-        group = self.find_groups_by_path(group_path,
-                                         tree=tree,
-                                         regex=regex,
-                                         flags=flags,
-                                         first=True)
+        return self.find_entries(
+            path=path,
+            regex=regex,
+            flags=flags,
+            tree=tree,
+            history=history,
+            first=first
+        )
 
-        if group is not None:
-            if regex:
-                res = [x for x in group.entries
-                       if re.match(('(?{})'.format(flags) if flags else None) + entry_title,
-                                   x.title)]
-            else:
-                res = [x for x in group.entries if x.title == entry_title]
-        else:
-            return
-
-        # return first object in list or None
-        if first:
-            res = res[0] if res else None
-
-        return res
 
     def find_entries_by_uuid(self, uuid, regex=False, flags=None,
                               tree=None, history=False, first=False):
@@ -311,6 +315,7 @@ class PyKeePass(object):
             history=history,
             first=first
         )
+
 
     def add_entry(self, destination_group, title, username,
                   password, url=None, notes=None, expiry_time=None,
@@ -345,6 +350,7 @@ class PyKeePass(object):
             destination_group.append(entry)
 
         return entry
+
 
     def delete_entry(self, entry):
         entry.delete()

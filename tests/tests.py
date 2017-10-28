@@ -154,15 +154,15 @@ class GroupFunctionTests(unittest.TestCase):
         self.assertEqual(results.name, 'subgroup')
 
     def test_find_groups_by_path(self):
-        results = self.kp.find_groups_by_path('/foobar_group/subgroup')
+        results = self.kp.find_groups_by_path('/foobar_group/subgroup/')
         self.assertIsInstance(results[0], Group)
-        results = self.kp.find_groups_by_path('/foobar_group/subgroup', first=True)
+        results = self.kp.find_groups_by_path('/foobar_group/subgroup/', first=True)
         self.assertEqual(results.name, 'subgroup')
 
     def test_find_groups(self):
-        results = self.kp.find_groups(path='/foobar_group/subgroup')
+        results = self.kp.find_groups(path='/foobar_group/subgroup/')
         self.assertIsInstance(results[0], Group)
-        results = self.kp.find_groups_by_path('/foobar_group/subgroup', first=True)
+        results = self.kp.find_groups_by_path('/foobar_group/subgroup/', first=True)
         self.assertEqual(results.name, 'subgroup')
 
     def test_groups(self):
@@ -178,7 +178,7 @@ class GroupFunctionTests(unittest.TestCase):
         base_group = self.kp.add_group(self.kp.root_group, base_group_name)
         sub_group = self.kp.add_group(base_group, sub_group_name)
 
-        results = self.kp.find_groups_by_path(base_group_name + '/' + sub_group_name,
+        results = self.kp.find_groups_by_path(base_group_name + '/' + sub_group_name + '/',
                                               first=True)
         self.assertIsInstance(results, Group)
         self.assertEqual(results.name, sub_group_name)
