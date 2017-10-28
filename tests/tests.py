@@ -7,6 +7,7 @@ from pykeepass.group import Group
 import os
 import shutil
 import unittest
+import logging
 
 """
 Missing Tests:
@@ -23,6 +24,8 @@ Missing Tests:
 """
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
+logger = logging.getLogger("pykeepass")
+# logger.setLevel(logging.DEBUG)
 
 
 class EntryFunctionTests(unittest.TestCase):
@@ -59,9 +62,11 @@ class EntryFunctionTests(unittest.TestCase):
 
     def test_find_entries_by_notes(self):
         results = self.kp.find_entries_by_notes('entry notes')
+        self.assertEqual(len(results), 1)
+        results = self.kp.find_entries_by_notes('entry notes', regex=True)
         self.assertEqual(len(results), 2)
         results = self.kp.find_entries_by_notes('Entry notes', regex=True, flags='i', first=True)
-        self.assertEqual('entry notes', results.notes)
+        self.assertEqual('root entry notes', results.notes)
 
     def test_find_entries_by_path(self):
         results = self.kp.find_entries_by_path('foobar_group/group_entry')
@@ -81,9 +86,10 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertEqual(len(results), 0)
         results = self.kp.find_entries(title='Root_entry', regex=True, flags='i', first=True)
         self.assertEqual('root_entry', results.title)
-        results = self.kp.find_entries(notes="entry notes", url="http://example.com")
+        results = self.kp.find_entries(url="http://example.com")
         self.assertEqual(len(results), 2)
-        self.assertTrue(self.kp.find_entries(title='root_entry', first=True) in results)
+        results = self.kp.find_entries(notes="entry notes", url="http://example.com")
+        self.assertEqual(len(results), 1)
         self.assertTrue(self.kp.find_entries(title='group_entry', first=True) in results)
 
 
