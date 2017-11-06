@@ -153,16 +153,27 @@ class PyKeePass(object):
 
     #---------- Entries ----------
 
-    def _find_entry_by(self, key, value, regex=False, flags=None,
-                       tree=None, history=False, first=False):
-        if regex:
-            xp = './/Entry/String/Key[text()="{}"]/../Value[re:match(text(), "{}", "{}")]/../..'.format(
-                key, value, flags
-            )
-        else:
-            xp = './/Entry/String/Key[text()="{}"]/../Value[text()="{}"]/../..'.format(
-                key, value
-            )
+    def find_entry_by(self, regex=False, flags=None,
+                       tree=None, history=False, first=False, **kwargs):
+        keys_dict = {'title':'Title', 'username':'UserName', 'password':'Password', 'url':'URL', 'notes':'Notes'}
+        xp = './/Entry'
+        for key, value in kwargs.items():
+            if key not in keys_dict.keys():
+                raise TypeError(
+                    '{} is an invalid keyword argument for this function'.format(
+                        key
+                    )
+                )
+            key = keys_dict[key]
+            if regex:
+                xp += '/String/Key[text()="{key}"]/../Value[re:test(text(), "{value}", "{flags}")]/../..'.format(
+                    key=key,
+                    value=value,
+                    flags=flags
+                )
+            else:
+                xp += '/String/Key[text()="{key}"]/../Value[text()="{value}"]/../..'.format(key=key, value=value)
+
         res = self._xpath(tree=tree, xpath_str=xp)
         if history is False:
             res = [item for item in res if not item.is_a_history_entry]
@@ -173,21 +184,10 @@ class PyKeePass(object):
 
         return res
 
-    def _find_exact_entry(self, title, username, tree=None, history=False):
-        xp = ('.//Entry/String/Key[text()="Title"]/../Value[text()="{}"]'
-              '/../../String/Key[text()="UserName"]/../Value[text()="{}"]/../..').format(
-            title, username)
-        res = self._xpath(tree=tree, xpath_str=xp)
-        if history is False:
-            res = [item for item in res if not item.is_a_history_entry]
-
-        return res
-
     def find_entries_by_title(self, title, regex=False, flags=None,
                               tree=None, history=False, first=False):
-        return self._find_entry_by(
-            key='Title',
-            value=title,
+        return self.find_entry_by(
+            title=title,
             regex=regex,
             flags=flags,
             tree=tree,
@@ -197,9 +197,8 @@ class PyKeePass(object):
 
     def find_entries_by_username(self, username, regex=False, flags=None,
                                  tree=None, history=False, first=False):
-        return self._find_entry_by(
-            key='UserName',
-            value=username,
+        return self.find_entry_by(
+            username=username,
             regex=regex,
             flags=flags,
             tree=tree,
@@ -209,9 +208,8 @@ class PyKeePass(object):
 
     def find_entries_by_password(self, password, regex=False, flags=None,
                                  tree=None, history=False, first=False):
-        return self._find_entry_by(
-            key='Password',
-            value=password,
+        return self.find_entry_by(
+            password=password,
             regex=regex,
             flags=flags,
             tree=tree,
@@ -221,9 +219,8 @@ class PyKeePass(object):
 
     def find_entries_by_url(self, url, regex=False, flags=None,
                             tree=None, history=False, first=False):
-        return self._find_entry_by(
-            key='URL',
-            value=url,
+        return self.find_entry_by(
+            url=url,
             regex=regex,
             flags=flags,
             tree=tree,
@@ -233,9 +230,8 @@ class PyKeePass(object):
 
     def find_entries_by_notes(self, notes, regex=False, flags=None,
                               tree=None, history=False, first=False):
-        return self._find_entry_by(
-            key='Notes',
-            value=notes,
+        return self.find_entry_by(
+            notes=notes,
             regex=regex,
             flags=flags,
             tree=tree,
@@ -288,7 +284,7 @@ class PyKeePass(object):
                   password, url=None, notes=None, expiry_time=None,
                   tags=None, icon=None, force_creation=False):
 
-        entries = self._find_exact_entry(
+        entries = self.find_entry_by(
             title=title,
             username=username,
             tree=destination_group._element,
