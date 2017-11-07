@@ -7,6 +7,7 @@ from pykeepass.group import Group
 import os
 import shutil
 import unittest
+import logging
 
 """
 Missing Tests:
@@ -23,6 +24,8 @@ Missing Tests:
 """
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
+logger = logging.getLogger("pykeepass")
+# logger.setLevel(logging.DEBUG)
 
 
 class EntryFunctionTests(unittest.TestCase):
@@ -59,9 +62,11 @@ class EntryFunctionTests(unittest.TestCase):
 
     def test_find_entries_by_notes(self):
         results = self.kp.find_entries_by_notes('entry notes')
+        self.assertEqual(len(results), 1)
+        results = self.kp.find_entries_by_notes('entry notes', regex=True)
         self.assertEqual(len(results), 2)
         results = self.kp.find_entries_by_notes('Entry notes', regex=True, flags='i', first=True)
-        self.assertEqual('entry notes', results.notes)
+        self.assertEqual('root entry notes', results.notes)
 
     def test_find_entries_by_path(self):
         results = self.kp.find_entries_by_path('foobar_group/group_entry')
@@ -70,17 +75,23 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertIsInstance(results, Entry)
         self.assertEqual('group_entry', results.title)
 
-    def test_find_entry_by_uuid(self):
-        results = self.kp.find_entry_by_uuid('CC5F7ECD2A0048CA9621C222A347B0BB')
+    def test_find_entries_by_uuid(self):
+        results = self.kp.find_entries_by_uuid('zF9+zSoASMqWIcIio0ewuw==')[0]
         self.assertIsInstance(results, Entry)
         self.assertEqual('zF9+zSoASMqWIcIio0ewuw==', results.uuid)
         self.assertEqual('foobar_user', results.username)
 
-    def test_find_entry_by(self):
-        results = self.kp._find_entry_by('Title', 'Root_entry', regex=True)
+    def test_find_entries(self):
+        results = self.kp.find_entries(title='Root_entry', regex=True)
         self.assertEqual(len(results), 0)
-        results = self.kp._find_entry_by('Title', 'Root_entry', regex=True, flags='i', first=True)
+        results = self.kp.find_entries(title='Root_entry', regex=True, flags='i', first=True)
         self.assertEqual('root_entry', results.title)
+        results = self.kp.find_entries(url="http://example.com")
+        self.assertEqual(len(results), 2)
+        results = self.kp.find_entries(notes="entry notes", url="http://example.com")
+        self.assertEqual(len(results), 1)
+        self.assertTrue(self.kp.find_entries(title='group_entry', first=True) in results)
+
 
 
     #---------- Adding/Deleting entries -----------
@@ -149,9 +160,15 @@ class GroupFunctionTests(unittest.TestCase):
         self.assertEqual(results.name, 'subgroup')
 
     def test_find_groups_by_path(self):
-        results = self.kp.find_groups_by_path('/foobar_group/subgroup')
+        results = self.kp.find_groups_by_path('/foobar_group/subgroup/')
         self.assertIsInstance(results[0], Group)
-        results = self.kp.find_groups_by_path('/foobar_group/subgroup', first=True)
+        results = self.kp.find_groups_by_path('/foobar_group/subgroup/', first=True)
+        self.assertEqual(results.name, 'subgroup')
+
+    def test_find_groups(self):
+        results = self.kp.find_groups(path='/foobar_group/subgroup/')
+        self.assertIsInstance(results[0], Group)
+        results = self.kp.find_groups_by_path('/foobar_group/subgroup/', first=True)
         self.assertEqual(results.name, 'subgroup')
 
     def test_groups(self):
@@ -167,7 +184,7 @@ class GroupFunctionTests(unittest.TestCase):
         base_group = self.kp.add_group(self.kp.root_group, base_group_name)
         sub_group = self.kp.add_group(base_group, sub_group_name)
 
-        results = self.kp.find_groups_by_path(base_group_name + '/' + sub_group_name,
+        results = self.kp.find_groups_by_path(base_group_name + '/' + sub_group_name + '/',
                                               first=True)
         self.assertIsInstance(results, Group)
         self.assertEqual(results.name, sub_group_name)
