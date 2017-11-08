@@ -25,7 +25,6 @@ Missing Tests:
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 logger = logging.getLogger("pykeepass")
-# logger.setLevel(logging.DEBUG)
 
 
 class EntryFunctionTests(unittest.TestCase):
@@ -165,6 +164,12 @@ class GroupFunctionTests(unittest.TestCase):
         results = self.kp.find_groups_by_path('/foobar_group/subgroup/', first=True)
         self.assertEqual(results.name, 'subgroup')
 
+    def test_find_groups_by_uuid(self):
+        results = self.kp.find_groups_by_uuid('lRVaMlMXoQ/U5NDCAwJktg==', first=True)
+        self.assertIsInstance(results, Group)
+        results = self.kp.find_groups(uuid='^lRVaMlMX|^kwTZdSoU', regex=True)
+        self.assertEqual(len(results), 2)
+
     def test_find_groups(self):
         results = self.kp.find_groups(path='/foobar_group/subgroup/')
         self.assertIsInstance(results[0], Group)
@@ -244,8 +249,8 @@ class EntryTests(unittest.TestCase):
         entry.password = changed_string + 'password'
         entry.url = changed_string + 'url'
         entry.notes = changed_string + 'notes'
-#        entry.expires = False
-#        entry.expiry_time = changed_time
+        # entry.expires = False
+        # entry.expiry_time = changed_time
         entry.icon = icons.GLOBE
         entry.set_custom_property('foo', 'bar')
 
@@ -254,9 +259,9 @@ class EntryTests(unittest.TestCase):
         self.assertEqual(entry.password, changed_string + 'password')
         self.assertEqual(entry.url, changed_string + 'url')
         self.assertEqual(entry.notes, changed_string + 'notes')
-#        self.assertEqual(entry.expires, False)
-#        self.assertEqual(entry.expiry_time,
-#                         changed_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
+        # self.assertEqual(entry.expires, False)
+        # self.assertEqual(entry.expiry_time,
+        #                  changed_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
         self.assertEqual(entry.icon, icons.GLOBE)
         self.assertEqual(entry.get_custom_property('foo'), 'bar')
         self.assertIn('foo', entry.custom_properties)
