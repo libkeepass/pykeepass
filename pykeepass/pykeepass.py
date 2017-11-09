@@ -165,6 +165,17 @@ class PyKeePass(object):
         return res
 
 
+    def find_groups_by_path(self, group_path_str=None, regex=False, flags=None,
+                            tree=None, first=False):
+
+        return self.find_groups(name=group_name,
+                                regex=regex,
+                                flags=flags,
+                                tree=tree,
+                                first=first
+        )
+
+
     def find_groups_by_name(self, group_name, regex=False, flags=None,
                             tree=None, first=False):
 
@@ -184,6 +195,18 @@ class PyKeePass(object):
                                 flags=flags,
                                 tree=tree,
                                 first=first
+        )
+
+    def find_groups_by_uuid(self, uuid, regex=False, flags=None,
+                              tree=None, history=False, first=False):
+
+        return self.find_groups(
+            uuid=uuid,
+            regex=regex,
+            flags=flags,
+            tree=tree,
+            history=history,
+            first=first
         )
 
     # creates a new group and all parent groups, if necessary

@@ -13,14 +13,14 @@ Simple Example
    >>> kp = PyKeePass('db.kdbx', password='somePassw0rd')
 
    # find any group by its name
-   >>> group = kp.find_groups_by_name('social', first=True)
+   >>> group = kp.find_groups(name='social', first=True)
 
    # get the entries in a group
    >>> group.entries
    [Entry: "social/facebook (myusername)", Entry: "social/twitter (myusername)"]
 
    # find any entry by its title
-   >>> entry = kp.find_entries_by_title('facebook', first=True)
+   >>> entry = kp.find_entries(title='facebook', first=True)
 
    # retrieve the associated password
    >>> entry.password
@@ -43,6 +43,48 @@ Simple Example
 Finding Entries
 ----------------------
 
+**find_entries** (title=None, username=None, password=None, url=None, notes=None, path=None, uuid=None, regex=False, flags=None, tree=None, history=False, first=False)
+
+Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``path`` and ``uuid`` are strings.  These functions have optional ``regex`` boolean and ``flags`` string arguments, which means to interpret the string as an `XSLT style`_ regular expression with `flags`_.
+
+.. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
+.. _flags: https://www.w3.org/TR/xpath-functions/#flags 
+
+The ``path`` string can be a direct path to an entry, or (when ending in ``/``) the path to the group to recursively search under.
+
+The ``history`` (default ``False``) boolean controls whether history entries should be included in the search results.
+
+The ``first`` (default ``False``) boolean controls whether to return the first matched item, or a list of matched items.
+
+* if ``first=False``, the function returns a list of ``Entry`` s or ``[]`` if there are no matches
+* if ``first=True``, the function returns the first ``Entry`` match, or ``None`` if there are no matches
+
+**entries**
+
+a flattened list of all entries in the database
+
+.. code:: python
+
+   >>> kp.entries
+   [Entry: "foo_entry (myusername)", Entry: "foobar_entry (myusername)", Entry: "social/gmail (myusername)", Entry: "social/facebook (myusername)"]
+
+   >>> kp.find_entries(title='gmail', first=True)
+   Entry: "social/gmail (myusername)"
+
+   >>> kp.find_entries(title='foo.*', regex=True)
+   [Entry: "foo_entry (myusername)", Entry: "foobar_entry (myusername)"]
+
+   >>> entry = kp.find_entries(title='foo.*', url='.*facebook.*', regex=True, first=True)
+   >>> entry.url
+   'facebook.com'
+   >>> entry.title
+   'foo_entry'
+
+   >>> kp.find_groups_by_name('social', first=True).entries
+   [Entry: "social/gmail (myusername)", Entry: "social/facebook (myusername)"]
+
+For backwards compatibility, the following function are also available:
+
 **find_entries_by_title** (title, regex=False, flags=None, tree=None, history=False, first=False)
 
 **find_entries_by_username** (username, regex=False, flags=None, tree=None, history=False, first=False)
@@ -55,56 +97,19 @@ Finding Entries
 
 **find_entries_by_path** (path, regex=False, flags=None, tree=None, history=False, first=False)
 
-where ``title``, ``username``, ``password``, ``url``, ``notes`` and ``path`` are strings.  These functions have optional ``regex`` boolean and ``flags`` string arguments, which means to interpret the string as an `XSLT style`_ regular expression with `flags`_.
-
-
-.. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
-.. _flags: https://www.w3.org/TR/xpath-functions/#flags 
-
-The ``history`` (default ``False``) boolean controls whether history entries should be included in the search results.
-
-The ``first`` (default ``False``) boolean controls whether to return the first matched item, or a list of matched items.
-
-* if ``first=False``, the function returns a list of ``Entry`` s or ``[]`` if there are no matches
-* if ``first=True``, the function returns the first ``Entry`` match, or ``None`` if there are no matches
-
-**find_entry_by_uuid** (uuid, tree=None, history=False)
-
-This returns one entry except if ``history`` is set.
-
-**entries**
-
-a flattened list of all entries in the database
-
-.. code:: python
-
-   >>> kp.entries
-   [Entry: "foo_entry (myusername)", Entry: "foobar_entry (myusername)", Entry: "social/gmail (myusername)", Entry: "social/facebook (myusername)"]
-
-   >>> kp.find_entries_by_title('gmail', first=True)
-   Entry: "social/gmail (myusername)"
-
-   >>> kp.find_entries_by_title('foo.*', regex=True)
-   [Entry: "foo_entry (myusername)", Entry: "foobar_entry (myusername)"]
-
-   >>> entry = kp.find_entries_by_url('.*facebook.*', regex=True, first=True)
-   >>> entry.url
-   'facebook.com'
-
-   >>> kp.find_groups_by_name('social', first=True).entries
-   [Entry: "social/gmail (myusername)", Entry: "social/facebook (myusername)"]
+**find_entries_by_uuid** (uuid, regex=False, flags=None, tree=None, history=False, first=False)
 
 Finding Groups
 ----------------------
 
-**find_groups_by_name** (name, tree=None, regex=False, flags=None, first=False)
+**find_groups** (name=None, path=None, uuid=None, tree=None, regex=False, flags=None, first=False)
 
-**find_groups_by_path** (path, tree=None, regex=False, flags=None, first=False)
-
-where ``name`` and ``path`` are strings.  These functions have optional ``regex`` boolean and ``flags`` string arguments, which means to interpret the string as an `XSLT style`_ regular expression with `flags`_.
+where ``name``, ``path`` and ``uuid`` are strings.  These functions have optional ``regex`` boolean and ``flags`` string arguments, which means to interpret the string as an `XSLT style`_ regular expression with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
 .. _flags: https://www.w3.org/TR/xpath-functions/#flags 
+
+The ``path`` string must end in ``/``.
 
 The ``first`` (default ``False``) boolean controls whether to return the first matched item, or a list of matched items.
 
@@ -124,20 +129,28 @@ a flattened list of all groups in the database
    >>> kp.groups
    [Group: "foo", Group "foobar", Group: "social", Group: "social/foo_subgroup"]
 
-   >>> kp.find_groups_by_name('foo', first=True)
+   >>> kp.find_groups(name='foo', first=True)
    Group: "foo"
 
-   >>> kp.find_groups_by_name('foo.*', regex=True)
+   >>> kp.find_groups(name='foo.*', regex=True)
    [Group: "foo", Group "foobar"]
 
-   >>> kp.find_groups_by_path('social/.*', regex=True)
-   [Group: "social/foo_subgroup"]
+   >>> kp.find_groups(path='social/', regex=True)
+   [Group: "social", Group: "social/foo_subgroup"]
 
-   >>> kp.find_groups_by_name('social', first=True).subgroups
+   >>> kp.find_groups(name='social', first=True).subgroups
    [Group: "social/foo_subgroup"]
 
    >>> kp.root_group
    Group: "/"
+
+For backwards compatibility, the following functions are also available:
+
+**find_groups_by_name** (name, tree=None, regex=False, flags=None, first=False)
+
+**find_groups_by_path** (path, tree=None, regex=False, flags=None, first=False)
+
+**find_groups_by_uuid** (uuid, tree=None, regex=False, flags=None, first=False)
 
 
 Adding Entries
@@ -157,7 +170,7 @@ If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is no
    Entry: "testing (foo_user)"
 
    # add a new entry to the social group
-   >>> group = find_groups_by_name('social', first=True)
+   >>> group = find_groups(name='social', first=True)
    >>> entry = kp.add_entry(group, 'testing', 'foo_user', 'passw0rd')
    Entry: "testing (foo_user)"
 
@@ -213,4 +226,4 @@ clear current database credentials and set to the ones given.  ``password`` and 
 Tests
 -------------
 
-To run them issue :code:`$ python -m unittest tests.tests`
+To run them issue :code:`$ python tests/tests.py`
