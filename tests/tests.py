@@ -179,7 +179,7 @@ class GroupFunctionTests(unittest.TestCase):
     def test_groups(self):
         results = self.kp.groups
 
-        self.assertEqual(len(results), 5)
+        self.assertEqual(len(results), 6)
 
     #---------- Adding/Deleting Groups -----------
 
@@ -206,6 +206,9 @@ class GroupFunctionTests(unittest.TestCase):
 
 
 class EntryTests(unittest.TestCase):
+    # get some things ready before testing
+    def setUp(self):
+        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
 
     def test_fields(self):
         time = datetime.now()
@@ -230,6 +233,7 @@ class EntryTests(unittest.TestCase):
                          time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
         self.assertEqual(entry.icon, icons.KEY)
         self.assertEqual(entry.is_a_history_entry, False)
+        self.assertEqual(self.kp.find_entries(title='subentry', first=True).path, 'foobar_group/subgroup/subentry')
 
     def test_set_and_get_fields(self):
         time = datetime.now()
@@ -273,6 +277,13 @@ class EntryTests(unittest.TestCase):
         entry.tags = ['changed', 'again', 'tags']
         self.assertEqual(entry.tags, ['changed', 'again', 'tags'])
 
+class GroupTests(unittest.TestCase):
+    # get some things ready before testing
+    def setUp(self):
+        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
+
+    def test_fields(self):
+        self.assertEqual(self.kp.find_groups(name='subgroup2', first=True).path, 'foobar_group/subgroup/subgroup2')
 
 class PyKeePassTests(unittest.TestCase):
     def setUp(self):
