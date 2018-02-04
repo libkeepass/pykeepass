@@ -80,6 +80,12 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertEqual('zF9+zSoASMqWIcIio0ewuw==', results.uuid)
         self.assertEqual('foobar_user', results.username)
 
+    def test_find_entries_by_string(self):
+        results = self.kp.find_entries_by_string({'custom_field': 'custom field value'})[0]
+        self.assertIsInstance(results, Entry)
+        self.assertEqual('custom field value', results.get_custom_property('custom_field'))
+        self.assertEqual('HnN4bHSVjEybPf8nOq1bVA==', results.uuid)
+
     def test_find_entries(self):
         results = self.kp.find_entries(title='Root_entry', regex=True)
         self.assertEqual(len(results), 0)

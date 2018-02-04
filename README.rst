@@ -43,14 +43,16 @@ Simple Example
 Finding Entries
 ----------------------
 
-**find_entries** (title=None, username=None, password=None, url=None, notes=None, path=None, uuid=None, regex=False, flags=None, tree=None, history=False, first=False)
+**find_entries** (title=None, username=None, password=None, url=None, notes=None, path=None, uuid=None, string=none, regex=False, flags=None, tree=None, history=False, first=False)
 
-Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``path`` and ``uuid`` are strings.  These functions have optional ``regex`` boolean and ``flags`` string arguments, which means to interpret the string as an `XSLT style`_ regular expression with `flags`_.
+Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``path`` and ``uuid`` are strings, ``string`` is a dict.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
 .. _flags: https://www.w3.org/TR/xpath-functions/#flags 
 
 The ``path`` string can be a direct path to an entry, or (when ending in ``/``) the path to the group to recursively search under.
+
+The ``string`` dict allows for searching custom string fields.  ex. ``{'custom_field1': 'custom value', 'custom_field2': 'custom value'}``
 
 The ``history`` (default ``False``) boolean controls whether history entries should be included in the search results.
 
@@ -99,12 +101,14 @@ For backwards compatibility, the following function are also available:
 
 **find_entries_by_uuid** (uuid, regex=False, flags=None, tree=None, history=False, first=False)
 
+**find_entries_by_string** (string, regex=False, flags=None, tree=None, history=False, first=False)
+
 Finding Groups
 ----------------------
 
 **find_groups** (name=None, path=None, uuid=None, tree=None, regex=False, flags=None, first=False)
 
-where ``name``, ``path`` and ``uuid`` are strings.  These functions have optional ``regex`` boolean and ``flags`` string arguments, which means to interpret the string as an `XSLT style`_ regular expression with `flags`_.
+where ``name``, ``path`` and ``uuid`` are strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
 .. _flags: https://www.w3.org/TR/xpath-functions/#flags 
