@@ -235,6 +235,9 @@ class PyKeePass(object):
     def delete_group(self, group):
         group.delete()
 
+    def move_group(self, group, destination_group):
+        destination_group.append(group)
+
     #---------- Entries ----------
 
     def find_entries(self, history=False, first=False, **kwargs):
@@ -394,3 +397,6 @@ class PyKeePass(object):
 
     def delete_entry(self, entry):
         entry.delete()
+
+    def move_entry(self, entry, destination_group):
+        destination_group.append(entry)

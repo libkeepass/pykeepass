@@ -163,6 +163,8 @@ Adding Entries
 
 **delete_entry** (entry)
 
+**move_entry** (entry, destination_group)
+
 where ``destination_group`` is a ``Group`` instance.  ``entry`` is an ``Entry`` instance. ``title``, ``username``, ``password``, ``url``, ``notes``, ``tags``, ``icon`` are strings. ``expiry_time`` is a ``datetime`` instance.
 
 If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is not set), the timezone is retrieved from ``dateutil.tz.gettz()``.
@@ -184,6 +186,9 @@ If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is no
    # delete an entry
    >>> kp.delete_entry(entry)
 
+   # move an entry
+   >>> kp.move_entry(entry, kp.root_group)
+
    # save the database
    >>> kp.save()
 
@@ -193,6 +198,8 @@ Adding Groups
 
 **delete_group** (group)
 
+**move_group** (group, destination_group)
+
 ``destination_group`` and ``group`` are instances of ``Group``.  ``group_name`` is a string
 
 .. code:: python
@@ -201,7 +208,7 @@ Adding Groups
    >>> group = kp.add_group(kp.root_group, 'social')
 
    # add a new group to the social group
-   >>> kp.add_group(group, 'gmail')
+   >>> group2 = kp.add_group(group, 'gmail')
    Group: "social/gmail"
 
    # save the database
@@ -209,6 +216,9 @@ Adding Groups
 
    # delete a group
    >>> kp.delete_group(group)
+
+   # move a group
+   >>> kp.move_group(group2, kp.root_group)
 
    # save the database
    >>> kp.save()
