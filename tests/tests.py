@@ -80,6 +80,12 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertEqual('zF9+zSoASMqWIcIio0ewuw==', results.uuid)
         self.assertEqual('foobar_user', results.username)
 
+    def test_find_entries_by_string(self):
+        results = self.kp.find_entries_by_string({'custom_field': 'custom field value'})[0]
+        self.assertIsInstance(results, Entry)
+        self.assertEqual('custom field value', results.get_custom_property('custom_field'))
+        self.assertEqual('HnN4bHSVjEybPf8nOq1bVA==', results.uuid)
+
     def test_find_entries(self):
         results = self.kp.find_entries(title='Root_entry', regex=True)
         self.assertEqual(len(results), 0)
@@ -95,7 +101,7 @@ class EntryFunctionTests(unittest.TestCase):
 
     #---------- Adding/Deleting entries -----------
 
-    def test_add_delete_entry(self):
+    def test_add_delete_move_entry(self):
         unique_str = 'test_add_entry_'
         expiry_time = datetime.now()
         entry = self.kp.add_entry(self.kp.root_group,
@@ -120,6 +126,11 @@ class EntryFunctionTests(unittest.TestCase):
         # convert naive datetime to utc
         expiry_time_utc = expiry_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC'))
         self.assertEqual(results.icon, icons.KEY)
+
+        sub_group = self.kp.add_group(self.kp.root_group, 'sub_group')
+        self.kp.move_entry(entry, sub_group)
+        results = self.kp.find_entries(path='sub_group/' + 'test_add_entry_title', first=True)
+        self.assertEqual(results.title, entry.title)
 
         self.kp.delete_entry(entry)
         results = self.kp.find_entries_by_title(unique_str + 'title', first=True)
@@ -183,20 +194,21 @@ class GroupFunctionTests(unittest.TestCase):
 
     #---------- Adding/Deleting Groups -----------
 
-    def test_add_delete_group(self):
-        base_group_name = 'base_group'
-        sub_group_name = 'sub_group'
-        base_group = self.kp.add_group(self.kp.root_group, base_group_name)
-        sub_group = self.kp.add_group(base_group, sub_group_name)
+    def test_add_delete_move_group(self):
+        base_group = self.kp.add_group(self.kp.root_group, 'base_group')
+        sub_group = self.kp.add_group(base_group, 'sub_group')
+        sub_group2 = self.kp.add_group(base_group, 'sub_group2')
 
-        results = self.kp.find_groups_by_path(base_group_name + '/' + sub_group_name + '/',
-                                              first=True)
+        results = self.kp.find_groups_by_path('base_group/sub_group/', first=True)
         self.assertIsInstance(results, Group)
-        self.assertEqual(results.name, sub_group_name)
+        self.assertEqual(results.name, sub_group.name)
+
+        self.kp.move_group(sub_group2, sub_group)
+        results = self.kp.find_groups(path='base_group/sub_group/sub_group2/', first=True)
+        self.assertEqual(results.name, sub_group2.name)
 
         self.kp.delete_group(sub_group)
-        results = self.kp.find_groups_by_path(base_group_name + '/' + sub_group_name,
-                                              first=True)
+        results = self.kp.find_groups_by_path('base_group/sub_group/', first=True)
         self.assertIsNone(results)
 
         # ---------- Groups representation -----------

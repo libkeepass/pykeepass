@@ -133,6 +133,17 @@ class PyKeePass(object):
 
         if kwargs.keys():
             xp += keys_xp['prefix']
+
+            # handle searching custom string fields
+            if 'string' in kwargs.keys():
+                for key, value in kwargs['string'].items():
+                    if regex:
+                        xp += (keys_xp['string'].format(key, regex_string)).format(value, flags)
+                    else:
+                        xp += (keys_xp['string'].format(key, match_string)).format(value, flags)
+
+                kwargs.pop('string')
+
             # build xpath to filter results with specified attributes
             for key, value in kwargs.items():
                 if key not in keys_xp.keys():
@@ -224,6 +235,9 @@ class PyKeePass(object):
     def delete_group(self, group):
         group.delete()
 
+    def move_group(self, group, destination_group):
+        destination_group.append(group)
+
     #---------- Entries ----------
 
     def find_entries(self, history=False, first=False, **kwargs):
@@ -236,13 +250,12 @@ class PyKeePass(object):
             'url': '/String/Key[text()="URL"]/../Value{}/../..',
             'notes': '/String/Key[text()="Notes"]/../Value{}/../..',
             'uuid': '/UUID{}/..',
+            'string': '/String/Key[text()="{}"]/../Value{}/../..',
         }
 
 
         res = self._find(keys_xp, **kwargs)
 
-        ## FIXME we should figure out how to filter history entries using xpath
-        ##       then move this to the _find() function
         if history is False:
             res = [item for item in res if item._element.getparent().tag != 'History']
 
@@ -325,9 +338,20 @@ class PyKeePass(object):
 
     def find_entries_by_uuid(self, uuid, regex=False, flags=None,
                               tree=None, history=False, first=False):
-
         return self.find_entries(
             uuid=uuid,
+            regex=regex,
+            flags=flags,
+            tree=tree,
+            history=history,
+            first=first
+        )
+
+
+    def find_entries_by_string(self, string, regex=False, flags=None,
+                              tree=None, history=False, first=False):
+        return self.find_entries(
+            string=string,
             regex=regex,
             flags=flags,
             tree=tree,
@@ -373,3 +397,6 @@ class PyKeePass(object):
 
     def delete_entry(self, entry):
         entry.delete()
+
+    def move_entry(self, entry, destination_group):
+        destination_group.append(entry)
