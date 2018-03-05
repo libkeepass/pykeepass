@@ -248,7 +248,7 @@ class Entry(BaseElement):
         ppath = ''
         while p is not None and not p.is_root_group:
             if p.name is not None: # dont make the root group appear
-                ppath += '{}/'.format(p.name)
+                ppath = '{}/{}'.format(p.name, ppath)
             p = p.parentgroup
         return '{}{}'.format(ppath, self.title)
 
