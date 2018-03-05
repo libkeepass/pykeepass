@@ -221,13 +221,13 @@ class PyKeePass(object):
         )
 
     # creates a new group and all parent groups, if necessary
-    def add_group(self, destination_group, group_name, icon=None):
+    def add_group(self, destination_group, group_name, icon=None, notes=None):
         logger.debug('Creating group {}'.format(group_name))
 
         if icon:
-            group = Group(name=group_name, icon=icon)
+            group = Group(name=group_name, icon=icon, notes=notes)
         else:
-            group = Group(name=group_name)
+            group = Group(name=group_name, notes=notes)
         destination_group.append(group)
 
         return group
