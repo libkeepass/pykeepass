@@ -185,7 +185,7 @@ If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is no
 
 Adding Groups
 --------------
-**add_group** (destination_group, group_name, icon=None)
+**add_group** (destination_group, group_name, icon=None, notes=None)
 
 **delete_group** (group)
 
