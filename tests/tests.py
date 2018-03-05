@@ -186,8 +186,13 @@ class GroupFunctionTests(unittest.TestCase):
     def test_add_delete_group(self):
         base_group_name = 'base_group'
         sub_group_name = 'sub_group'
-        base_group = self.kp.add_group(self.kp.root_group, base_group_name)
+        notes_text = "this is a note for a group!"
+        base_group = self.kp.add_group(self.kp.root_group, base_group_name, notes=notes_text)
         sub_group = self.kp.add_group(base_group, sub_group_name)
+
+        self.assertEqual(base_group.notes, notes_text)
+        base_group.notes = ''
+        self.assertEqual(base_group.notes, '')
 
         results = self.kp.find_groups_by_path(base_group_name + '/' + sub_group_name + '/',
                                               first=True)
