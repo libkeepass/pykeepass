@@ -10,7 +10,7 @@ import pykeepass.entry
 
 class Group(BaseElement):
 
-    def __init__(self, name=None, element=None, icon=None):
+    def __init__(self, name=None, element=None, icon=None, notes=None):
         if element is None:
             element = Element('Group')
             name = xmlfactory.create_name_element(name)
@@ -20,6 +20,9 @@ class Group(BaseElement):
             if icon:
                 icon_el = xmlfactory.create_icon_element(icon)
                 element.append(icon_el)
+            if notes:
+                notes_el = xmlfactory.create_element('Notes', notes)
+                element.append(notes_el)
         assert type(element) in [_Element, Element, ObjectifiedElement], \
             'The provided element is not an LXML Element, but {}'.format(
                 type(element)
@@ -43,6 +46,14 @@ class Group(BaseElement):
     @icon.setter
     def icon(self, value):
         return self._set_subelement_text('IconID', value)
+
+    @property
+    def notes(self):
+        return self._get_subelement_text('Notes')
+
+    @notes.setter
+    def notes(self, value):
+        return self._set_subelement_text('Notes', value)
 
     @property
     def entries(self):
