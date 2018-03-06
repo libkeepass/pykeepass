@@ -106,9 +106,9 @@ For backwards compatibility, the following function are also available:
 Finding Groups
 ----------------------
 
-**find_groups** (name=None, path=None, uuid=None, tree=None, regex=False, flags=None, first=False)
+**find_groups** (name=None, path=None, uuid=None, notes=None tree=None, regex=False, flags=None, first=False)
 
-where ``name``, ``path`` and ``uuid`` are strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
+where ``name``, ``path``, ``uuid`` and ``notes`` are strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
 .. _flags: https://www.w3.org/TR/xpath-functions/#flags 
@@ -155,6 +155,8 @@ For backwards compatibility, the following functions are also available:
 **find_groups_by_path** (path, tree=None, regex=False, flags=None, first=False)
 
 **find_groups_by_uuid** (uuid, tree=None, regex=False, flags=None, first=False)
+
+**find_groups_by_notes** (notes, tree=None, regex=False, flags=None, first=False)
 
 
 Adding Entries
