@@ -166,6 +166,7 @@ class PyKeePass(object):
             'prefix': '//Group',
             'name': '/Name{}/..',
             'uuid': '/UUID{}/..',
+            'notes': '/Notes{}/..',
         }
 
         res = self._find(keys_xp, **kwargs)
@@ -213,6 +214,18 @@ class PyKeePass(object):
 
         return self.find_groups(
             uuid=uuid,
+            regex=regex,
+            flags=flags,
+            tree=tree,
+            history=history,
+            first=first
+        )
+
+    def find_groups_by_notes(self, notes, regex=False, flags=None,
+                              tree=None, history=False, first=False):
+
+        return self.find_groups(
+            notes=notes,
             regex=regex,
             flags=flags,
             tree=tree,
