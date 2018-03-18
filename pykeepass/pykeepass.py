@@ -163,7 +163,7 @@ class PyKeePass(object):
     def find_groups(self, first=False, **kwargs):
 
         keys_xp = {
-            'prefix': '//Group',
+            'prefix': './/Group',
             'name': '/Name{}/..',
             'uuid': '/UUID{}/..',
             'notes': '/Notes{}/..',
@@ -256,7 +256,7 @@ class PyKeePass(object):
     def find_entries(self, history=False, first=False, **kwargs):
 
         keys_xp = {
-            'prefix': '//Entry',
+            'prefix': './/Entry',
             'title': '/String/Key[text()="Title"]/../Value{}/../..',
             'username': '/String/Key[text()="UserName"]/../Value{}/../..',
             'password': '/String/Key[text()="Password"]/../Value{}/../..',

@@ -97,7 +97,12 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertEqual(len(results), 1)
         self.assertTrue(self.kp.find_entries(title='group_entry', first=True) in results)
 
-
+        # test `tree` argument
+        results = self.kp.find_entries(title='foobar_entry', tree=None)
+        self.assertEqual(len(results), 3)
+        tree = self.kp.find_groups(name='foobar_group', first=True)._element
+        results = self.kp.find_entries(title='foobar_entry', tree=tree)
+        self.assertEqual(len(results), 2)
 
     #---------- Adding/Deleting entries -----------
 
@@ -135,6 +140,10 @@ class EntryFunctionTests(unittest.TestCase):
         self.kp.delete_entry(entry)
         results = self.kp.find_entries_by_title(unique_str + 'title', first=True)
         self.assertIsNone(results)
+
+        # test adding entry which exists in another group
+        subgroup = self.kp.find_groups(name='subgroup2', first=True)
+        self.kp.add_entry(subgroup, title='foobar_entry', username='foobar', password='foobar')
 
     #---------- Entries name collision exception -----------
 
