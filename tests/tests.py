@@ -145,6 +145,10 @@ class EntryFunctionTests(unittest.TestCase):
         subgroup = self.kp.find_groups(name='subgroup2', first=True)
         self.kp.add_entry(subgroup, title='foobar_entry', username='foobar', password='foobar')
 
+        # test adding entry to root which exists in subgroup
+        self.kp.add_entry(subgroup, title='foobar_entry2', username='foobar', password='foobar')
+        self.kp.add_entry(self.kp.root_group, title='foobar_entry2', username='foobar', password='foobar')
+
     #---------- Entries name collision exception -----------
 
     def test_raise_exception_entry(self):

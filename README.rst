@@ -106,7 +106,7 @@ For backwards compatibility, the following function are also available:
 Finding Groups
 ----------------------
 
-**find_groups** (name=None, path=None, uuid=None, notes=None tree=None, regex=False, flags=None, first=False)
+**find_groups** (name=None, path=None, uuid=None, notes=None, tree=None, recursive=True, regex=False, flags=None, first=False)
 
 where ``name``, ``path``, ``uuid`` and ``notes`` are strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 

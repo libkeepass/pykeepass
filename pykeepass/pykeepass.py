@@ -130,6 +130,8 @@ class PyKeePass(object):
                     xp += (entry_xp.format(match_string)).format(entry)
 
             kwargs.pop('path')
+        elif tree is not None:
+            xp += '.'
 
         if kwargs.keys():
             xp += keys_xp['prefix']
@@ -160,10 +162,10 @@ class PyKeePass(object):
 
     #---------- Groups ----------
 
-    def find_groups(self, first=False, **kwargs):
+    def find_groups(self, first=False, recursive=True, **kwargs):
 
         keys_xp = {
-            'prefix': './/Group',
+            'prefix': '//Group' if recursive else '/Group',
             'name': '/Name{}/..',
             'uuid': '/UUID{}/..',
             'notes': '/Notes{}/..',
@@ -253,10 +255,10 @@ class PyKeePass(object):
 
     #---------- Entries ----------
 
-    def find_entries(self, history=False, first=False, **kwargs):
+    def find_entries(self, history=False, first=False, recursive=True, **kwargs):
 
         keys_xp = {
-            'prefix': './/Entry',
+            'prefix': '//Entry' if recursive else '/Entry',
             'title': '/String/Key[text()="Title"]/../Value{}/../..',
             'username': '/String/Key[text()="UserName"]/../Value{}/../..',
             'password': '/String/Key[text()="Password"]/../Value{}/../..',
@@ -382,6 +384,7 @@ class PyKeePass(object):
             username=username,
             first=True,
             tree=destination_group._element,
+            recursive=False
         )
 
         if entries and not force_creation:
