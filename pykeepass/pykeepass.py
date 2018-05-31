@@ -62,7 +62,7 @@ class PyKeePass(object):
 
     @property
     def root_group(self):
-        return self.find_groups_by_path('', tree=None, first=True)
+        return self.find_groups_by_path('', group=None, first=True)
 
     @property
     def groups(self):
@@ -99,7 +99,7 @@ class PyKeePass(object):
         return res
 
 
-    def _find(self, keys_xp, regex=False, flags=None, tree=None,
+    def _find(self, keys_xp, regex=False, flags=None, group=None,
               history=False, first=False, **kwargs):
 
         regex_string = '[re:test(text(), "{}", "{}")]'
@@ -130,6 +130,8 @@ class PyKeePass(object):
                     xp += (entry_xp.format(match_string)).format(entry)
 
             kwargs.pop('path')
+        elif group is not None:
+            xp += '.'
 
         if kwargs.keys():
             xp += keys_xp['prefix']
@@ -154,16 +156,16 @@ class PyKeePass(object):
                 else:
                     xp += (keys_xp[key].format(match_string)).format(value, flags)
 
-        res = self._xpath(xp, tree=tree)
+        res = self._xpath(xp, tree=group._element if group else None)
 
         return res
 
     #---------- Groups ----------
 
-    def find_groups(self, first=False, **kwargs):
+    def find_groups(self, first=False, recursive=True, **kwargs):
 
         keys_xp = {
-            'prefix': './/Group',
+            'prefix': '//Group' if recursive else '/Group',
             'name': '/Name{}/..',
             'uuid': '/UUID{}/..',
             'notes': '/Notes{}/..',
@@ -178,57 +180,57 @@ class PyKeePass(object):
 
 
     def find_groups_by_path(self, group_path_str=None, regex=False, flags=None,
-                            tree=None, first=False):
+                            group=None, first=False):
 
         return self.find_groups(name=group_name,
                                 regex=regex,
                                 flags=flags,
-                                tree=tree,
+                                group=group,
                                 first=first
         )
 
 
     def find_groups_by_name(self, group_name, regex=False, flags=None,
-                            tree=None, first=False):
+                            group=None, first=False):
 
         return self.find_groups(name=group_name,
                                 regex=regex,
                                 flags=flags,
-                                tree=tree,
+                                group=group,
                                 first=first
         )
 
 
     def find_groups_by_path(self, group_path_str=None, regex=False, flags=None,
-                            tree=None, first=False):
+                            group=None, first=False):
 
         return self.find_groups(path=group_path_str,
                                 regex=regex,
                                 flags=flags,
-                                tree=tree,
+                                group=group,
                                 first=first
         )
 
     def find_groups_by_uuid(self, uuid, regex=False, flags=None,
-                              tree=None, history=False, first=False):
+                              group=None, history=False, first=False):
 
         return self.find_groups(
             uuid=uuid,
             regex=regex,
             flags=flags,
-            tree=tree,
+            group=group,
             history=history,
             first=first
         )
 
     def find_groups_by_notes(self, notes, regex=False, flags=None,
-                              tree=None, history=False, first=False):
+                              group=None, history=False, first=False):
 
         return self.find_groups(
             notes=notes,
             regex=regex,
             flags=flags,
-            tree=tree,
+            group=group,
             history=history,
             first=first
         )
@@ -253,10 +255,10 @@ class PyKeePass(object):
 
     #---------- Entries ----------
 
-    def find_entries(self, history=False, first=False, **kwargs):
+    def find_entries(self, history=False, first=False, recursive=True, **kwargs):
 
         keys_xp = {
-            'prefix': './/Entry',
+            'prefix': '//Entry' if recursive else '/Entry',
             'title': '/String/Key[text()="Title"]/../Value{}/../..',
             'username': '/String/Key[text()="UserName"]/../Value{}/../..',
             'password': '/String/Key[text()="Password"]/../Value{}/../..',
@@ -280,94 +282,94 @@ class PyKeePass(object):
 
 
     def find_entries_by_title(self, title, regex=False, flags=None,
-                              tree=None, history=False, first=False):
+                              group=None, history=False, first=False):
         return self.find_entries(
             title=title,
             regex=regex,
             flags=flags,
-            tree=tree,
+            group=group,
             history=history,
             first=first
         )
 
     def find_entries_by_username(self, username, regex=False, flags=None,
-                                 tree=None, history=False, first=False):
+                                 group=None, history=False, first=False):
         return self.find_entries(
             username=username,
             regex=regex,
             flags=flags,
-            tree=tree,
+            group=group,
             history=history,
             first=first
         )
 
     def find_entries_by_password(self, password, regex=False, flags=None,
-                                 tree=None, history=False, first=False):
+                                 group=None, history=False, first=False):
         return self.find_entries(
             password=password,
             regex=regex,
             flags=flags,
-            tree=tree,
+            group=group,
             history=history,
             first=first
         )
 
 
     def find_entries_by_url(self, url, regex=False, flags=None,
-                            tree=None, history=False, first=False):
+                            group=None, history=False, first=False):
         return self.find_entries(
             url=url,
             regex=regex,
             flags=flags,
-            tree=tree,
+            group=group,
             history=history,
             first=first
         )
 
 
     def find_entries_by_notes(self, notes, regex=False, flags=None,
-                              tree=None, history=False, first=False):
+                              group=None, history=False, first=False):
         return self.find_entries(
             notes=notes,
             regex=regex,
             flags=flags,
-            tree=tree,
+            group=group,
             history=history,
             first=first
         )
 
 
     def find_entries_by_path(self, path, regex=False, flags=None,
-                             tree=None, history=False, first=False):
+                             group=None, history=False, first=False):
         return self.find_entries(
             path=path,
             regex=regex,
             flags=flags,
-            tree=tree,
+            group=group,
             history=history,
             first=first
         )
 
 
     def find_entries_by_uuid(self, uuid, regex=False, flags=None,
-                              tree=None, history=False, first=False):
+                              group=None, history=False, first=False):
         return self.find_entries(
             uuid=uuid,
             regex=regex,
             flags=flags,
-            tree=tree,
+            group=group,
             history=history,
             first=first
         )
 
 
     def find_entries_by_string(self, string, regex=False, flags=None,
-                              tree=None, history=False, first=False):
+                              group=None, history=False, first=False):
         return self.find_entries(
             string=string,
             regex=regex,
             flags=flags,
-            tree=tree,
+            group=group,
             history=history,
             first=first
         )
@@ -381,7 +383,8 @@ class PyKeePass(object):
             title=title,
             username=username,
             first=True,
-            tree=destination_group._element,
+            group=destination_group,
+            recursive=False
         )
 
         if entries and not force_creation:

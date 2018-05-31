@@ -43,7 +43,7 @@ Simple Example
 Finding Entries
 ----------------------
 
-**find_entries** (title=None, username=None, password=None, url=None, notes=None, path=None, uuid=None, string=none, regex=False, flags=None, tree=None, history=False, first=False)
+**find_entries** (title=None, username=None, password=None, url=None, notes=None, path=None, uuid=None, string=none, group=None, recursive=True, regex=False, flags=None, history=False, first=False)
 
 Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``path`` and ``uuid`` are strings, ``string`` is a dict.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
@@ -53,6 +53,8 @@ Returns entries which match all provided parameters, where ``title``, ``username
 The ``path`` string can be a direct path to an entry, or (when ending in ``/``) the path to the group to recursively search under.
 
 The ``string`` dict allows for searching custom string fields.  ex. ``{'custom_field1': 'custom value', 'custom_field2': 'custom value'}``
+
+The ``group`` argument determines what ``Group`` to search under, and the ``recursive`` boolean controls whether to search recursively.
 
 The ``history`` (default ``False``) boolean controls whether history entries should be included in the search results.
 
@@ -82,8 +84,9 @@ a flattened list of all entries in the database
    >>> entry.title
    'foo_entry'
 
-   >>> kp.find_groups_by_name('social', first=True).entries
-   [Entry: "social/gmail (myusername)", Entry: "social/facebook (myusername)"]
+   >>> group = kp.find_group(name='social', first=True)
+   >>> kp.find_entries(title='facebook', group=group, recursive=False, first=True)
+   Entry: "social/facebook (myusername)"
 
 For backwards compatibility, the following function are also available:
 
@@ -106,7 +109,7 @@ For backwards compatibility, the following function are also available:
 Finding Groups
 ----------------------
 
-**find_groups** (name=None, path=None, uuid=None, notes=None tree=None, regex=False, flags=None, first=False)
+**find_groups** (name=None, path=None, uuid=None, notes=None, group=None, recursive=True, regex=False, flags=None, first=False)
 
 where ``name``, ``path``, ``uuid`` and ``notes`` are strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
@@ -114,6 +117,8 @@ where ``name``, ``path``, ``uuid`` and ``notes`` are strings.  This function has
 .. _flags: https://www.w3.org/TR/xpath-functions/#flags 
 
 The ``path`` string must end in ``/``.
+
+The ``group`` argument determines what ``Group`` to search under, and the ``recursive`` boolean controls whether to search recursively.
 
 The ``first`` (default ``False``) boolean controls whether to return the first matched item, or a list of matched items.
 

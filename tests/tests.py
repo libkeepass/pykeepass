@@ -97,11 +97,11 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertEqual(len(results), 1)
         self.assertTrue(self.kp.find_entries(title='group_entry', first=True) in results)
 
-        # test `tree` argument
-        results = self.kp.find_entries(title='foobar_entry', tree=None)
+        # test `group` argument
+        results = self.kp.find_entries(title='foobar_entry', group=None)
         self.assertEqual(len(results), 3)
-        tree = self.kp.find_groups(name='foobar_group', first=True)._element
-        results = self.kp.find_entries(title='foobar_entry', tree=tree)
+        group = self.kp.find_groups(name='foobar_group', first=True)
+        results = self.kp.find_entries(title='foobar_entry', group=group)
         self.assertEqual(len(results), 2)
 
     #---------- Adding/Deleting entries -----------
@@ -145,6 +145,10 @@ class EntryFunctionTests(unittest.TestCase):
         subgroup = self.kp.find_groups(name='subgroup2', first=True)
         self.kp.add_entry(subgroup, title='foobar_entry', username='foobar', password='foobar')
 
+        # test adding entry to root which exists in subgroup
+        self.kp.add_entry(subgroup, title='foobar_entry2', username='foobar', password='foobar')
+        self.kp.add_entry(self.kp.root_group, title='foobar_entry2', username='foobar', password='foobar')
+
     #---------- Entries name collision exception -----------
 
     def test_raise_exception_entry(self):
@@ -177,6 +181,11 @@ class GroupFunctionTests(unittest.TestCase):
         self.assertEqual(len(results), 1)
         results = self.kp.find_groups_by_name('subgroup', first=True)
         self.assertEqual(results.name, 'subgroup')
+        g = self.kp.find_groups(name='foobar_group', first=True)
+        results = self.kp.find_groups(group=g, name='.*group.*', regex=True)
+        self.assertEqual(len(results), 2)
+        results = self.kp.find_groups(group=g, name='.*group.*', regex=True, recursive=False)
+        self.assertEqual(len(results), 1)
 
     def test_find_groups_by_path(self):
         results = self.kp.find_groups_by_path('/foobar_group/subgroup/')
