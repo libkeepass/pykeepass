@@ -6,11 +6,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import absolute_import
 import base64
-import libkeepass
 import logging
 import os
 import re
 from uuid import UUID
+from io import BytesIO
+from libkeepass import KDBX
 
 from pykeepass.entry import Entry
 from pykeepass.group import Group
@@ -21,44 +22,43 @@ logger = logging.getLogger(__name__)
 class PyKeePass(object):
 
     def __init__(self, filename, password=None, keyfile=None):
-        self.kdb_filename = filename
-        self.kdb = self.read(filename, password, keyfile)
+        self.filename = filename
+
+        self.read(password=password, keyfile=keyfile)
 
     def read(self, filename=None, password=None, keyfile=None):
+        self.password = password
+        self.keyfile = keyfile
         if not filename:
-            filename = self.kdb_filename
-        credentials = {}
-        if password:
-            credentials['password'] = password
-        if keyfile:
-            credentials['keyfile'] = keyfile
-        assert filename, 'Filename should not be empty'
-        logger.debug('Open file {}'.format(filename))
-        return libkeepass.open(
-            filename, **credentials
-        ).__enter__()
+            filename = self.filename
+
+        self.kdbx = KDBX.parse_file(
+            filename,
+            password=password,
+            keyfile=keyfile
+        )
+
 
     def save(self, filename=None):
-        # FIXME The *second* save operations creates gibberish passwords
-        # FIXME the save operation should be moved to libkeepass at some point
-        #       we shouldn't need to open another fd here just to write
         if not filename:
-            filename = self.kdb_filename
-        with open(filename, 'wb+') as outfile:
-            self.kdb.write_to(outfile)
+            filename = self.filename
 
-    # clear and set the database credentials
-    def set_credentials(self, password=None, keyfile=None):
-        if password or keyfile:
-            credentials = {}
-            if password:
-                credentials['password'] = password
-            if keyfile:
-                credentials['keyfile'] = keyfile
-            self.kdb.clear_credentials()
-            self.kdb.add_credentials(**credentials)
-        else:
-            logger.error("You must specify a password or keyfile")
+        self.kdbx.build_file(
+            filename,
+            password=self.password,
+            keyfile=self.keyfile
+        )
+
+    @property
+    def version(self):
+        return (
+            self.kdbx.header.value.major_version,
+            self.kdbx.header.value.minor_version
+        )
+
+    @property
+    def tree(self):
+        return self.kdbx.body.payload.xml
 
     @property
     def root_group(self):
@@ -78,11 +78,11 @@ class PyKeePass(object):
         NOTE The file is unencrypted!
         '''
         with open(outfile, 'wb') as f:
-            f.write(self.kdb.pretty_print())
+            f.write(self.tree.pretty_print())
 
     def _xpath(self, xpath_str, tree=None):
         if tree is None:
-            tree = self.kdb.tree
+            tree = self.tree
         logger.debug(xpath_str)
         result = tree.xpath(
             xpath_str, namespaces={'re': 'http://exslt.org/regular-expressions'}
