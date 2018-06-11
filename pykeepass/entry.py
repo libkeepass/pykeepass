@@ -7,8 +7,9 @@ from lxml.objectify import ObjectifiedElement
 import logging
 import pykeepass.xmlfactory as xmlfactory
 import pykeepass.group
-from datetime import datetime
+from datetime import datetime, timedelta
 import dateutil.parser, dateutil.tz as tz
+import base64
 
 logger = logging.getLogger(__name__)
 reserved_keys = [
@@ -27,7 +28,7 @@ class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
                  notes=None, tags=None, expires=False, expiry_time=None,
-                 icon=None, element=None):
+                 icon=None, element=None, version=None):
         if element is None:
             element = Element('Entry')
             title = xmlfactory.create_title_element(title)
@@ -53,13 +54,17 @@ class Entry(BaseElement):
             element.append(password)
             element.append(times)
         assert type(element) in [_Element, Element, ObjectifiedElement], \
-            'The provided element is not an LXML Element, but {}'.format(
+            'The provided element is not an LXML Element, but a {}'.format(
                 type(element)
             )
         assert element.tag == 'Entry', 'The provided element is not an Entry '\
             'element, but a {}'.format(element.tag)
+        assert type(version) is tuple, 'The provided version is not a tuple, but a {}'.format(
+            type(version)
+        )
 
         self._element = element
+        self.version = version
 
     def _get_string_field(self, key):
         results = self._element.xpath('String/Key[text()="{}"]/../Value'.format(key))
@@ -147,14 +152,39 @@ class Entry(BaseElement):
         if times is not None:
             prop = times.find(prop)
             if prop is not None:
-                return prop.text
+                if self.version >= (4, 0):
+                    # decode KDBX4 date from b64 format
+                    return (
+                        datetime(year=1, month=1, day=1) +
+                        timedelta(
+                            seconds=int.from_bytes(
+                                base64.b64decode(prop.text), 'little'
+                            )
+                        )
+                    )
+                else:
+                    return dateutil.parser.parse(
+                        prop.text,
+                        tzinfos={'UTC':tz.gettz('UTC')}
+                    )
 
     def _set_times_property(self, prop, value):
         times = self._element.find('Times')
         if times is not None:
             prop = times.find(prop)
             if prop is not None:
-                prop._setText(value)
+                if self.version >= (4, 0):
+                    # encode KDBX4 date to b64 format
+                    diff_seconds = (
+                        xmlfactory.datetime_to_utc(value).isoformat() -
+                        datetime(year=1, month=1, day=1)
+                    ).total_seconds()
+                    prop.text = base64.b64encode(
+                        struct.pack('<Q', diff_seconds),
+                        'big'
+                    )
+                else:
+                    prop.text = xmlfactory.datetime_to_utc(value).isoformat()
 
     @property
     def expires(self):
@@ -167,6 +197,7 @@ class Entry(BaseElement):
     def expires(self, value):
         d = self._element.find('Times').find('Expires')
         d.text = 'True' if value else 'False'
+
     @property
     def expired(self):
         return self.expires and (datetime.utcnow() > self.expiry_time)
@@ -207,7 +238,7 @@ class Entry(BaseElement):
     @property
     def history(self):
         if self._element.find('History') is not None:
-            return [Entry(element=x) for x in self._element.find('History').findall('Entry')]
+            return [Entry(element=x, version=self.version) for x in self._element.find('History').findall('Entry')]
 
     @history.setter
     def history(self, value):
@@ -227,13 +258,16 @@ class Entry(BaseElement):
         else:
             ancestor = self._element.getparent()
         if ancestor is not None:
-            return pykeepass.group.Group(element=ancestor)
+            return pykeepass.group.Group(element=ancestor, version=self.version)
 
     @property
     def path(self):
         # The root group is an orphan
         if self.is_a_history_entry:
-            pentry = Entry(element=self._element.getparent().getparent()).title
+            pentry = Entry(
+                element=self._element.getparent().getparent(),
+                version=self.version
+            ).title
             return '[History of: {}]'.format(pentry)
         if self.parentgroup is None:
             return None
@@ -313,5 +347,3 @@ class Entry(BaseElement):
              other.notes, other.icon, other.tags, other.atime, other.ctime,
              other.mtime, other.expires, other.uuid)
         )
-
-

@@ -264,15 +264,18 @@ class EntryTests(unittest.TestCase):
 
     def test_fields(self):
         time = datetime.now()
-        entry = Entry('title',
-                      'username',
-                      'password',
-                      url='url',
-                      notes='notes',
-                      tags='tags',
-                      expires=True,
-                      expiry_time=time,
-                      icon=icons.KEY)
+        entry = Entry(
+            'title',
+            'username',
+            'password',
+            url='url',
+            notes='notes',
+            tags='tags',
+            expires=True,
+            expiry_time=time,
+            icon=icons.KEY,
+            version=self.kp.version
+        )
 
         self.assertEqual(entry.title, 'title')
         self.assertEqual(entry.username, 'username')
@@ -291,15 +294,18 @@ class EntryTests(unittest.TestCase):
         time = datetime.now()
         changed_time = datetime.now() + timedelta(hours=9)
         changed_string = 'changed_'
-        entry = Entry('title',
-                      'username',
-                      'password',
-                      url='url',
-                      notes='notes',
-                      tags='tags',
-                      expires=True,
-                      expiry_time=time,
-                      icon=icons.KEY)
+        entry = Entry(
+            'title',
+            'username',
+            'password',
+            url='url',
+            notes='notes',
+            tags='tags',
+            expires=True,
+            expiry_time=time,
+            icon=icons.KEY,
+            version=self.kp.version
+        )
         entry.title = changed_string + 'title'
         entry.username = changed_string + 'username'
         entry.password = changed_string + 'password'

@@ -10,7 +10,7 @@ import pykeepass.entry
 
 class Group(BaseElement):
 
-    def __init__(self, name=None, element=None, icon=None, notes=None):
+    def __init__(self, name=None, element=None, icon=None, notes=None, version=None):
         if element is None:
             element = Element('Group')
             name = xmlfactory.create_name_element(name)
@@ -29,7 +29,11 @@ class Group(BaseElement):
             )
         assert element.tag == 'Group', 'The provided element is not a Group '\
             'element, but a {}'.format(element.tag)
+        assert type(version) is tuple, 'The provided version is not a tuple, but a {}'.format(
+            type(version)
+        )
         self._element = element
+        self.version = version
 
     @property
     def name(self):
@@ -62,17 +66,17 @@ class Group(BaseElement):
         # ... but that may become out of sync and what is supposed to happen
         # when an entry is updated?!
         # On the other side this would make things like "e in g.entries" work
-        return [pykeepass.entry.Entry(element=x) for x in self._element.findall('Entry')]
+        return [pykeepass.entry.Entry(element=x, version=self.version) for x in self._element.findall('Entry')]
 
     @property
     def subgroups(self):
-        return [Group(element=x) for x in self._element.findall('Group')]
+        return [Group(element=x, version=self.version) for x in self._element.findall('Group')]
 
     @property
     def parentgroup(self):
         if self._element.getparent() is None:
             return None
-        return Group(element=self._element.getparent())
+        return Group(element=self._element.getparent(), version=self.version)
 
     @property
     def is_root_group(self):

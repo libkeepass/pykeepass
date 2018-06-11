@@ -100,9 +100,9 @@ class PyKeePass(object):
         res = []
         for r in result:
             if r.tag == 'Entry':
-                res.append(Entry(element=r))
+                res.append(Entry(element=r, version=self.version))
             elif r.tag == 'Group':
-                res.append(Group(element=r))
+                res.append(Group(element=r, version=self.version))
             else:
                 res.append(r)
         return res
@@ -249,9 +249,9 @@ class PyKeePass(object):
         logger.debug('Creating group {}'.format(group_name))
 
         if icon:
-            group = Group(name=group_name, icon=icon, notes=notes)
+            group = Group(name=group_name, icon=icon, notes=notes, version=self.version)
         else:
-            group = Group(name=group_name, notes=notes)
+            group = Group(name=group_name, notes=notes, version=self.version)
         destination_group.append(group)
 
         return group
@@ -413,7 +413,8 @@ class PyKeePass(object):
                 tags=tags,
                 expires=True if expiry_time else False,
                 expiry_time=expiry_time,
-                icon=icon
+                icon=icon,
+                version=self.version
             )
             destination_group.append(entry)
 
