@@ -31,7 +31,11 @@ class EntryFunctionTests(unittest.TestCase):
 
     # get some things ready before testing
     def setUp(self):
-        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
+        self.kp = pykeepass.PyKeePass(
+            os.path.join(base_dir, 'test.kdbx'),
+            password='passw0rd',
+            keyfile=os.path.join(base_dir, 'test.key')
+        )
 
     #---------- Finding entries -----------
 
@@ -172,7 +176,11 @@ class GroupFunctionTests(unittest.TestCase):
 
     # get some things ready before testing
     def setUp(self):
-        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
+        self.kp = pykeepass.PyKeePass(
+            os.path.join(base_dir, 'test.kdbx'),
+            password='passw0rd',
+            keyfile=os.path.join(base_dir, 'test.key')
+        )
 
     #---------- Finding groups -----------
 
@@ -248,7 +256,11 @@ class GroupFunctionTests(unittest.TestCase):
 class EntryTests(unittest.TestCase):
     # get some things ready before testing
     def setUp(self):
-        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
+        self.kp = pykeepass.PyKeePass(
+            os.path.join(base_dir, 'test.kdbx'),
+            password='passw0rd',
+            keyfile=os.path.join(base_dir, 'test.key')
+        )
 
     def test_fields(self):
         time = datetime.now()
@@ -293,8 +305,8 @@ class EntryTests(unittest.TestCase):
         entry.password = changed_string + 'password'
         entry.url = changed_string + 'url'
         entry.notes = changed_string + 'notes'
-        # entry.expires = False
-        # entry.expiry_time = changed_time
+        entry.expires = False
+        entry.expiry_time = changed_time
         entry.icon = icons.GLOBE
         entry.set_custom_property('foo', 'bar')
 
@@ -303,12 +315,13 @@ class EntryTests(unittest.TestCase):
         self.assertEqual(entry.password, changed_string + 'password')
         self.assertEqual(entry.url, changed_string + 'url')
         self.assertEqual(entry.notes, changed_string + 'notes')
-        # self.assertEqual(entry.expires, False)
-        # self.assertEqual(entry.expiry_time,
-        #                  changed_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
         self.assertEqual(entry.icon, icons.GLOBE)
         self.assertEqual(entry.get_custom_property('foo'), 'bar')
         self.assertIn('foo', entry.custom_properties)
+        # test time properties
+        self.assertEqual(entry.expires, False)
+        self.assertEqual(entry.expiry_time,
+                         changed_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
 
         entry.tags = 'changed_tags'
         self.assertEqual(entry.tags, ['changed_tags'])
@@ -320,21 +333,41 @@ class EntryTests(unittest.TestCase):
 class GroupTests(unittest.TestCase):
     # get some things ready before testing
     def setUp(self):
-        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
+        self.kp = pykeepass.PyKeePass(
+            os.path.join(base_dir, 'test.kdbx'),
+            password='passw0rd',
+            keyfile=os.path.join(base_dir, 'test.key')
+        )
 
     def test_fields(self):
         self.assertEqual(self.kp.find_groups(name='subgroup2', first=True).path, 'foobar_group/subgroup/subgroup2')
 
 class PyKeePassTests(unittest.TestCase):
     def setUp(self):
-        shutil.copy(base_dir + '/test.kdbx', base_dir + '/change_creds.kdbx')
-        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
-        self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_creds.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
+        shutil.copy(
+            os.path.join(base_dir, 'test.kdbx'),
+            os.path.join(base_dir, 'change_creds.kdbx')
+        )
+        self.kp = pykeepass.PyKeePass(
+            os.path.join(base_dir, 'test.kdbx'),
+            password='passw0rd',
+            keyfile=os.path.join(base_dir, 'test.key')
+        )
+        self.kp_tmp = pykeepass.PyKeePass(
+            os.path.join(base_dir, 'change_creds.kdbx'),
+            password='passw0rd',
+            keyfile=os.path.join(base_dir, 'test.key')
+        )
 
     def test_set_credentials(self):
-        self.kp_pass.set_credentials(password='f00bar', keyfile=base_dir + '/change.key')
-        self.kp_pass.save()
-        self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_creds.kdbx', password='f00bar', keyfile=base_dir + '/change.key')
+        self.kp_tmp.password = 'f00bar'
+        self.kp_tmp.keyfile = os.path.join(base_dir, 'change.key')
+        self.kp_tmp.save()
+        self.kp_tmp = pykeepass.PyKeePass(
+            os.path.join(base_dir, 'change_creds.kdbx'),
+            password='f00bar',
+            keyfile=os.path.join(base_dir, 'change.key')
+        )
 
         results = self.kp.find_entries_by_username('foobar_user', first=True)
         self.assertEqual('foobar_user', results.username)
@@ -347,7 +380,7 @@ class PyKeePassTests(unittest.TestCase):
 
 
     def tearDown(self):
-        os.remove(base_dir + '/change_creds.kdbx')
+        os.remove(os.path.join(base_dir, 'change_creds.kdbx'))
 
 
 if __name__ == '__main__':

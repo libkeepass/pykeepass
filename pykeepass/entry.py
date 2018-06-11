@@ -158,10 +158,15 @@ class Entry(BaseElement):
 
     @property
     def expires(self):
-        d = self._get_times_property('Expires')
+        times = self._element.find('Times')
+        d = times.find('Expires').text
         if d is not None:
             return d == 'True'
 
+    @expires.setter
+    def expires(self, value):
+        d = self._element.find('Times').find('Expires')
+        d.text = 'True' if value else 'False'
     @property
     def expired(self):
         return self.expires and (datetime.utcnow() > self.expiry_time)
@@ -169,47 +174,35 @@ class Entry(BaseElement):
 
     @property
     def expiry_time(self):
-        d = self._get_times_property('ExpiryTime')
-        if d is not None:
-            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
+        return self._get_times_property('ExpiryTime')
 
     @expiry_time.setter
     def expiry_time(self, value):
-        self._set_times_property('ExpiryTime',
-                                  xmlfactory.datetime_to_utc(value).isoformat())
+        self._set_times_property('ExpiryTime', value)
 
     @property
     def ctime(self):
-        d = self._get_times_property('CreationTime')
-        if d is not None:
-            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
+        return self._get_times_property('CreationTime')
 
     @ctime.setter
     def ctime(self, value):
-        self._set_times_property('CreationTime',
-                                  xmlfactory.datetime_to_utc(value).isoformat())
+        self._set_times_property('CreationTime', value)
 
     @property
     def atime(self):
-        d = self._get_times_property('LastAccessTime')
-        if d is not None:
-            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
+        return self._get_times_property('LastAccessTime')
 
     @atime.setter
     def atime(self, value):
-        self._set_times_property('LastAccessTime',
-                                  xmlfactory.datetime_to_utc(value).isoformat())
+        self._set_times_property('LastAccessTime', value)
 
     @property
     def mtime(self):
-        d = self._get_times_property('LastModificationTime')
-        if d is not None:
-            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
+        return self._get_times_property('LastModificationTime')
 
     @mtime.setter
     def mtime(self, value):
-        self._set_times_property('LastModificationTime',
-                                  xmlfactory.datetime_to_utc(value).isoformat())
+        self._set_times_property('LastModificationTime', value)
 
     @property
     def history(self):

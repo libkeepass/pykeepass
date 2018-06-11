@@ -12,6 +12,7 @@ import re
 from uuid import UUID
 from io import BytesIO
 from libkeepass import KDBX
+from lxml import etree
 
 from pykeepass.entry import Entry
 from pykeepass.group import Group
@@ -43,7 +44,8 @@ class PyKeePass(object):
         if not filename:
             filename = self.filename
 
-        self.kdbx.build_file(
+        KDBX.build_file(
+            self.kdbx,
             filename,
             password=self.password,
             keyfile=self.keyfile
@@ -78,7 +80,14 @@ class PyKeePass(object):
         NOTE The file is unencrypted!
         '''
         with open(outfile, 'wb') as f:
-            f.write(self.tree.pretty_print())
+            f.write(
+                etree.tostring(
+                    self.tree,
+                    pretty_print=True,
+                    standalone=True,
+                    encoding='utf-8'
+                )
+            )
 
     def _xpath(self, xpath_str, tree=None):
         if tree is None:
