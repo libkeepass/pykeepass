@@ -10,30 +10,45 @@ import pykeepass.entry
 
 class Group(BaseElement):
 
-    def __init__(self, name=None, element=None, icon=None, notes=None, version=None):
-        if element is None:
-            element = Element('Group')
-            name = xmlfactory.create_name_element(name)
-            uuid = xmlfactory.create_uuid_element()
-            element.append(uuid)
-            element.append(name)
-            if icon:
-                icon_el = xmlfactory.create_icon_element(icon)
-                element.append(icon_el)
-            if notes:
-                notes_el = xmlfactory.create_element('Notes', notes)
-                element.append(notes_el)
-        assert type(element) in [_Element, Element, ObjectifiedElement], \
-            'The provided element is not an LXML Element, but {}'.format(
-                type(element)
-            )
-        assert element.tag == 'Group', 'The provided element is not a Group '\
-            'element, but a {}'.format(element.tag)
+    def __init__(self, name=None, element=None, icon=None, notes=None,
+                 version=None, expires=None, expiry_time=None):
+
         assert type(version) is tuple, 'The provided version is not a tuple, but a {}'.format(
             type(version)
         )
-        self._element = element
-        self.version = version
+
+        if element is None:
+            super(Group, self).__init__(
+                element=Element('Group'),
+                version=version,
+                expires=expires,
+                expiry_time=expiry_time
+            )
+
+            name = xmlfactory.create_name_element(name)
+            self._element.append(name)
+            if icon:
+                icon_el = xmlfactory.create_icon_element(icon)
+                self._element.append(icon_el)
+            if notes:
+                notes_el = xmlfactory.create_element('Notes', notes)
+                self._element.append(notes_el)
+        else:
+            super(Group, self).__init__(
+                element=element,
+                version=version,
+                expires=expires,
+                expiry_time=expiry_time
+            )
+
+            assert type(element) in [_Element, Element, ObjectifiedElement], \
+                'The provided element is not an LXML Element, but {}'.format(
+                    type(element)
+                )
+            assert element.tag == 'Group', 'The provided element is not a Group '\
+                'element, but a {}'.format(element.tag)
+
+            self._element = element
 
     @property
     def name(self):
@@ -42,14 +57,6 @@ class Group(BaseElement):
     @name.setter
     def name(self, value):
         return self._set_subelement_text('Name', value)
-
-    @property
-    def icon(self):
-        return self._get_subelement_text('IconID')
-
-    @icon.setter
-    def icon(self, value):
-        return self._set_subelement_text('IconID', value)
 
     @property
     def notes(self):
@@ -66,17 +73,17 @@ class Group(BaseElement):
         # ... but that may become out of sync and what is supposed to happen
         # when an entry is updated?!
         # On the other side this would make things like "e in g.entries" work
-        return [pykeepass.entry.Entry(element=x, version=self.version) for x in self._element.findall('Entry')]
+        return [pykeepass.entry.Entry(element=x, version=self._version) for x in self._element.findall('Entry')]
 
     @property
     def subgroups(self):
-        return [Group(element=x, version=self.version) for x in self._element.findall('Group')]
+        return [Group(element=x, version=self._version) for x in self._element.findall('Group')]
 
     @property
     def parentgroup(self):
         if self._element.getparent() is None:
             return None
-        return Group(element=self._element.getparent(), version=self.version)
+        return Group(element=self._element.getparent(), version=self._version)
 
     @property
     def is_root_group(self):
@@ -102,14 +109,5 @@ class Group(BaseElement):
         else:
             self._element.append(entries._element)
 
-    def delete(self):
-        self._element.getparent().remove(self._element)
-
     def __str__(self):
         return str('Group: "{}"'.format(self.path).encode('utf-8'))
-
-    def __unicode__(self):
-        return self.__str__()
-
-    def __repr__(self):
-        return self.__str__()

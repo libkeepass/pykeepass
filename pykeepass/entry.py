@@ -7,9 +7,7 @@ from lxml.objectify import ObjectifiedElement
 import logging
 import pykeepass.xmlfactory as xmlfactory
 import pykeepass.group
-from datetime import datetime, timedelta
-import dateutil.parser, dateutil.tz as tz
-import base64
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 reserved_keys = [
@@ -29,42 +27,54 @@ class Entry(BaseElement):
     def __init__(self, title=None, username=None, password=None, url=None,
                  notes=None, tags=None, expires=False, expiry_time=None,
                  icon=None, element=None, version=None):
-        if element is None:
-            element = Element('Entry')
-            title = xmlfactory.create_title_element(title)
-            uuid = xmlfactory.create_uuid_element()
-            username = xmlfactory.create_username_element(username)
-            password = xmlfactory.create_password_element(password)
-            times = xmlfactory.create_times_element(expires, expiry_time)
-            if url:
-                url_el = xmlfactory.create_url_element(url)
-                element.append(url_el)
-            if notes:
-                notes_el = xmlfactory.create_notes_element(notes)
-                element.append(notes_el)
-            if tags:
-                tags_el = xmlfactory.create_tags_element(tags)
-                element.append(tags_el)
-            if icon:
-                icon_el = xmlfactory.create_icon_element(icon)
-                element.append(icon_el)
-            element.append(title)
-            element.append(uuid)
-            element.append(username)
-            element.append(password)
-            element.append(times)
-        assert type(element) in [_Element, Element, ObjectifiedElement], \
-            'The provided element is not an LXML Element, but a {}'.format(
-                type(element)
-            )
-        assert element.tag == 'Entry', 'The provided element is not an Entry '\
-            'element, but a {}'.format(element.tag)
+
         assert type(version) is tuple, 'The provided version is not a tuple, but a {}'.format(
             type(version)
         )
 
-        self._element = element
-        self.version = version
+
+        if element is None:
+            super(Entry, self).__init__(
+                element=Element('Entry'),
+                version=version,
+                expires=expires,
+                expiry_time=expiry_time
+            )
+
+            title = xmlfactory.create_title_element(title)
+            self._element.append(title)
+            username = xmlfactory.create_username_element(username)
+            self._element.append(username)
+            password = xmlfactory.create_password_element(password)
+            self._element.append(password)
+            if url:
+                url_el = xmlfactory.create_url_element(url)
+                self._element.append(url_el)
+            if notes:
+                notes_el = xmlfactory.create_notes_element(notes)
+                self._element.append(notes_el)
+            if tags:
+                tags_el = xmlfactory.create_tags_element(tags)
+                self._element.append(tags_el)
+            if icon:
+                icon_el = xmlfactory.create_icon_element(icon)
+                self._element.append(icon_el)
+        else:
+            super(Entry, self).__init__(
+                element=element,
+                version=version,
+                expires=expires,
+                expiry_time=expiry_time
+            )
+
+            self._element = element
+
+            assert type(element) in [_Element, Element, ObjectifiedElement], \
+                'The provided element is not an LXML Element, but a {}'.format(
+                    type(element)
+                )
+            assert element.tag == 'Entry', 'The provided element is not an Entry '\
+                'element, but a {}'.format(element.tag)
 
     def _get_string_field(self, key):
         results = self._element.xpath('String/Key[text()="{}"]/../Value'.format(key))
@@ -147,98 +157,10 @@ class Entry(BaseElement):
         v = ';'.join(value if type(value) is list else [value])
         return self._set_subelement_text('Tags', v)
 
-    def _get_times_property(self, prop):
-        times = self._element.find('Times')
-        if times is not None:
-            prop = times.find(prop)
-            if prop is not None:
-                if self.version >= (4, 0):
-                    # decode KDBX4 date from b64 format
-                    return (
-                        datetime(year=1, month=1, day=1) +
-                        timedelta(
-                            seconds=int.from_bytes(
-                                base64.b64decode(prop.text), 'little'
-                            )
-                        )
-                    )
-                else:
-                    return dateutil.parser.parse(
-                        prop.text,
-                        tzinfos={'UTC':tz.gettz('UTC')}
-                    )
-
-    def _set_times_property(self, prop, value):
-        times = self._element.find('Times')
-        if times is not None:
-            prop = times.find(prop)
-            if prop is not None:
-                if self.version >= (4, 0):
-                    # encode KDBX4 date to b64 format
-                    diff_seconds = (
-                        xmlfactory.datetime_to_utc(value).isoformat() -
-                        datetime(year=1, month=1, day=1)
-                    ).total_seconds()
-                    prop.text = base64.b64encode(
-                        struct.pack('<Q', diff_seconds),
-                        'big'
-                    )
-                else:
-                    prop.text = xmlfactory.datetime_to_utc(value).isoformat()
-
-    @property
-    def expires(self):
-        times = self._element.find('Times')
-        d = times.find('Expires').text
-        if d is not None:
-            return d == 'True'
-
-    @expires.setter
-    def expires(self, value):
-        d = self._element.find('Times').find('Expires')
-        d.text = 'True' if value else 'False'
-
-    @property
-    def expired(self):
-        return self.expires and (datetime.utcnow() > self.expiry_time)
-
-
-    @property
-    def expiry_time(self):
-        return self._get_times_property('ExpiryTime')
-
-    @expiry_time.setter
-    def expiry_time(self, value):
-        self._set_times_property('ExpiryTime', value)
-
-    @property
-    def ctime(self):
-        return self._get_times_property('CreationTime')
-
-    @ctime.setter
-    def ctime(self, value):
-        self._set_times_property('CreationTime', value)
-
-    @property
-    def atime(self):
-        return self._get_times_property('LastAccessTime')
-
-    @atime.setter
-    def atime(self, value):
-        self._set_times_property('LastAccessTime', value)
-
-    @property
-    def mtime(self):
-        return self._get_times_property('LastModificationTime')
-
-    @mtime.setter
-    def mtime(self, value):
-        self._set_times_property('LastModificationTime', value)
-
     @property
     def history(self):
         if self._element.find('History') is not None:
-            return [Entry(element=x, version=self.version) for x in self._element.find('History').findall('Entry')]
+            return [Entry(element=x, version=self._version) for x in self._element.find('History').findall('Entry')]
 
     @history.setter
     def history(self, value):
@@ -258,7 +180,7 @@ class Entry(BaseElement):
         else:
             ancestor = self._element.getparent()
         if ancestor is not None:
-            return pykeepass.group.Group(element=ancestor, version=self.version)
+            return pykeepass.group.Group(element=ancestor, version=self._version)
 
     @property
     def path(self):
@@ -266,7 +188,7 @@ class Entry(BaseElement):
         if self.is_a_history_entry:
             pentry = Entry(
                 element=self._element.getparent().getparent(),
-                version=self.version
+                version=self._version
             ).title
             return '[History of: {}]'.format(pentry)
         if self.parentgroup is None:
@@ -324,19 +246,10 @@ class Entry(BaseElement):
             history.append(archive)
             self._element.append(history)
 
-    def delete(self):
-        self._element.getparent().remove(self._element)
-
     def __str__(self):
         return str(
             'Entry: "{} ({})"'.format(self.path, self.username).encode('utf-8')
         )
-
-    def __unicode__(self):
-        return self.__str__()
-
-    def __repr__(self):
-        return self.__str__()
 
     def __eq__(self, other):
         return (
