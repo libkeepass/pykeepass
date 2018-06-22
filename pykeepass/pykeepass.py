@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
 from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import absolute_import
@@ -11,7 +10,7 @@ import os
 import re
 from uuid import UUID
 from io import BytesIO
-from libkeepass import KDBX
+from pykeepass.kdbx_parsing.kdbx import KDBX
 from lxml import etree
 
 from pykeepass.entry import Entry
@@ -44,12 +43,14 @@ class PyKeePass(object):
         if not filename:
             filename = self.filename
 
-        KDBX.build_file(
-            self.kdbx,
-            filename,
-            password=self.password,
-            keyfile=self.keyfile
-        )
+        with open(filename, 'wb') as f:
+            f.write(
+                KDBX.build(
+                    self.kdbx,
+                    password=self.password,
+                    keyfile=self.keyfile
+                )
+            )
 
     @property
     def version(self):
@@ -57,6 +58,10 @@ class PyKeePass(object):
             self.kdbx.header.value.major_version,
             self.kdbx.header.value.minor_version
         )
+
+    @property
+    def encryption_algorithm(self):
+        return self.kdbx.header.value.dynamic_header.cipher_id.data
 
     @property
     def tree(self):
