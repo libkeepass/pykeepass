@@ -1,10 +1,9 @@
 from __future__ import unicode_literals
 from __future__ import absolute_import
 from pykeepass.baseelement import BaseElement
-from lxml.etree import Element
-from lxml.etree import _Element
+from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
-import pykeepass.xmlfactory as xmlfactory
+from lxml.builder import E
 import pykeepass.entry
 
 
@@ -17,30 +16,20 @@ class Group(BaseElement):
             type(version)
         )
 
+        super(Group, self).__init__(
+            element=Element('Group') if element is None else element,
+            version=version,
+            expires=expires,
+            expiry_time=expiry_time,
+            icon=icon
+        )
+
         if element is None:
-            super(Group, self).__init__(
-                element=Element('Group'),
-                version=version,
-                expires=expires,
-                expiry_time=expiry_time
-            )
-
-            name = xmlfactory.create_name_element(name)
-            self._element.append(name)
-            if icon:
-                icon_el = xmlfactory.create_icon_element(icon)
-                self._element.append(icon_el)
+            self._element.append(E.Name(name))
             if notes:
-                notes_el = xmlfactory.create_element('Notes', notes)
-                self._element.append(notes_el)
-        else:
-            super(Group, self).__init__(
-                element=element,
-                version=version,
-                expires=expires,
-                expiry_time=expiry_time
-            )
+                self._element.append(E.Notes(notes))
 
+        else:
             assert type(element) in [_Element, Element, ObjectifiedElement], \
                 'The provided element is not an LXML Element, but {}'.format(
                     type(element)

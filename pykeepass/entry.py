@@ -4,8 +4,8 @@ from pykeepass.baseelement import BaseElement
 from copy import deepcopy
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
+from lxml.builder import E
 import logging
-import pykeepass.xmlfactory as xmlfactory
 import pykeepass.group
 from datetime import datetime
 
@@ -32,43 +32,30 @@ class Entry(BaseElement):
             type(version)
         )
 
+        super(Entry, self).__init__(
+            element=Element('Entry') if element is None else element,
+            version=version,
+            expires=expires,
+            expiry_time=expiry_time,
+            icon=icon
+        )
 
         if element is None:
-            super(Entry, self).__init__(
-                element=Element('Entry'),
-                version=version,
-                expires=expires,
-                expiry_time=expiry_time
+            self._element.append(E.String(E.Key('Title'), E.Value(title)))
+            self._element.append(E.String(E.Key('UserName'), E.Value(username)))
+            self._element.append(
+                E.String(E.Key('Password'), E.Value(password, protected="False"))
             )
-
-            title = xmlfactory.create_title_element(title)
-            self._element.append(title)
-            username = xmlfactory.create_username_element(username)
-            self._element.append(username)
-            password = xmlfactory.create_password_element(password)
-            self._element.append(password)
             if url:
-                url_el = xmlfactory.create_url_element(url)
-                self._element.append(url_el)
+                self._element.append(E.String(E.Key('URL'), E.Value(url)))
             if notes:
-                notes_el = xmlfactory.create_notes_element(notes)
-                self._element.append(notes_el)
+                self._element.append(E.String(E.Key('Notes'), E.Value(notes)))
             if tags:
-                tags_el = xmlfactory.create_tags_element(tags)
-                self._element.append(tags_el)
-            if icon:
-                icon_el = xmlfactory.create_icon_element(icon)
-                self._element.append(icon_el)
+                self._element.append(
+                    E.Tags(';'.join(tags) if type(tags) is list else tags)
+                )
+
         else:
-            super(Entry, self).__init__(
-                element=element,
-                version=version,
-                expires=expires,
-                expiry_time=expiry_time
-            )
-
-            self._element = element
-
             assert type(element) in [_Element, Element, ObjectifiedElement], \
                 'The provided element is not an LXML Element, but a {}'.format(
                     type(element)
@@ -88,8 +75,7 @@ class Entry(BaseElement):
             self._element.remove(results[0])
         else:
             logger.debug('No field named {}. Create it.'.format(key))
-        el = xmlfactory._create_string_element(key, value)
-        self._element.append(el)
+        self._element.append(E.String(E.Key(key), E.Value(value)))
 
     def _get_string_field_keys(self, exclude_reserved=False):
         results = [x.find('Key').text for x in self._element.findall('String')]

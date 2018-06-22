@@ -1,20 +1,45 @@
 from __future__ import unicode_literals
 from __future__ import absolute_import
-import pykeepass.xmlfactory as xmlfactory
-import lxml
+from lxml import etree
+from lxml.builder import E
 from datetime import datetime, timedelta
 import base64
-import dateutil
+from dateutil import parser, tz
+import uuid
+import struct
 
 
 class BaseElement(object):
+    """Entry and Group inherit from this class"""
 
-    def __init__(self, element=None, version=None, expires=None,
+    def __init__(self, element=None, version=None, icon=None, expires=None,
                  expiry_time=None):
         self._element = element
         self._version = version
-        self._element.append(xmlfactory.create_uuid_element())
-        self._element.append(xmlfactory.create_times_element(expires, expiry_time))
+        self._element.append(
+            E.UUID(base64.b64encode(uuid.uuid1().bytes).decode('utf-8'))
+        )
+        if icon:
+            self._element.append(E.IconID(icon))
+        current_time_str = self._encode_time(datetime.utcnow())
+        if expiry_time:
+            expiry_time_str = self._encode_time(
+                self._datetime_to_utc(expiry_time)
+            )
+        else:
+            expiry_time_str = self._encode_time(datetime.utcnow())
+
+        self._element.append(
+            E.Times(
+                E.CreationTime(current_time_str),
+                E.LastModificationTime(current_time_str),
+                E.LastAccessTime(current_time_str),
+                E.ExpiryTime(expiry_time_str),
+                E.Expires(str(expires if expires is not None else None)),
+                E.UsageCount(str(0)),
+                E.LocationChanged(current_time_str)
+            )
+        )
 
     def _get_subelement_text(self, tag):
         v = self._element.find(tag)
@@ -25,11 +50,10 @@ class BaseElement(object):
         v = self._element.find(tag)
         if v is not None:
             self._element.remove(v)
-        el = xmlfactory.create_element(tag, value)
-        self._element.append(el)
+        self._element.append(getattr(E, tag)(value))
 
     def dump_xml(self, pretty_print=False):
-        return lxml.etree.tostring(self._element, pretty_print=pretty_print)
+        return etree.tostring(self._element, pretty_print=pretty_print)
 
     @property
     def uuid(self):
@@ -37,8 +61,7 @@ class BaseElement(object):
 
     @uuid.setter
     def uuid(self, value):
-        # Ignore the provided value to avoid an uuid collision
-        return self._set_subelement_text('UUID', xmlfactory._generate_uuid())
+        return self._set_subelement_text('UUID', value)
 
     @property
     def icon(self):
@@ -48,10 +71,56 @@ class BaseElement(object):
     def icon(self, value):
         return self._set_subelement_text('IconID', value)
 
-
     @property
     def _path(self):
         return self._element.getroottree().getpath(self._element)
+
+    def _datetime_to_utc(self, dt):
+        """Convert naive datetimes to UTC"""
+        
+        if not dt.tzinfo:
+            dt = dt.replace(tzinfo=tz.gettz())
+        return dt.astimezone(tz.gettz('UTC'))
+
+    def _encode_time(self, value):
+        """Convert datetime to base64 or plaintext string"""
+
+        if self._version >= (4, 0):
+            diff_seconds = int(
+                (value - 
+                datetime(year=1, month=1, day=1)
+                ).total_seconds()
+            )
+            return base64.b64encode(
+                struct.pack('<Q', diff_seconds)
+            ).decode('utf-8')
+        else:
+            return self._datetime_to_utc(value).isoformat()
+
+    def _decode_time(self, text):
+        """Convert base64 time or plaintext time to datetime"""
+
+        if self._version >= (4, 0):
+            # decode KDBX4 date from b64 format
+            try:
+                return (
+                    datetime(year=1, month=1, day=1) +
+                    timedelta(
+                        seconds=int.from_bytes(
+                            base64.b64decode(text), 'little'
+                        )
+                    )
+                )
+            except BinasciiError:
+                return parser.parse(
+                    text,
+                    tzinfos={'UTC':tz.gettz('UTC')}
+                )
+        else:
+            return parser.parse(
+                text,
+                tzinfos={'UTC':tz.gettz('UTC')}
+            )
 
 
     def _get_times_property(self, prop):
@@ -59,45 +128,14 @@ class BaseElement(object):
         if times is not None:
             prop = times.find(prop)
             if prop is not None:
-                if self._version >= (4, 0):
-                    # decode KDBX4 date from b64 format
-                    # try:
-                    return (
-                        datetime(year=1, month=1, day=1) +
-                        timedelta(
-                            seconds=int.from_bytes(
-                                base64.b64decode(prop.text), 'little'
-                            )
-                        )
-                    )
-                    # except BinasciiError:
-                    #     return dateutil.parser.parse(
-                    #         prop.text,
-                    #         tzinfos={'UTC':dateutil.tz.gettz('UTC')}
-                    #     )
-                else:
-                    return dateutil.parser.parse(
-                        prop.text,
-                        tzinfos={'UTC':dateutil.tz.gettz('UTC')}
-                    )
+                return self._decode_time(prop.text)
 
     def _set_times_property(self, prop, value):
         times = self._element.find('Times')
         if times is not None:
             prop = times.find(prop)
             if prop is not None:
-                if self._version >= (4, 0):
-                    # encode KDBX4 date to b64 format
-                    diff_seconds = (
-                        xmlfactory.datetime_to_utc(value).isoformat() -
-                        datetime(year=1, month=1, day=1)
-                    ).total_seconds()
-                    prop.text = base64.b64encode(
-                        struct.pack('<Q', diff_seconds),
-                        'big'
-                    )
-                else:
-                    prop.text = xmlfactory.datetime_to_utc(value).isoformat()
+                prop.text = self._encode_time(value)
 
     @property
     def expires(self):
