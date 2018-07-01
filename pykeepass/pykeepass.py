@@ -27,6 +27,12 @@ class PyKeePass(object):
 
         self.read(password=password, keyfile=keyfile)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, typ, value, tb):
+        self.kdb.close()
+
     def read(self, filename=None, password=None, keyfile=None):
         self.password = password
         self.keyfile = keyfile
