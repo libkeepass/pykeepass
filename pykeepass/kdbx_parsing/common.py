@@ -1,4 +1,5 @@
 from Crypto.Cipher import AES, ChaCha20, Salsa20
+from .twofish import Twofish
 from Crypto.Util import Padding as CryptoPadding
 import hashlib
 from construct import (
@@ -262,7 +263,7 @@ class ChaCha20Payload(DecryptedPayload):
 
 class TwoFishPayload(DecryptedPayload):
     def get_cipher(self, master_key, encryption_iv):
-        raise Exception("TwoFish not implemented")
+        return Twofish.new(master_key, mode=Twofish.MODE_CBC, IV=encryption_iv)
 
 
 class Decompressed(Adapter):

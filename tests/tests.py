@@ -397,18 +397,26 @@ class KDBXTests(unittest.TestCase):
         """try to open all databases, save them, then open the result"""
 
         databases = [
-            'test3.kdbx', 'test4.kdbx',
-            # also test original libkeepass databases
-            'sample1.kdbx', 'sample2.kdbx', 'sample3.kdbx', 'sample4.kdbx'
+            'test3.kdbx',
+            'test4.kdbx',
+            'test4_aes.kdbx',
+            'test4_chacha20.kdbx',
+            'test4_twofish.kdbx',
 
         ]
         passwords = [
-            'password', 'password',
-            'asdf', 'asdf', 'qwer', 'qwer'
+            'password',
+            'password',
+            'password',
+            'password',
+            'password',
         ]
         keyfiles = [
-            'test3.key', 'test4.key',
-            None, 'sample2_keyfile.key', 'sample3_keyfile.exe', 'sample3_keyfile.exe'
+            'test3.key',
+            'test4.key',
+            'test4.key',
+            'test4.key',
+            'test4.key',
         ]
 
         for database, password, keyfile in zip(databases, passwords, keyfiles):
