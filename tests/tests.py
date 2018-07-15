@@ -418,15 +418,39 @@ class KDBXTests(unittest.TestCase):
             'test4.key',
             'test4.key',
         ]
+        encryption_algorithms = [
+            'aes256',
+            'chacha20',
+            'aes256',
+            'chacha20',
+            'twofish',
+        ]
+        kdf_algorithms = [
+            'aeskdf',
+            'argon2',
+            'argon2',
+            'argon2',
+            'argon2',
+        ]
 
-        for database, password, keyfile in zip(databases, passwords, keyfiles):
+        for database, password, keyfile, encryption_algorithm, kdf_algorithm in zip(
+                databases,
+                passwords,
+                keyfiles,
+                encryption_algorithms,
+                kdf_algorithms
+        ):
+            kp = PyKeePass(
+                os.path.join(base_dir, database),
+                password,
+                os.path.join(base_dir, keyfile)
+            )
+            self.assertEqual(kp.encryption_algorithm, encryption_algorithm)
+            self.assertEqual(kp.kdf_algorithm, kdf_algorithm)
+
             KDBX.parse(
                 KDBX.build(
-                    KDBX.parse_file(
-                        os.path.join(base_dir, database),
-                        password=password,
-                        keyfile=None if keyfile is None else os.path.join(base_dir, keyfile)
-                    ),
+                    kp.kdbx,
                     password=password,
                     keyfile=None if keyfile is None else os.path.join(base_dir, keyfile)
                 ),

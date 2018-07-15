@@ -25,7 +25,7 @@ from .common import (
 # https://github.com/keepassxreboot/keepassxc/blob/8324d03f0a015e62b6182843b4478226a5197090/src/format/KeePass2.cpp#L24-L26 
 kdf_uuids = {
     'argon2': b'\xefcm\xdf\x8c)DK\x91\xf7\xa9\xa4\x03\xe3\n\x0c',
-    'aes': b'\xc9\xd9\xf3\x9ab\x8aD`\xbft\r\x08\xc1\x8aO\xea',
+    'aeskdf': b'\xc9\xd9\xf3\x9ab\x8aD`\xbft\r\x08\xc1\x8aO\xea',
 }
 
 def compute_transformed(context):
@@ -48,7 +48,7 @@ def compute_transformed(context):
             parallelism=kdf_parameters['P'].value,
             version=kdf_parameters['V'].value
         )
-    elif kdf_parameters['$UUID'].value == kdf_uuids['aes']:
+    elif kdf_parameters['$UUID'].value == kdf_uuids['aeskdf']:
         transformed_key = aes_kdf(
             kdf_parameters['S'].value,
             kdf_parameters['R'].value,

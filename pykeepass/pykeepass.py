@@ -11,6 +11,7 @@ import re
 from uuid import UUID
 from io import BytesIO
 from pykeepass.kdbx_parsing.kdbx import KDBX
+from pykeepass.kdbx_parsing.kdbx4 import kdf_uuids
 from lxml import etree
 
 from pykeepass.entry import Entry
@@ -62,6 +63,17 @@ class PyKeePass(object):
     @property
     def encryption_algorithm(self):
         return self.kdbx.header.value.dynamic_header.cipher_id.data
+
+    @property
+    def kdf_algorithm(self):
+        if self.version == (3, 1):
+            return 'aeskdf'
+        elif self.version == (4, 0):
+            kdf_parameters = self.kdbx.header.value.dynamic_header.kdf_parameters.data.dict
+            if kdf_parameters['$UUID'].value == kdf_uuids['argon2']:
+                return 'argon2'
+            elif kdf_parameters['$UUID'].value == kdf_uuids['aeskdf']:
+                return 'aeskdf'
 
     @property
     def tree(self):
