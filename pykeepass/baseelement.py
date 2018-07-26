@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from __future__ import absolute_import
 from lxml import etree
+from lxml.etree import Element
 from lxml.builder import E
 from datetime import datetime, timedelta
 import base64
@@ -12,34 +13,39 @@ import struct
 class BaseElement(object):
     """Entry and Group inherit from this class"""
 
-    def __init__(self, element=None, version=None, icon=None, expires=None,
+    def __init__(self, element=None, version=None, icon=None, expires=False,
                  expiry_time=None):
-        self._element = element
+
         self._version = version
-        self._element.append(
-            E.UUID(base64.b64encode(uuid.uuid1().bytes).decode('utf-8'))
-        )
-        if icon:
-            self._element.append(E.IconID(icon))
-        current_time_str = self._encode_time(datetime.utcnow())
-        if expiry_time:
-            expiry_time_str = self._encode_time(
-                self._datetime_to_utc(expiry_time)
+        if element is None:
+            self._element = Element('Entry')
+            self._element.append(
+                E.UUID(base64.b64encode(uuid.uuid1().bytes).decode('utf-8'))
+            )
+            if icon:
+                self._element.append(E.IconID(icon))
+            current_time_str = self._encode_time(datetime.utcnow())
+            if expiry_time:
+                expiry_time_str = self._encode_time(
+                    self._datetime_to_utc(expiry_time)
+                )
+            else:
+                expiry_time_str = self._encode_time(datetime.utcnow())
+
+            self._element.append(
+                E.Times(
+                    E.CreationTime(current_time_str),
+                    E.LastModificationTime(current_time_str),
+                    E.LastAccessTime(current_time_str),
+                    E.ExpiryTime(expiry_time_str),
+                    E.Expires(str(expires if expires is not None else False)),
+                    E.UsageCount(str(0)),
+                    E.LocationChanged(current_time_str)
+                )
             )
         else:
-            expiry_time_str = self._encode_time(datetime.utcnow())
+            self._element = element
 
-        self._element.append(
-            E.Times(
-                E.CreationTime(current_time_str),
-                E.LastModificationTime(current_time_str),
-                E.LastAccessTime(current_time_str),
-                E.ExpiryTime(expiry_time_str),
-                E.Expires(str(expires if expires is not None else None)),
-                E.UsageCount(str(0)),
-                E.LocationChanged(current_time_str)
-            )
-        )
 
     def _get_subelement_text(self, tag):
         v = self._element.find(tag)
@@ -87,9 +93,7 @@ class BaseElement(object):
 
         if self._version >= (4, 0):
             diff_seconds = int(
-                (value - 
-                datetime(year=1, month=1, day=1)
-                ).total_seconds()
+                (value - datetime(year=1, month=1, day=1)).total_seconds()
             )
             return base64.b64encode(
                 struct.pack('<Q', diff_seconds)

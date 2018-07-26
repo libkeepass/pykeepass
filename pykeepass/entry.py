@@ -33,7 +33,7 @@ class Entry(BaseElement):
         )
 
         super(Entry, self).__init__(
-            element=Element('Entry') if element is None else element,
+            element=element,
             version=version,
             expires=expires,
             expiry_time=expiry_time,
