@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 from __future__ import absolute_import
 from pykeepass.baseelement import BaseElement
 from copy import deepcopy
-from lxml.etree import Element, _Element
+from lxml.etree import Element, _Element, iterwalk
 from lxml.objectify import ObjectifiedElement
 import logging
 import pykeepass.xmlfactory as xmlfactory
@@ -27,7 +27,8 @@ class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
                  notes=None, tags=None, expires=False, expiry_time=None,
-                 icon=None, element=None):
+                 icon=None, customicon=None, element=None, meta=None):
+        self.meta = meta
         if element is None:
             element = Element('Entry')
             title = xmlfactory.create_title_element(title)
@@ -47,6 +48,9 @@ class Entry(BaseElement):
             if icon:
                 icon_el = xmlfactory.create_icon_element(icon)
                 element.append(icon_el)
+            if customicon:
+                customicon_el = xmlfactory.create_customicon_element(customicon)
+                element.append(customicon_el)
             element.append(title)
             element.append(uuid)
             element.append(username)
@@ -130,6 +134,33 @@ class Entry(BaseElement):
     @icon.setter
     def icon(self, value):
         return self._set_subelement_text('IconID', value)
+
+    @property
+    def customicon(self):
+        if self.meta is None:
+            return None
+        uuid = self._get_subelement_text('CustomIconUUID')
+        walk = iterwalk(self.meta, tag="CustomIcons")
+        find = self.meta.xpath('.//Icon/UUID[text()="{}"]'.format(uuid))
+        if len(find) < 1:
+            return None
+        icon = find[0].getparent()
+        for _, element in walk:
+            icons = element.getchildren()
+            index = icons.index(icon)
+            self.icon = "0"
+            return str(index)
+            break
+
+    @customicon.setter
+    def customicon(self, value):
+        value = int(value)
+        if self.meta is not None:
+            icons = self.meta.xpath('.//Icon/UUID[1]')
+            value = str(icons[value]) if value > 0 and value < len(icons) else None
+        else:
+            value = None
+        return self._set_subelement_text('CustomIconUUID', value)
 
     @property
     def tags(self):

@@ -296,6 +296,7 @@ class EntryTests(unittest.TestCase):
         # entry.expires = False
         # entry.expiry_time = changed_time
         entry.icon = icons.GLOBE
+        entry.customicon = "9"
         entry.set_custom_property('foo', 'bar')
 
         self.assertEqual(entry.title, changed_string + 'title')
@@ -307,6 +308,7 @@ class EntryTests(unittest.TestCase):
         # self.assertEqual(entry.expiry_time,
         #                  changed_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
         self.assertEqual(entry.icon, icons.GLOBE)
+        self.assertEqual(entry.customicon, None)
         self.assertEqual(entry.get_custom_property('foo'), 'bar')
         self.assertIn('foo', entry.custom_properties)
 

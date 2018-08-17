@@ -23,6 +23,12 @@ def create_icon_element(icon):
     return icon_el
 
 
+def create_customicon_element(customicon):
+    customicon_el = Element('CustomIconUUID')
+    customicon_el.text = str(customicon)
+    return customicon_el
+
+
 def create_tags_element(tags):
     tags_el = Element('Tags')
     str_tags = ';'.join(tags) if type(tags) is list else tags
