@@ -91,7 +91,7 @@ class PyKeePass(object):
         res = []
         for r in result:
             if r.tag == 'Entry':
-                res.append(Entry(element=r))
+                res.append(Entry(element=r, meta=tree.find('Meta/CustomIcons')))
             elif r.tag == 'Group':
                 res.append(Group(element=r))
             else:
@@ -377,7 +377,7 @@ class PyKeePass(object):
 
     def add_entry(self, destination_group, title, username,
                   password, url=None, notes=None, expiry_time=None,
-                  tags=None, icon=None, force_creation=False):
+                  tags=None, icon=None, customicon=None, force_creation=False):
 
         entries = self.find_entries(
             title=title,
@@ -404,7 +404,9 @@ class PyKeePass(object):
                 tags=tags,
                 expires=True if expiry_time else False,
                 expiry_time=expiry_time,
-                icon=icon
+                icon=icon,
+                customicon=customicon,
+                meta=self.kdb.tree.find('Meta/CustomIcons')
             )
             destination_group.append(entry)
 
