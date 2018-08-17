@@ -172,7 +172,7 @@ Adding Entries
 
 **move_entry** (entry, destination_group)
 
-where ``destination_group`` is a ``Group`` instance.  ``entry`` is an ``Entry`` instance. ``title``, ``username``, ``password``, ``url``, ``notes``, ``tags``, ``icon`` are strings. ``expiry_time`` is a ``datetime`` instance.
+where ``destination_group`` is a ``Group`` instance.  ``entry`` is an ``Entry`` instance. ``title``, ``username``, ``password``, ``url``, ``notes``, ``tags``, ``icon``, ``customicon`` are strings. ``expiry_time`` is a ``datetime`` instance.
 
 If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is not set), the timezone is retrieved from ``dateutil.tz.gettz()``.
 
@@ -184,7 +184,7 @@ If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is no
 
    # add a new entry to the social group
    >>> group = find_groups(name='social', first=True)
-   >>> entry = kp.add_entry(group, 'testing', 'foo_user', 'passw0rd')
+   >>> entry = kp.add_entry(group, 'testing', 'foo_user', 'passw0rd', customicon="2")
    Entry: "testing (foo_user)"
 
    # save the database
