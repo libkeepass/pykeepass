@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
 from dateutil import tz
-from pykeepass import icons
-from pykeepass import pykeepass
+from pykeepass import icons, PyKeePass
 from pykeepass.entry import Entry
 from pykeepass.group import Group
+from pykeepass.kdbx_parsing import KDBX
 import os
 import shutil
 import unittest
@@ -31,7 +31,11 @@ class EntryFunctionTests(unittest.TestCase):
 
     # get some things ready before testing
     def setUp(self):
-        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
+        self.kp = PyKeePass(
+            os.path.join(base_dir, 'test.kdbx'),
+            password='passw0rd',
+            keyfile=os.path.join(base_dir, 'test.key')
+        )
 
     #---------- Finding entries -----------
 
@@ -172,7 +176,11 @@ class GroupFunctionTests(unittest.TestCase):
 
     # get some things ready before testing
     def setUp(self):
-        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
+        self.kp = PyKeePass(
+            os.path.join(base_dir, 'test.kdbx'),
+            password='passw0rd',
+            keyfile=os.path.join(base_dir, 'test.key')
+        )
 
     #---------- Finding groups -----------
 
@@ -248,19 +256,26 @@ class GroupFunctionTests(unittest.TestCase):
 class EntryTests(unittest.TestCase):
     # get some things ready before testing
     def setUp(self):
-        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
+        self.kp = PyKeePass(
+            os.path.join(base_dir, 'test.kdbx'),
+            password='passw0rd',
+            keyfile=os.path.join(base_dir, 'test.key')
+        )
 
     def test_fields(self):
         time = datetime.now()
-        entry = Entry('title',
-                      'username',
-                      'password',
-                      url='url',
-                      notes='notes',
-                      tags='tags',
-                      expires=True,
-                      expiry_time=time,
-                      icon=icons.KEY)
+        entry = Entry(
+            'title',
+            'username',
+            'password',
+            url='url',
+            notes='notes',
+            tags='tags',
+            expires=True,
+            expiry_time=time,
+            icon=icons.KEY,
+            version=self.kp.version
+        )
 
         self.assertEqual(entry.title, 'title')
         self.assertEqual(entry.username, 'username')
@@ -279,22 +294,25 @@ class EntryTests(unittest.TestCase):
         time = datetime.now()
         changed_time = datetime.now() + timedelta(hours=9)
         changed_string = 'changed_'
-        entry = Entry('title',
-                      'username',
-                      'password',
-                      url='url',
-                      notes='notes',
-                      tags='tags',
-                      expires=True,
-                      expiry_time=time,
-                      icon=icons.KEY)
+        entry = Entry(
+            'title',
+            'username',
+            'password',
+            url='url',
+            notes='notes',
+            tags='tags',
+            expires=True,
+            expiry_time=time,
+            icon=icons.KEY,
+            version=self.kp.version
+        )
         entry.title = changed_string + 'title'
         entry.username = changed_string + 'username'
         entry.password = changed_string + 'password'
         entry.url = changed_string + 'url'
         entry.notes = changed_string + 'notes'
-        # entry.expires = False
-        # entry.expiry_time = changed_time
+        entry.expires = False
+        entry.expiry_time = changed_time
         entry.icon = icons.GLOBE
         entry.set_custom_property('foo', 'bar')
 
@@ -303,12 +321,13 @@ class EntryTests(unittest.TestCase):
         self.assertEqual(entry.password, changed_string + 'password')
         self.assertEqual(entry.url, changed_string + 'url')
         self.assertEqual(entry.notes, changed_string + 'notes')
-        # self.assertEqual(entry.expires, False)
-        # self.assertEqual(entry.expiry_time,
-        #                  changed_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
         self.assertEqual(entry.icon, icons.GLOBE)
         self.assertEqual(entry.get_custom_property('foo'), 'bar')
         self.assertIn('foo', entry.custom_properties)
+        # test time properties
+        self.assertEqual(entry.expires, False)
+        self.assertEqual(entry.expiry_time,
+                         changed_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
 
         entry.tags = 'changed_tags'
         self.assertEqual(entry.tags, ['changed_tags'])
@@ -320,21 +339,41 @@ class EntryTests(unittest.TestCase):
 class GroupTests(unittest.TestCase):
     # get some things ready before testing
     def setUp(self):
-        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
+        self.kp = PyKeePass(
+            os.path.join(base_dir, 'test.kdbx'),
+            password='passw0rd',
+            keyfile=os.path.join(base_dir, 'test.key')
+        )
 
     def test_fields(self):
         self.assertEqual(self.kp.find_groups(name='subgroup2', first=True).path, 'foobar_group/subgroup/subgroup2')
 
 class PyKeePassTests(unittest.TestCase):
     def setUp(self):
-        shutil.copy(base_dir + '/test.kdbx', base_dir + '/change_creds.kdbx')
-        self.kp = pykeepass.PyKeePass(base_dir + '/test.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
-        self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_creds.kdbx', password='passw0rd', keyfile=base_dir + '/test.key')
+        shutil.copy(
+            os.path.join(base_dir, 'test.kdbx'),
+            os.path.join(base_dir, 'change_creds.kdbx')
+        )
+        self.kp = PyKeePass(
+            os.path.join(base_dir, 'test.kdbx'),
+            password='passw0rd',
+            keyfile=os.path.join(base_dir, 'test.key')
+        )
+        self.kp_tmp = PyKeePass(
+            os.path.join(base_dir, 'change_creds.kdbx'),
+            password='passw0rd',
+            keyfile=os.path.join(base_dir, 'test.key')
+        )
 
     def test_set_credentials(self):
-        self.kp_pass.set_credentials(password='f00bar', keyfile=base_dir + '/change.key')
-        self.kp_pass.save()
-        self.kp_pass = pykeepass.PyKeePass(base_dir + '/change_creds.kdbx', password='f00bar', keyfile=base_dir + '/change.key')
+        self.kp_tmp.password = 'f00bar'
+        self.kp_tmp.keyfile = os.path.join(base_dir, 'change.key')
+        self.kp_tmp.save()
+        self.kp_tmp = PyKeePass(
+            os.path.join(base_dir, 'change_creds.kdbx'),
+            password='f00bar',
+            keyfile=os.path.join(base_dir, 'change.key')
+        )
 
         results = self.kp.find_entries_by_username('foobar_user', first=True)
         self.assertEqual('foobar_user', results.username)
@@ -345,10 +384,79 @@ class PyKeePassTests(unittest.TestCase):
             first_line = f.readline()
             self.assertEqual(first_line, '<?xml version=\'1.0\' encoding=\'utf-8\' standalone=\'yes\'?>\n')
 
+    def test_db_info(self):
+        self.assertEqual(self.kp.version, (3, 1))
+        self.assertEqual(self.kp.encryption_algorithm, 'aes256')
 
     def tearDown(self):
-        os.remove(base_dir + '/change_creds.kdbx')
+        os.remove(os.path.join(base_dir, 'change_creds.kdbx'))
 
+class KDBXTests(unittest.TestCase):
+
+    def test_open_save(self):
+        """try to open all databases, save them, then open the result"""
+
+        databases = [
+            'test3.kdbx',
+            'test4.kdbx',
+            'test4_aes.kdbx',
+            'test4_chacha20.kdbx',
+            'test4_twofish.kdbx',
+
+        ]
+        passwords = [
+            'password',
+            'password',
+            'password',
+            'password',
+            'password',
+        ]
+        keyfiles = [
+            'test3.key',
+            'test4.key',
+            'test4.key',
+            'test4.key',
+            'test4.key',
+        ]
+        encryption_algorithms = [
+            'aes256',
+            'chacha20',
+            'aes256',
+            'chacha20',
+            'twofish',
+        ]
+        kdf_algorithms = [
+            'aeskdf',
+            'argon2',
+            'argon2',
+            'argon2',
+            'argon2',
+        ]
+
+        for database, password, keyfile, encryption_algorithm, kdf_algorithm in zip(
+                databases,
+                passwords,
+                keyfiles,
+                encryption_algorithms,
+                kdf_algorithms
+        ):
+            kp = PyKeePass(
+                os.path.join(base_dir, database),
+                password,
+                os.path.join(base_dir, keyfile)
+            )
+            self.assertEqual(kp.encryption_algorithm, encryption_algorithm)
+            self.assertEqual(kp.kdf_algorithm, kdf_algorithm)
+
+            KDBX.parse(
+                KDBX.build(
+                    kp.kdbx,
+                    password=password,
+                    keyfile=None if keyfile is None else os.path.join(base_dir, keyfile)
+                ),
+                password=password,
+                keyfile=None if keyfile is None else os.path.join(base_dir, keyfile)
+            )
 
 if __name__ == '__main__':
     unittest.main()

@@ -240,11 +240,23 @@ where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is 
 
 where ``filename`` is the path of the file to save to.  If ``filename`` is not given, the path given in ``read`` will be used.
 
-**set_credentials** (password=None, keyfile=None)
+**password**
 
-clear current database credentials and set to the ones given.  ``password`` and ``keyfile`` are strings.  At least one of ``password`` and ``keyfile`` is required
+string containing database password.  Can also be set.  Use ``None`` for no password.
+
+**keyfile**
+
+string containing path to the database keyfile.  Can also be set.  Use ``None`` for no keyfile.
+
+**version**
+
+tuple containing database version.  e.g. ``(3, 1)`` is a KDBX version 3.1 database.
+
+**encryption_algorithm**
+
+string containing algorithm used to encrypt database.  Possible values are ``aes256``, ``chacha20``, and ``twofish``.
 
 Tests
 -------------
 
-To run them issue :code:`$ python tests/tests.py`
+To run them issue :code:`python tests/tests.py`

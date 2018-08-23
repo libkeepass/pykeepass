@@ -4,11 +4,10 @@ from pykeepass.baseelement import BaseElement
 from copy import deepcopy
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
+from lxml.builder import E
 import logging
-import pykeepass.xmlfactory as xmlfactory
 import pykeepass.group
 from datetime import datetime
-import dateutil.parser, dateutil.tz as tz
 
 logger = logging.getLogger(__name__)
 reserved_keys = [
@@ -27,39 +26,42 @@ class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
                  notes=None, tags=None, expires=False, expiry_time=None,
-                 icon=None, element=None):
-        if element is None:
-            element = Element('Entry')
-            title = xmlfactory.create_title_element(title)
-            uuid = xmlfactory.create_uuid_element()
-            username = xmlfactory.create_username_element(username)
-            password = xmlfactory.create_password_element(password)
-            times = xmlfactory.create_times_element(expires, expiry_time)
-            if url:
-                url_el = xmlfactory.create_url_element(url)
-                element.append(url_el)
-            if notes:
-                notes_el = xmlfactory.create_notes_element(notes)
-                element.append(notes_el)
-            if tags:
-                tags_el = xmlfactory.create_tags_element(tags)
-                element.append(tags_el)
-            if icon:
-                icon_el = xmlfactory.create_icon_element(icon)
-                element.append(icon_el)
-            element.append(title)
-            element.append(uuid)
-            element.append(username)
-            element.append(password)
-            element.append(times)
-        assert type(element) in [_Element, Element, ObjectifiedElement], \
-            'The provided element is not an LXML Element, but {}'.format(
-                type(element)
-            )
-        assert element.tag == 'Entry', 'The provided element is not an Entry '\
-            'element, but a {}'.format(element.tag)
+                 icon=None, element=None, version=None):
 
-        self._element = element
+        assert type(version) is tuple, 'The provided version is not a tuple, but a {}'.format(
+            type(version)
+        )
+
+        super(Entry, self).__init__(
+            element=element,
+            version=version,
+            expires=expires,
+            expiry_time=expiry_time,
+            icon=icon
+        )
+
+        if element is None:
+            self._element.append(E.String(E.Key('Title'), E.Value(title)))
+            self._element.append(E.String(E.Key('UserName'), E.Value(username)))
+            self._element.append(
+                E.String(E.Key('Password'), E.Value(password, protected="False"))
+            )
+            if url:
+                self._element.append(E.String(E.Key('URL'), E.Value(url)))
+            if notes:
+                self._element.append(E.String(E.Key('Notes'), E.Value(notes)))
+            if tags:
+                self._element.append(
+                    E.Tags(';'.join(tags) if type(tags) is list else tags)
+                )
+
+        else:
+            assert type(element) in [_Element, Element, ObjectifiedElement], \
+                'The provided element is not an LXML Element, but a {}'.format(
+                    type(element)
+                )
+            assert element.tag == 'Entry', 'The provided element is not an Entry '\
+                'element, but a {}'.format(element.tag)
 
     def _get_string_field(self, key):
         results = self._element.xpath('String/Key[text()="{}"]/../Value'.format(key))
@@ -73,8 +75,7 @@ class Entry(BaseElement):
             self._element.remove(results[0])
         else:
             logger.debug('No field named {}. Create it.'.format(key))
-        el = xmlfactory._create_string_element(key, value)
-        self._element.append(el)
+        self._element.append(E.String(E.Key(key), E.Value(value)))
 
     def _get_string_field_keys(self, exclude_reserved=False):
         results = [x.find('Key').text for x in self._element.findall('String')]
@@ -142,79 +143,10 @@ class Entry(BaseElement):
         v = ';'.join(value if type(value) is list else [value])
         return self._set_subelement_text('Tags', v)
 
-    def _get_times_property(self, prop):
-        times = self._element.find('Times')
-        if times is not None:
-            prop = times.find(prop)
-            if prop is not None:
-                return prop.text
-
-    def _set_times_property(self, prop, value):
-        times = self._element.find('Times')
-        if times is not None:
-            prop = times.find(prop)
-            if prop is not None:
-                prop._setText(value)
-
-    @property
-    def expires(self):
-        d = self._get_times_property('Expires')
-        if d is not None:
-            return d == 'True'
-
-    @property
-    def expired(self):
-        return self.expires and (datetime.utcnow() > self.expiry_time)
-
-
-    @property
-    def expiry_time(self):
-        d = self._get_times_property('ExpiryTime')
-        if d is not None:
-            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
-
-    @expiry_time.setter
-    def expiry_time(self, value):
-        self._set_times_property('ExpiryTime',
-                                  xmlfactory.datetime_to_utc(value).isoformat())
-
-    @property
-    def ctime(self):
-        d = self._get_times_property('CreationTime')
-        if d is not None:
-            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
-
-    @ctime.setter
-    def ctime(self, value):
-        self._set_times_property('CreationTime',
-                                  xmlfactory.datetime_to_utc(value).isoformat())
-
-    @property
-    def atime(self):
-        d = self._get_times_property('LastAccessTime')
-        if d is not None:
-            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
-
-    @atime.setter
-    def atime(self, value):
-        self._set_times_property('LastAccessTime',
-                                  xmlfactory.datetime_to_utc(value).isoformat())
-
-    @property
-    def mtime(self):
-        d = self._get_times_property('LastModificationTime')
-        if d is not None:
-            return dateutil.parser.parse(d, tzinfos={'UTC':tz.gettz('UTC')})
-
-    @mtime.setter
-    def mtime(self, value):
-        self._set_times_property('LastModificationTime',
-                                  xmlfactory.datetime_to_utc(value).isoformat())
-
     @property
     def history(self):
         if self._element.find('History') is not None:
-            return [Entry(element=x) for x in self._element.find('History').findall('Entry')]
+            return [Entry(element=x, version=self._version) for x in self._element.find('History').findall('Entry')]
 
     @history.setter
     def history(self, value):
@@ -234,13 +166,16 @@ class Entry(BaseElement):
         else:
             ancestor = self._element.getparent()
         if ancestor is not None:
-            return pykeepass.group.Group(element=ancestor)
+            return pykeepass.group.Group(element=ancestor, version=self._version)
 
     @property
     def path(self):
         # The root group is an orphan
         if self.is_a_history_entry:
-            pentry = Entry(element=self._element.getparent().getparent()).title
+            pentry = Entry(
+                element=self._element.getparent().getparent(),
+                version=self._version
+            ).title
             return '[History of: {}]'.format(pentry)
         if self.parentgroup is None:
             return None
@@ -297,19 +232,10 @@ class Entry(BaseElement):
             history.append(archive)
             self._element.append(history)
 
-    def delete(self):
-        self._element.getparent().remove(self._element)
-
     def __str__(self):
         return str(
             'Entry: "{} ({})"'.format(self.path, self.username).encode('utf-8')
         )
-
-    def __unicode__(self):
-        return self.__str__()
-
-    def __repr__(self):
-        return self.__str__()
 
     def __eq__(self, other):
         return (
@@ -320,5 +246,3 @@ class Entry(BaseElement):
              other.notes, other.icon, other.tags, other.atime, other.ctime,
              other.mtime, other.expires, other.uuid)
         )
-
-
