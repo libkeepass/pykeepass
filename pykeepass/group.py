@@ -5,6 +5,8 @@ from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
 from lxml.builder import E
 import pykeepass.entry
+import base64
+import uuid
 
 
 class Group(BaseElement):
@@ -25,6 +27,9 @@ class Group(BaseElement):
         )
 
         if element is None:
+            self._element.append(
+                E.UUID(base64.b64encode(uuid.uuid1().bytes).decode('utf-8'))
+            )
             self._element.append(E.Name(name))
             if notes:
                 self._element.append(E.Notes(notes))
