@@ -16,36 +16,31 @@ class BaseElement(object):
     def __init__(self, element=None, version=None, icon=None, expires=False,
                  expiry_time=None):
 
-        self._version = version
-        if element is None:
-            self._element = Element('Entry')
-            self._element.append(
-                E.UUID(base64.b64encode(uuid.uuid1().bytes).decode('utf-8'))
-            )
-            if icon:
-                self._element.append(E.IconID(icon))
-            current_time_str = self._encode_time(datetime.utcnow())
-            if expiry_time:
-                expiry_time_str = self._encode_time(
-                    self._datetime_to_utc(expiry_time)
-                )
-            else:
-                expiry_time_str = self._encode_time(datetime.utcnow())
-
-            self._element.append(
-                E.Times(
-                    E.CreationTime(current_time_str),
-                    E.LastModificationTime(current_time_str),
-                    E.LastAccessTime(current_time_str),
-                    E.ExpiryTime(expiry_time_str),
-                    E.Expires(str(expires if expires is not None else False)),
-                    E.UsageCount(str(0)),
-                    E.LocationChanged(current_time_str)
-                )
+        self._element = element
+        self._element.append(
+            E.UUID(base64.b64encode(uuid.uuid1().bytes).decode('utf-8'))
+        )
+        if icon:
+            self._element.append(E.IconID(icon))
+        current_time_str = self._encode_time(datetime.utcnow())
+        if expiry_time:
+            expiry_time_str = self._encode_time(
+                self._datetime_to_utc(expiry_time)
             )
         else:
-            self._element = element
+            expiry_time_str = self._encode_time(datetime.utcnow())
 
+        self._element.append(
+            E.Times(
+                E.CreationTime(current_time_str),
+                E.LastModificationTime(current_time_str),
+                E.LastAccessTime(current_time_str),
+                E.ExpiryTime(expiry_time_str),
+                E.Expires(str(expires if expires is not None else False)),
+                E.UsageCount(str(0)),
+                E.LocationChanged(current_time_str)
+            )
+        )
 
     def _get_subelement_text(self, tag):
         v = self._element.find(tag)

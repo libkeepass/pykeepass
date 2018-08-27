@@ -15,16 +15,17 @@ class Group(BaseElement):
         assert type(version) is tuple, 'The provided version is not a tuple, but a {}'.format(
             type(version)
         )
+        self._version = version
 
-        super(Group, self).__init__(
-            element=Element('Group') if element is None else element,
-            version=version,
-            expires=expires,
-            expiry_time=expiry_time,
-            icon=icon
-        )
 
         if element is None:
+            super(Group, self).__init__(
+                element=Element('Group'),
+                version=version,
+                expires=expires,
+                expiry_time=expiry_time,
+                icon=icon
+            )
             self._element.append(E.Name(name))
             if notes:
                 self._element.append(E.Notes(notes))
@@ -36,7 +37,6 @@ class Group(BaseElement):
                 )
             assert element.tag == 'Group', 'The provided element is not a Group '\
                 'element, but a {}'.format(element.tag)
-
             self._element = element
 
     @property
