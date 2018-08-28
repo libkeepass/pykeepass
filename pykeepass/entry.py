@@ -31,16 +31,16 @@ class Entry(BaseElement):
         assert type(version) is tuple, 'The provided version is not a tuple, but a {}'.format(
             type(version)
         )
-
-        super(Entry, self).__init__(
-            element=element,
-            version=version,
-            expires=expires,
-            expiry_time=expiry_time,
-            icon=icon
-        )
+        self._version = version
 
         if element is None:
+            super(Entry, self).__init__(
+                element=Element('Entry'),
+                version=version,
+                expires=expires,
+                expiry_time=expiry_time,
+                icon=icon
+            )
             self._element.append(E.String(E.Key('Title'), E.Value(title)))
             self._element.append(E.String(E.Key('UserName'), E.Value(username)))
             self._element.append(
@@ -62,6 +62,7 @@ class Entry(BaseElement):
                 )
             assert element.tag == 'Entry', 'The provided element is not an Entry '\
                 'element, but a {}'.format(element.tag)
+            self._element = element
 
     def _get_string_field(self, key):
         results = self._element.xpath('String/Key[text()="{}"]/../Value'.format(key))
