@@ -39,13 +39,6 @@ Simple Example
    # save database
    >>> kp.save()
 
-Context Manager Example
---------------
-.. code:: python
-   >>> with PyKeePass('db.kdbx', password='somePassw0rd') as kp:
-      >>> entry = kp.find_entries(title='facebook', first=True)
-      >>> entry.password
-      's3cure_p455w0rd'
 
 Finding Entries
 ----------------------
@@ -173,13 +166,13 @@ For backwards compatibility, the following functions are also available:
 
 Adding Entries
 --------------
-**add_entry** (destination_group, title, username, password, url=None, notes=None, tags=None, expiry_time=None, icon=None, force_creation=False)
+**add_entry** (destination_group, title, username, password, url=None, notes=None, tags=None, expiry_time=None, icon=None, customicon=None, force_creation=False)
 
 **delete_entry** (entry)
 
 **move_entry** (entry, destination_group)
 
-where ``destination_group`` is a ``Group`` instance.  ``entry`` is an ``Entry`` instance. ``title``, ``username``, ``password``, ``url``, ``notes``, ``tags``, ``icon`` are strings. ``expiry_time`` is a ``datetime`` instance.
+where ``destination_group`` is a ``Group`` instance.  ``entry`` is an ``Entry`` instance. ``title``, ``username``, ``password``, ``url``, ``notes``, ``tags``, ``icon``, ``customicon`` are strings. ``expiry_time`` is a ``datetime`` instance.
 
 If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is not set), the timezone is retrieved from ``dateutil.tz.gettz()``.
 
@@ -189,9 +182,9 @@ If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is no
    >>> kp.add_entry(kp.root_group, 'testing', 'foo_user', 'passw0rd')
    Entry: "testing (foo_user)"
 
-   # add a new entry to the social group
+   # add a new entry to the social group with a custom icon
    >>> group = find_groups(name='social', first=True)
-   >>> entry = kp.add_entry(group, 'testing', 'foo_user', 'passw0rd')
+   >>> entry = kp.add_entry(group, 'testing', 'foo_user', 'passw0rd', customicon="2")
    Entry: "testing (foo_user)"
 
    # save the database

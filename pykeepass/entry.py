@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 from __future__ import absolute_import
 from pykeepass.baseelement import BaseElement
 from copy import deepcopy
-from lxml.etree import Element, _Element
+from lxml.etree import Element, _Element, iterwalk
 from lxml.objectify import ObjectifiedElement
 from lxml.builder import E
 import logging
@@ -17,6 +17,7 @@ reserved_keys = [
     'URL',
     'Tags',
     'IconID',
+    'CustomIconUUID',
     'Times',
     'History'
 ]
@@ -26,12 +27,13 @@ class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
                  notes=None, tags=None, expires=False, expiry_time=None,
-                 icon=None, element=None, version=None):
+                 icon=None, customicon=None, element=None, version=None, meta=None):
 
         assert type(version) is tuple, 'The provided version is not a tuple, but a {}'.format(
             type(version)
         )
         self._version = version
+        self._meta = meta
 
         if element is None:
             super(Entry, self).__init__(
@@ -39,7 +41,9 @@ class Entry(BaseElement):
                 version=version,
                 expires=expires,
                 expiry_time=expiry_time,
-                icon=icon
+                icon=icon,
+                customicon=customicon,
+                meta=meta
             )
             self._element.append(E.String(E.Key('Title'), E.Value(title)))
             self._element.append(E.String(E.Key('UserName'), E.Value(username)))
@@ -126,14 +130,6 @@ class Entry(BaseElement):
         return self._set_string_field('Notes', value)
 
     @property
-    def icon(self):
-        return self._get_subelement_text('IconID')
-
-    @icon.setter
-    def icon(self, value):
-        return self._set_subelement_text('IconID', value)
-
-    @property
     def tags(self):
         val =  self._get_subelement_text('Tags')
         return val.split(';') if val else val
@@ -147,7 +143,7 @@ class Entry(BaseElement):
     @property
     def history(self):
         if self._element.find('History') is not None:
-            return [Entry(element=x, version=self._version) for x in self._element.find('History').findall('Entry')]
+            return [Entry(element=x, version=self._version, meta=self._meta) for x in self._element.find('History').findall('Entry')]
 
     @history.setter
     def history(self, value):
@@ -241,9 +237,9 @@ class Entry(BaseElement):
     def __eq__(self, other):
         return (
             (self.title, self.username, self.password, self.url,
-             self.notes, self.icon, self.tags, self.atime, self.ctime,
+             self.notes, self.icon, self.customicon, self.tags, self.atime, self.ctime,
              self.mtime, self.expires, self.uuid) ==
             (other.title, other.username, other.password, other.url,
-             other.notes, other.icon, other.tags, other.atime, other.ctime,
+             other.notes, other.icon, other.customicon, other.tags, other.atime, other.ctime,
              other.mtime, other.expires, other.uuid)
         )

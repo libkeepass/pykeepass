@@ -27,12 +27,6 @@ class PyKeePass(object):
 
         self.read(password=password, keyfile=keyfile)
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, typ, value, tb):
-        del self.kdbx
-
     def read(self, filename=None, password=None, keyfile=None):
         self.password = password
         self.keyfile = keyfile
@@ -97,6 +91,10 @@ class PyKeePass(object):
     def entries(self):
         return self.find_entries_by_title('.*', regex=True)
 
+    @property
+    def meta(self):
+        return self.tree.find('Meta')
+
     def dump_xml(self, outfile):
         '''
         Dump the content of the database to a file
@@ -123,9 +121,9 @@ class PyKeePass(object):
         res = []
         for r in result:
             if r.tag == 'Entry':
-                res.append(Entry(element=r, version=self.version))
+                res.append(Entry(element=r, version=self.version, meta=self.meta))
             elif r.tag == 'Group':
-                res.append(Group(element=r, version=self.version))
+                res.append(Group(element=r, version=self.version, meta=self.meta))
             else:
                 res.append(r)
         return res
@@ -268,10 +266,12 @@ class PyKeePass(object):
         )
 
     # creates a new group and all parent groups, if necessary
-    def add_group(self, destination_group, group_name, icon=None, notes=None):
+    def add_group(self, destination_group, group_name, icon=None, customicon=None, notes=None):
         logger.debug('Creating group {}'.format(group_name))
 
-        if icon:
+        if customicon:
+            group = Group(name=group_name, customicon=customicon, notes=notes, version=self.version, meta=self.meta)
+        elif icon:
             group = Group(name=group_name, icon=icon, notes=notes, version=self.version)
         else:
             group = Group(name=group_name, notes=notes, version=self.version)
@@ -409,7 +409,7 @@ class PyKeePass(object):
 
     def add_entry(self, destination_group, title, username,
                   password, url=None, notes=None, expiry_time=None,
-                  tags=None, icon=None, force_creation=False):
+                  tags=None, icon=None, customicon=None, force_creation=False):
 
         entries = self.find_entries(
             title=title,
@@ -437,7 +437,9 @@ class PyKeePass(object):
                 expires=True if expiry_time else False,
                 expiry_time=expiry_time,
                 icon=icon,
-                version=self.version
+                customicon=customicon,
+                version=self.version,
+                meta=self.meta
             )
             destination_group.append(entry)
 

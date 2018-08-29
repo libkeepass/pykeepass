@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from __future__ import absolute_import
 from lxml import etree
-from lxml.etree import Element
+from lxml.etree import Element, iterwalk
 from lxml.builder import E
 from datetime import datetime, timedelta
 import base64
@@ -13,15 +13,18 @@ import struct
 class BaseElement(object):
     """Entry and Group inherit from this class"""
 
-    def __init__(self, element=None, version=None, icon=None, expires=False,
-                 expiry_time=None):
+    def __init__(self, element=None, version=None, icon=None, customicon=None,
+                 expires=False, meta=None, expiry_time=None):
 
         self._element = element
+        self._meta = meta
         self._element.append(
             E.UUID(base64.b64encode(uuid.uuid1().bytes).decode('utf-8'))
         )
         if icon:
             self._element.append(E.IconID(icon))
+        if customicon:
+            self._element.append(E.CustomIconUUID(self._get_customicon_uuid(customicon)))
         current_time_str = self._encode_time(datetime.utcnow())
         if expiry_time:
             expiry_time_str = self._encode_time(
@@ -51,7 +54,8 @@ class BaseElement(object):
         v = self._element.find(tag)
         if v is not None:
             self._element.remove(v)
-        self._element.append(getattr(E, tag)(value))
+        if value is not None:
+            self._element.append(getattr(E, tag)(value))
 
     def dump_xml(self, pretty_print=False):
         return etree.tostring(self._element, pretty_print=pretty_print)
@@ -71,6 +75,14 @@ class BaseElement(object):
     @icon.setter
     def icon(self, value):
         return self._set_subelement_text('IconID', value)
+
+    @property
+    def customicon(self):
+        return self._get_customicon_id(self._get_subelement_text('CustomIconUUID'))
+
+    @customicon.setter
+    def customicon(self, value):
+        return self._set_subelement_text('CustomIconUUID', self._get_customicon_uuid(value))
 
     @property
     def _path(self):
@@ -121,7 +133,6 @@ class BaseElement(object):
                 tzinfos={'UTC':tz.gettz('UTC')}
             )
 
-
     def _get_times_property(self, prop):
         times = self._element.find('Times')
         if times is not None:
@@ -135,6 +146,25 @@ class BaseElement(object):
             prop = times.find(prop)
             if prop is not None:
                 prop.text = self._encode_time(value)
+
+    def _get_customicon_uuid(self, iconid):
+        iconid = int(iconid)
+        if self._meta is not None:
+            icons = self._meta.xpath('.//CustomIcons/Icon/UUID[1]')
+            return str(icons[iconid].text) if iconid >= 0 and iconid < len(icons) else None
+
+    def _get_customicon_id(self, iconuuid):
+        if self._meta is not None:
+            walk = iterwalk(self._meta, tag="CustomIcons")
+            find = self._meta.xpath('.//Icon/UUID[text()="{}"]'.format(iconuuid))
+            if len(find) >= 1:
+                icon = find[0].getparent()
+                for _, element in walk:
+                    icons = element.getchildren()
+                    iconid = icons.index(icon)
+                    self.icon = "0"
+                    return str(iconid)
+                    break
 
     @property
     def expires(self):
@@ -151,7 +181,6 @@ class BaseElement(object):
     @property
     def expired(self):
         return self.expires and (datetime.utcnow() > self.expiry_time)
-
 
     @property
     def expiry_time(self):
