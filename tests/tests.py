@@ -391,6 +391,12 @@ class PyKeePassTests(unittest.TestCase):
     def tearDown(self):
         os.remove(os.path.join(base_dir, 'change_creds.kdbx'))
 
+class CtxManagerTests(unittest.TestCase):
+    def test_ctx_manager(self):
+        with PyKeePass(os.path.join(base_dir, 'test.kdbx'), password='passw0rd', keyfile=base_dir + '/test.key') as kp:
+            results = kp.find_entries_by_username('foobar_user', first=True)
+            self.assertEqual('foobar_user', results.username)
+
 class KDBXTests(unittest.TestCase):
 
     def test_open_save(self):
