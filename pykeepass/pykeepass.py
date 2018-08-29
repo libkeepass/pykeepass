@@ -31,7 +31,7 @@ class PyKeePass(object):
         return self
 
     def __exit__(self, typ, value, tb):
-        self.kdb.close()
+        del self.kdbx
 
     def read(self, filename=None, password=None, keyfile=None):
         self.password = password
