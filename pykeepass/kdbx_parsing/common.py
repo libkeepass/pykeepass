@@ -9,6 +9,7 @@ from construct import (
 )
 from lxml import etree
 import base64
+import unicodedata
 import zlib
 from io import BytesIO
 from collections import OrderedDict
@@ -153,11 +154,11 @@ class UnprotectedStream(Adapter):
         cipher = self.get_cipher(self.protected_stream_key(con))
         for elem in tree.xpath(self.protected_xpath):
             if elem.text is not None:
-                elem.text = cipher.decrypt(
+                elem.text = ''.join(c for c in cipher.decrypt(
                     base64.b64decode(
                         elem.text
                     )
-                ).decode('utf-8')
+                ).decode('utf-8') if unicodedata.category(c)[0] != "C")
             elem.attrib['Protected'] = 'False'
         return tree
 
