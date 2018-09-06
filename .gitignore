@@ -3,3 +3,4 @@
 dist/
 *.egg-info/
 *.xml
+Pipfile.lock

@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+lxml = "==4.2.3"
+pycryptodome = "==3.6.6"
+construct = "==2.9.45"
+python-dateutil = "==2.7.3"
+"argon2_cffi" = "==18.3.0"
+
+[dev-packages]
+
+[requires]
+python_version = "3.7"
