@@ -11,12 +11,12 @@ setup(
     author='Philipp Schmitt',
     author_email='philipp@schmitt.co',
     url='https://github.com/pschmitt/pykeepass',
-    packages=['pykeepass'],
+    packages=find_packages(),
     install_requires=[
         'python-dateutil',
         "construct",
         "argon2_cffi",
         "pycryptodome",
         "lxml"
-        ],
+        ]
 )
