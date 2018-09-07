@@ -1,6 +1,9 @@
 pykeepass
 ============
 
+.. image:: https://travis-ci.org/pschmitt/pykeepass.svg?branch=master
+    :target: https://travis-ci.org/pschmitt/pykeepass
+    
 This library allows you to write entries to a KeePass database
 
 Simple Example
