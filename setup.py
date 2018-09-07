@@ -18,5 +18,6 @@ setup(
         "argon2_cffi",
         "pycryptodome",
         "lxml"
-        ]
+    ],
+    include_package_data=True
 )
