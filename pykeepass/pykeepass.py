@@ -59,6 +59,12 @@ class PyKeePass(object):
                 )
             )
 
+        self.kdbx = KDBX.parse_file(
+            self.filename,
+            password=self.password,
+            keyfile=self.keyfile
+        )
+
     @property
     def version(self):
         return (
