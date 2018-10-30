@@ -9,14 +9,14 @@ import pykeepass.entry
 
 class Group(BaseElement):
 
-    def __init__(self, name=None, element=None, icon=None, notes=None,
-                 version=None, expires=None, expiry_time=None):
+    def __init__(self, name=None, element=None, icon=None, customicon=None, notes=None,
+                 version=None, expires=None, expiry_time=None, meta=None):
 
         assert type(version) is tuple, 'The provided version is not a tuple, but a {}'.format(
             type(version)
         )
         self._version = version
-
+        self._meta = meta
 
         if element is None:
             super(Group, self).__init__(
@@ -24,7 +24,9 @@ class Group(BaseElement):
                 version=version,
                 expires=expires,
                 expiry_time=expiry_time,
-                icon=icon
+                icon=icon,
+                customicon=customicon,
+                meta=meta
             )
             self._element.append(E.Name(name))
             if notes:
