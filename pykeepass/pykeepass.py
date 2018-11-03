@@ -298,6 +298,8 @@ class PyKeePass(object):
             'notes': '/String/Key[text()="Notes"]/../Value{}/../..',
             'uuid': '/UUID{}/..',
             'string': '/String/Key[text()="{}"]/../Value{}/../..',
+            'autotype_sequence': '/AutoType/DefaultSequence{}/../..',
+            'autotype_enabled': '/AutoType/Enabled{}/../..',
         }
 
 

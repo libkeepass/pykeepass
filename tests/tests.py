@@ -90,6 +90,14 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertEqual('custom field value', results.get_custom_property('custom_field'))
         self.assertEqual('HnN4bHSVjEybPf8nOq1bVA==', results.uuid)
 
+    def test_find_entries_by_autotype_sequence(self):
+        results = self.kp.find_entries(autotype_sequence='{TAB}', regex=True)
+        self.assertEqual(len(results), 1)
+
+    def test_find_entries_by_autotype_enabled(self):
+        results = self.kp.find_entries(autotype_enabled=True)
+        self.assertEqual(len(results), len(self.kp.entries) - 1)
+
     def test_find_entries(self):
         results = self.kp.find_entries(title='Root_entry', regex=True)
         self.assertEqual(len(results), 0)
