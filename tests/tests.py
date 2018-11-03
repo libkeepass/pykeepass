@@ -405,14 +405,15 @@ class KDBXTests(unittest.TestCase):
         """try to open all databases, save them, then open the result"""
 
         databases = [
-            'test3.kdbx',
-            'test4.kdbx',
-            'test4_aes.kdbx',
-            'test4_chacha20.kdbx',
-            'test4_twofish.kdbx',
-
+            'test3.kdbx',          # KDBX v3 test
+            'test4.kdbx',          # KDBX v4 test
+            'test4_aes.kdbx',      # KDBX v4 AES test
+            'test4_chacha20.kdbx', # KDBX v4 ChaCha test
+            'test4_twofish.kdbx',  # KDBX v4 Twofish test
+            'test4_hex.kdbx'       # legacy 64 byte hexadecimal keyfile test
         ]
         passwords = [
+            'password',
             'password',
             'password',
             'password',
@@ -425,6 +426,7 @@ class KDBXTests(unittest.TestCase):
             'test4.key',
             'test4.key',
             'test4.key',
+            'test4_hex.key',
         ]
         encryption_algorithms = [
             'aes256',
@@ -432,9 +434,11 @@ class KDBXTests(unittest.TestCase):
             'aes256',
             'chacha20',
             'twofish',
+            'chacha20',
         ]
         kdf_algorithms = [
             'aeskdf',
+            'argon2',
             'argon2',
             'argon2',
             'argon2',
