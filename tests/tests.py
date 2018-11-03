@@ -33,7 +33,7 @@ class EntryFunctionTests(unittest.TestCase):
     def setUp(self):
         self.kp = PyKeePass(
             os.path.join(base_dir, 'test.kdbx'),
-            password='passw0rd',
+            password='password',
             keyfile=os.path.join(base_dir, 'test.key')
         )
 
@@ -179,7 +179,7 @@ class GroupFunctionTests(unittest.TestCase):
     def setUp(self):
         self.kp = PyKeePass(
             os.path.join(base_dir, 'test.kdbx'),
-            password='passw0rd',
+            password='password',
             keyfile=os.path.join(base_dir, 'test.key')
         )
 
@@ -260,7 +260,7 @@ class EntryTests(unittest.TestCase):
     def setUp(self):
         self.kp = PyKeePass(
             os.path.join(base_dir, 'test.kdbx'),
-            password='passw0rd',
+            password='password',
             keyfile=os.path.join(base_dir, 'test.key')
         )
 
@@ -343,7 +343,7 @@ class GroupTests(unittest.TestCase):
     def setUp(self):
         self.kp = PyKeePass(
             os.path.join(base_dir, 'test.kdbx'),
-            password='passw0rd',
+            password='password',
             keyfile=os.path.join(base_dir, 'test.key')
         )
 
@@ -358,12 +358,12 @@ class PyKeePassTests(unittest.TestCase):
         )
         self.kp = PyKeePass(
             os.path.join(base_dir, 'test.kdbx'),
-            password='passw0rd',
+            password='password',
             keyfile=os.path.join(base_dir, 'test.key')
         )
         self.kp_tmp = PyKeePass(
             os.path.join(base_dir, 'change_creds.kdbx'),
-            password='passw0rd',
+            password='password',
             keyfile=os.path.join(base_dir, 'test.key')
         )
 
@@ -395,7 +395,7 @@ class PyKeePassTests(unittest.TestCase):
 
 class CtxManagerTests(unittest.TestCase):
     def test_ctx_manager(self):
-        with PyKeePass(os.path.join(base_dir, 'test.kdbx'), password='passw0rd', keyfile=base_dir + '/test.key') as kp:
+        with PyKeePass(os.path.join(base_dir, 'test.kdbx'), password='password', keyfile=base_dir + '/test.key') as kp:
             results = kp.find_entries_by_username('foobar_user', first=True)
             self.assertEqual('foobar_user', results.username)
 
