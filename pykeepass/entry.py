@@ -26,7 +26,8 @@ class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
                  notes=None, tags=None, expires=False, expiry_time=None,
-                 icon=None, element=None, version=None):
+                 icon=None, autotype_sequence=None, autotype_enabled=True,
+                 element=None, version=None):
 
         assert type(version) is tuple, 'The provided version is not a tuple, but a {}'.format(
             type(version)
@@ -54,6 +55,13 @@ class Entry(BaseElement):
                 self._element.append(
                     E.Tags(';'.join(tags) if type(tags) is list else tags)
                 )
+            self._element.append(
+                E.AutoType(
+                    E.Enabled(str(autotype_enabled)),
+                    E.DataTransferObfuscation('0'),
+                    E.DefaultSequence(str(autotype_sequence))
+                )
+            )
 
         else:
             assert type(element) in [_Element, Element, ObjectifiedElement], \
@@ -152,6 +160,28 @@ class Entry(BaseElement):
     @history.setter
     def history(self, value):
         raise NotImplementedError()
+
+    @property
+    def autotype_enabled(self):
+        enabled = self._element.find('AutoType/Enabled')
+        if enabled.text is not None:
+            return enabled.text == 'True'
+
+    @autotype_enabled.setter
+    def autotype_enabled(self, value):
+        enabled = self._element.find('AutoType/Enabled')
+        if value is not None:
+            enabled.text= str(value)
+        else:
+            enabled.text = None
+
+    @property
+    def autotype_sequence(self):
+        return self._element.find('AutoType/DefaultSequence').text
+
+    @autotype_sequence.setter
+    def autotype_sequence(self, value):
+        self._element.find('AutoType/DefaultSequence').text = value
 
     @property
     def is_a_history_entry(self):

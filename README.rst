@@ -55,7 +55,7 @@ Finding Entries
 
 **find_entries** (title=None, username=None, password=None, url=None, notes=None, path=None, uuid=None, string=none, group=None, recursive=True, regex=False, flags=None, history=False, first=False)
 
-Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``path`` and ``uuid`` are strings, ``string`` is a dict.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
+Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``path``, ``uuid`` and ``autotype_sequence`` are strings, ``string`` is a dict, ``autotype_enabled`` is a boolean.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
 .. _flags: https://www.w3.org/TR/xpath-functions/#flags 

@@ -11,6 +11,7 @@ from lxml import etree
 import base64
 import unicodedata
 import zlib
+import codecs
 from io import BytesIO
 from collections import OrderedDict
 
@@ -98,14 +99,21 @@ def compute_key_composite(password=None, keyfile=None):
             try:
                 with open(keyfile, 'rb') as f:
                     key = f.read()
+
+                    try:
+                        int(key, 16)
+                        is_hex = True
+                    except ValueError:
+                        is_hex = False
                     # if the length is 32 bytes we assume it is the key
                     if len(key) == 32:
                         keyfile_composite = key
                     # if the length is 64 bytes we assume the key is hex encoded
-                    if len(key) == 64:
-                        keyfile_composite =  key.decode('hex')
+                    elif len(key) == 64 and is_hex:
+                        keyfile_composite =  codecs.decode(key, 'hex')
                     # anything else may be a file to hash for the key
-                    keyfile_composite = hashlib.sha256(key).digest()
+                    else:
+                        keyfile_composite = hashlib.sha256(key).digest()
             except:
                 raise IOError('Could not read keyfile')
 

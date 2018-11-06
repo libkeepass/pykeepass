@@ -33,7 +33,7 @@ class EntryFunctionTests(unittest.TestCase):
     def setUp(self):
         self.kp = PyKeePass(
             os.path.join(base_dir, 'test.kdbx'),
-            password='passw0rd',
+            password='password',
             keyfile=os.path.join(base_dir, 'test.key')
         )
 
@@ -90,6 +90,14 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertEqual('custom field value', results.get_custom_property('custom_field'))
         self.assertEqual('HnN4bHSVjEybPf8nOq1bVA==', results.uuid)
 
+    def test_find_entries_by_autotype_sequence(self):
+        results = self.kp.find_entries(autotype_sequence='{TAB}', regex=True)
+        self.assertEqual(len(results), 1)
+
+    def test_find_entries_by_autotype_enabled(self):
+        results = self.kp.find_entries(autotype_enabled=True)
+        self.assertEqual(len(results), len(self.kp.entries) - 1)
+
     def test_find_entries(self):
         results = self.kp.find_entries(title='Root_entry', regex=True)
         self.assertEqual(len(results), 0)
@@ -132,6 +140,7 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertEqual(results.url, unique_str + 'url')
         self.assertEqual(results.notes, unique_str + 'notes')
         self.assertEqual(results.tags, [unique_str + 'tags'])
+        self.assertTrue(results.uuid != None)
         # convert naive datetime to utc
         expiry_time_utc = expiry_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC'))
         self.assertEqual(results.icon, icons.KEY)
@@ -178,7 +187,7 @@ class GroupFunctionTests(unittest.TestCase):
     def setUp(self):
         self.kp = PyKeePass(
             os.path.join(base_dir, 'test.kdbx'),
-            password='passw0rd',
+            password='password',
             keyfile=os.path.join(base_dir, 'test.key')
         )
 
@@ -238,6 +247,7 @@ class GroupFunctionTests(unittest.TestCase):
         results = self.kp.find_groups_by_path('base_group/sub_group/', first=True)
         self.assertIsInstance(results, Group)
         self.assertEqual(results.name, sub_group.name)
+        self.assertTrue(results.uuid != None)
 
         self.kp.move_group(sub_group2, sub_group)
         results = self.kp.find_groups(path='base_group/sub_group/sub_group2/', first=True)
@@ -258,7 +268,7 @@ class EntryTests(unittest.TestCase):
     def setUp(self):
         self.kp = PyKeePass(
             os.path.join(base_dir, 'test.kdbx'),
-            password='passw0rd',
+            password='password',
             keyfile=os.path.join(base_dir, 'test.key')
         )
 
@@ -341,7 +351,7 @@ class GroupTests(unittest.TestCase):
     def setUp(self):
         self.kp = PyKeePass(
             os.path.join(base_dir, 'test.kdbx'),
-            password='passw0rd',
+            password='password',
             keyfile=os.path.join(base_dir, 'test.key')
         )
 
@@ -356,12 +366,12 @@ class PyKeePassTests(unittest.TestCase):
         )
         self.kp = PyKeePass(
             os.path.join(base_dir, 'test.kdbx'),
-            password='passw0rd',
+            password='password',
             keyfile=os.path.join(base_dir, 'test.key')
         )
         self.kp_tmp = PyKeePass(
             os.path.join(base_dir, 'change_creds.kdbx'),
-            password='passw0rd',
+            password='password',
             keyfile=os.path.join(base_dir, 'test.key')
         )
 
@@ -393,7 +403,7 @@ class PyKeePassTests(unittest.TestCase):
 
 class CtxManagerTests(unittest.TestCase):
     def test_ctx_manager(self):
-        with PyKeePass(os.path.join(base_dir, 'test.kdbx'), password='passw0rd', keyfile=base_dir + '/test.key') as kp:
+        with PyKeePass(os.path.join(base_dir, 'test.kdbx'), password='password', keyfile=base_dir + '/test.key') as kp:
             results = kp.find_entries_by_username('foobar_user', first=True)
             self.assertEqual('foobar_user', results.username)
 
@@ -403,14 +413,15 @@ class KDBXTests(unittest.TestCase):
         """try to open all databases, save them, then open the result"""
 
         databases = [
-            'test3.kdbx',
-            'test4.kdbx',
-            'test4_aes.kdbx',
-            'test4_chacha20.kdbx',
-            'test4_twofish.kdbx',
-
+            'test3.kdbx',          # KDBX v3 test
+            'test4.kdbx',          # KDBX v4 test
+            'test4_aes.kdbx',      # KDBX v4 AES test
+            'test4_chacha20.kdbx', # KDBX v4 ChaCha test
+            'test4_twofish.kdbx',  # KDBX v4 Twofish test
+            'test4_hex.kdbx'       # legacy 64 byte hexadecimal keyfile test
         ]
         passwords = [
+            'password',
             'password',
             'password',
             'password',
@@ -423,6 +434,7 @@ class KDBXTests(unittest.TestCase):
             'test4.key',
             'test4.key',
             'test4.key',
+            'test4_hex.key',
         ]
         encryption_algorithms = [
             'aes256',
@@ -430,9 +442,11 @@ class KDBXTests(unittest.TestCase):
             'aes256',
             'chacha20',
             'twofish',
+            'chacha20',
         ]
         kdf_algorithms = [
             'aeskdf',
+            'argon2',
             'argon2',
             'argon2',
             'argon2',
