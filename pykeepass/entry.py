@@ -255,9 +255,10 @@ class Entry(BaseElement):
         Save the entry in its history
         '''
         archive = deepcopy(self._element)
-        if self._element.find('History') is not None:
-            archive.remove(archive.History)
-            self._element.History.append(archive)
+        hist = archive.find('History')
+        if hist is not None:
+            archive.remove(hist)
+            self._element.find('History').append(archive)
         else:
             history = Element('History')
             history.append(archive)
