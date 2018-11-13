@@ -346,6 +346,19 @@ class EntryTests(unittest.TestCase):
         entry.tags = ['changed', 'again', 'tags']
         self.assertEqual(entry.tags, ['changed', 'again', 'tags'])
 
+    def test_expired_datetime_offset(self):
+        """Test for https://github.com/pschmitt/pykeepass/issues/115"""
+        future_time = datetime.now() + timedelta(days=1)
+        entry = Entry(
+            'title',
+            'username',
+            'password',
+            expires=True,
+            expiry_time=future_time,
+            version=self.kp.version
+        )
+        self.assertFalse(entry.expired)
+
 class GroupTests(unittest.TestCase):
     # get some things ready before testing
     def setUp(self):
