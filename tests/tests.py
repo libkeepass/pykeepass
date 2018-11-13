@@ -369,7 +369,7 @@ class EntryTests(unittest.TestCase):
             'title',
             'username',
             'password',
-            # create an element, but one without AuthType
+            # create an element, but one without AutoType
             element=Element('Entry'),
             version=self.kp.version
         )
