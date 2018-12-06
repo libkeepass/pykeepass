@@ -4,6 +4,7 @@ from pykeepass import icons, PyKeePass
 from pykeepass.entry import Entry
 from pykeepass.group import Group
 from pykeepass.kdbx_parsing import KDBX
+from lxml.etree import Element
 import os
 import shutil
 import unittest
@@ -345,6 +346,35 @@ class EntryTests(unittest.TestCase):
         self.assertEqual(entry.tags, ['changed', 'tags'])
         entry.tags = ['changed', 'again', 'tags']
         self.assertEqual(entry.tags, ['changed', 'again', 'tags'])
+
+    def test_expired_datetime_offset(self):
+        """Test for https://github.com/pschmitt/pykeepass/issues/115"""
+        future_time = datetime.now() + timedelta(days=1)
+        past_time = datetime.now() - timedelta(days=1)
+        entry = Entry(
+            'title',
+            'username',
+            'password',
+            expires=True,
+            expiry_time=future_time,
+            version=self.kp.version
+        )
+        self.assertFalse(entry.expired)
+
+        entry.expiry_time = past_time
+        self.assertTrue(entry.expired)
+
+    def test_autotype_no_default_sequence(self):
+        entry = Entry(
+            'title',
+            'username',
+            'password',
+            # create an element, but one without AutoType
+            element=Element('Entry'),
+            version=self.kp.version
+        )
+        self.assertIsNone(entry.autotype_sequence)
+
 
 class GroupTests(unittest.TestCase):
     # get some things ready before testing
