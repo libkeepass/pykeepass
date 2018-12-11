@@ -375,6 +375,26 @@ class EntryTests(unittest.TestCase):
         )
         self.assertIsNone(entry.autotype_sequence)
 
+    def test_touch(self):
+        """Test for https://github.com/pschmitt/pykeepass/issues/120"""
+        entry = Entry(
+            'title',
+            'username',
+            'password',
+            version=self.kp.version
+        )
+        atime = entry.atime
+        mtime = entry.mtime
+        ctime = entry.ctime
+        entry.touch()
+        self.assertTrue(atime < entry.atime)
+        self.assertEqual(mtime, entry.mtime)
+        self.assertEqual(ctime, entry.ctime)
+        atime = entry.atime
+        entry.touch(modify=True)
+        self.assertTrue(atime < entry.atime)
+        self.assertTrue(mtime < entry.mtime)
+        self.assertEqual(ctime, entry.ctime)
 
 class GroupTests(unittest.TestCase):
     # get some things ready before testing
