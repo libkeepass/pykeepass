@@ -194,7 +194,7 @@ class Entry(BaseElement):
     @property
     def parentgroup(self):
         if self.is_a_history_entry:
-            ancestor = self._element.getparent().getparent()
+            ancestor = self._element.getparent().getparent().getparent()
         else:
             ancestor = self._element.getparent()
         if ancestor is not None:
