@@ -617,11 +617,11 @@ pykeepass/pykeepass.py
         title = 'subentry'
         path = '/'.join((parent, title))
         item = self.kp.find_entries_by_path(path, first=True)
-        self.assertEqual(repr(item.parentgroup), 'Group: "{}"'.format(parent))
+        self.assertEqual(item.parentgroup.path, parent)
         hist = item.history
         self.assertEqual(len(hist), 4)
         for hist_item in hist:
-            self.assertEqual(repr(hist_item.parentgroup), 'Group: "{}"'.format(parent))
+            self.assertEqual(hist_item.parentgroup.path, parent)
 
     def test_create_history(self):
         item = self.kp.find_entries_by_title('foobar_entry', first=True)
