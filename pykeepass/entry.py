@@ -177,7 +177,8 @@ class Entry(BaseElement):
 
     @property
     def autotype_sequence(self):
-        return self._element.find('AutoType/DefaultSequence').text
+        sequence = self._element.find('AutoType/DefaultSequence')
+        return sequence.text if sequence else None
 
     @autotype_sequence.setter
     def autotype_sequence(self, value):
@@ -193,7 +194,7 @@ class Entry(BaseElement):
     @property
     def parentgroup(self):
         if self.is_a_history_entry:
-            ancestor = self._element.getparent().getparent()
+            ancestor = self._element.getparent().getparent().getparent()
         else:
             ancestor = self._element.getparent()
         if ancestor is not None:

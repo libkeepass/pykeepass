@@ -78,7 +78,7 @@ class BaseElement(object):
 
     def _datetime_to_utc(self, dt):
         """Convert naive datetimes to UTC"""
-        
+
         if not dt.tzinfo:
             dt = dt.replace(tzinfo=tz.gettz())
         return dt.astimezone(tz.gettz('UTC'))
@@ -150,7 +150,9 @@ class BaseElement(object):
 
     @property
     def expired(self):
-        return self.expires and (datetime.utcnow() > self.expiry_time)
+        if self.expires:
+            return self._datetime_to_utc(datetime.utcnow()) > self._datetime_to_utc(self.expiry_time)
+        return False
 
 
     @property

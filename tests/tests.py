@@ -4,6 +4,7 @@ from pykeepass import icons, PyKeePass
 from pykeepass.entry import Entry
 from pykeepass.group import Group
 from pykeepass.kdbx_parsing import KDBX
+from lxml.etree import Element
 import os
 import shutil
 import unittest
@@ -298,7 +299,6 @@ class EntryTests(unittest.TestCase):
                          time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
         self.assertEqual(entry.icon, icons.KEY)
         self.assertEqual(entry.is_a_history_entry, False)
-        self.assertEqual(self.kp.find_entries(title='subentry', first=True).path, 'foobar_group/subgroup/subentry')
 
     def test_set_and_get_fields(self):
         time = datetime.now()
@@ -345,6 +345,56 @@ class EntryTests(unittest.TestCase):
         self.assertEqual(entry.tags, ['changed', 'tags'])
         entry.tags = ['changed', 'again', 'tags']
         self.assertEqual(entry.tags, ['changed', 'again', 'tags'])
+
+    def test_expired_datetime_offset(self):
+        """Test for https://github.com/pschmitt/pykeepass/issues/115"""
+        future_time = datetime.now() + timedelta(days=1)
+        past_time = datetime.now() - timedelta(days=1)
+        entry = Entry(
+            'title',
+            'username',
+            'password',
+            expires=True,
+            expiry_time=future_time,
+            version=self.kp.version
+        )
+        self.assertFalse(entry.expired)
+
+        entry.expiry_time = past_time
+        self.assertTrue(entry.expired)
+
+    def test_autotype_no_default_sequence(self):
+        entry = Entry(
+            'title',
+            'username',
+            'password',
+            # create an element, but one without AutoType
+            element=Element('Entry'),
+            version=self.kp.version
+        )
+        self.assertIsNone(entry.autotype_sequence)
+
+    def test_touch(self):
+        """Test for https://github.com/pschmitt/pykeepass/issues/120"""
+        entry = Entry(
+            'title',
+            'username',
+            'password',
+            version=self.kp.version
+        )
+        atime = entry.atime
+        mtime = entry.mtime
+        ctime = entry.ctime
+        entry.touch()
+        self.assertTrue(atime < entry.atime)
+        self.assertEqual(mtime, entry.mtime)
+        self.assertEqual(ctime, entry.ctime)
+        atime = entry.atime
+        entry.touch(modify=True)
+        self.assertTrue(atime < entry.atime)
+        self.assertTrue(mtime < entry.mtime)
+        self.assertEqual(ctime, entry.ctime)
+
 
 class GroupTests(unittest.TestCase):
     # get some things ready before testing
@@ -478,6 +528,122 @@ class KDBXTests(unittest.TestCase):
                 keyfile=None if keyfile is None else os.path.join(base_dir, keyfile)
             )
 
+
+
+class HistoryTests(unittest.TestCase):
+    '''Tests for https://github.com/pschmitt/pykeepass/issues/112
+the following methods are affected by History:
+pykeepass/entry.py
+    @property
+    def history(self):
+
+    @history.setter
+    def history(self, value): not implemented, not tested
+
+    @property
+    def is_a_history_entry(self):
+
+    @property
+    def parentgroup(self):
+
+    @property
+    def path(self):
+
+pykeepass/pykeepass.py
+    def find_entries(self, history=False, first=False, recursive=True, **kwargs):
+
+    def save_history(self):
+    '''
+
+    # get some things ready before testing
+    def setUp(self):
+        self.kp = PyKeePass(
+            os.path.join(base_dir, 'test.kdbx'),
+            password='password',
+            keyfile=os.path.join(base_dir, 'test.key')
+        )
+
+    def test_find_entries_by_title(self):
+        results = self.kp.find_entries_by_title('root_entry')
+        self.assertEqual(len(results), 1)
+        results = self.kp.find_entries_by_title('root_entry', history=True)
+        self.assertEqual(len(results), 3)
+
+    def test_no_history(self):
+        results = self.kp.find_entries_by_title('foobar_entry')
+        self.assertEqual(len(results), 3)
+        for item in results:
+            self.assertFalse(item.is_a_history_entry)
+            self.assertEqual(item.history, [])
+
+    def test_with_history(self):
+        item = self.kp.find_entries_by_title('root_entry', first=True)
+        self.assertFalse(item.is_a_history_entry)
+        hist = item.history
+        self.assertEqual(len(hist), 2)
+        for hist_item in hist:
+            self.assertTrue(hist_item.is_a_history_entry)
+
+    def test_path_root_group(self):
+        title = 'root_entry'
+        item = self.kp.find_entries_by_title(title, first=True)
+        self.assertEqual(item.path, title)
+        hist = item.history
+        self.assertEqual(len(hist), 2)
+        for hist_item in hist:
+            self.assertEqual('[History of: {}]'.format(title), hist_item.path)
+
+    def test_parentgroup_root_group(self):
+        item = self.kp.find_entries_by_title('root_entry', first=True)
+        self.assertEqual(repr(item.parentgroup), repr(self.kp.root_group))
+        hist = item.history
+        self.assertEqual(len(hist), 2)
+        for hist_item in hist:
+            self.assertEqual(repr(hist_item.parentgroup), repr(self.kp.root_group))
+
+    def test_path_subgroup(self):
+        parent = "foobar_group/subgroup"
+        title = 'subentry'
+        path = '/'.join((parent, title))
+        item = self.kp.find_entries_by_path(path, first=True)
+        self.assertEqual(item.path, path)
+        hist = item.history
+        self.assertEqual(len(hist), 4)
+        for hist_item in hist:
+            self.assertEqual('[History of: {}]'.format(title), hist_item.path)
+
+    def test_parentgroup_subgroup(self):
+        parent = "foobar_group/subgroup"
+        title = 'subentry'
+        path = '/'.join((parent, title))
+        item = self.kp.find_entries_by_path(path, first=True)
+        self.assertEqual(repr(item.parentgroup), 'Group: "{}"'.format(parent))
+        hist = item.history
+        self.assertEqual(len(hist), 4)
+        for hist_item in hist:
+            self.assertEqual(repr(hist_item.parentgroup), 'Group: "{}"'.format(parent))
+
+    def test_create_history(self):
+        item = self.kp.find_entries_by_title('foobar_entry', first=True)
+        self.assertFalse(item.is_a_history_entry)
+        self.assertEqual(item.history, [])
+        item.save_history()
+        hist = item.history
+        self.assertEqual(len(hist), 1)
+        self.assertTrue(hist[0].is_a_history_entry)
+
+    def test_add_history(self):
+        item = self.kp.find_entries_by_title('root_entry', first=True)
+        self.assertFalse(item.is_a_history_entry)
+        hist = item.history
+        self.assertEqual(len(hist), 2)
+        item.save_history()
+        hist = item.history
+        self.assertEqual(len(hist), 3)
+        for hist_item in hist:
+            self.assertTrue(hist_item.is_a_history_entry)
+
+
+
 if __name__ == '__main__':
     unittest.main()
-
