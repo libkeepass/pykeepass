@@ -37,7 +37,9 @@ def compute_transformed(context):
     )
     kdf_parameters = context._.header.value.dynamic_header.kdf_parameters.data.dict
 
-    if kdf_parameters['$UUID'].value == kdf_uuids['argon2']:
+    if context._._.transformed_key is not None:
+        transformed_key = context._._.transformed_key
+    elif kdf_parameters['$UUID'].value == kdf_uuids['argon2']:
         transformed_key = argon2.low_level.hash_secret_raw(
             secret=key_composite,
             salt=kdf_parameters['S'].value,

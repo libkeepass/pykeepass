@@ -448,7 +448,8 @@ class KDBXTests(unittest.TestCase):
             'test4_aes.kdbx',      # KDBX v4 AES test
             'test4_chacha20.kdbx', # KDBX v4 ChaCha test
             'test4_twofish.kdbx',  # KDBX v4 Twofish test
-            'test4_hex.kdbx'       # legacy 64 byte hexadecimal keyfile test
+            'test4_hex.kdbx',      # legacy 64 byte hexadecimal keyfile test
+            'test4.kdbx',          # KDBX v4 transformed_key open test
         ]
         passwords = [
             'password',
@@ -457,6 +458,16 @@ class KDBXTests(unittest.TestCase):
             'password',
             'password',
             'password',
+            None,
+        ]
+        transformed_keys = [
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            b'\x07\xa9\xb2\xaaU:\x99lt)ob2\xb5\xa5\xdedS\xed3O\xc04\xca=.\xd1\xd3\xd0\xeb\xd4F',
         ]
         keyfiles = [
             'test3.key',
@@ -465,6 +476,7 @@ class KDBXTests(unittest.TestCase):
             'test4.key',
             'test4.key',
             'test4_hex.key',
+            None,
         ]
         encryption_algorithms = [
             'aes256',
@@ -472,6 +484,7 @@ class KDBXTests(unittest.TestCase):
             'aes256',
             'chacha20',
             'twofish',
+            'chacha20',
             'chacha20',
         ]
         kdf_algorithms = [
@@ -481,19 +494,23 @@ class KDBXTests(unittest.TestCase):
             'argon2',
             'argon2',
             'argon2',
+            'argon2',
         ]
 
-        for database, password, keyfile, encryption_algorithm, kdf_algorithm in zip(
-                databases,
-                passwords,
-                keyfiles,
-                encryption_algorithms,
-                kdf_algorithms
+        for (database, password, transformed_key,
+             keyfile, encryption_algorithm, kdf_algorithm) in zip(
+                databases, passwords, transformed_keys,
+                keyfiles, encryption_algorithms, kdf_algorithms
         ):
+            print('##########', database)
+            print('password:', password)
+            print('keyfile:', keyfile)
+            print('transformed_key:', transformed_key)
             kp = PyKeePass(
                 os.path.join(base_dir, database),
                 password,
-                os.path.join(base_dir, keyfile)
+                None if keyfile is None else os.path.join(base_dir, keyfile),
+                transformed_key=transformed_key
             )
             self.assertEqual(kp.encryption_algorithm, encryption_algorithm)
             self.assertEqual(kp.kdf_algorithm, kdf_algorithm)
@@ -502,10 +519,12 @@ class KDBXTests(unittest.TestCase):
                 KDBX.build(
                     kp.kdbx,
                     password=password,
-                    keyfile=None if keyfile is None else os.path.join(base_dir, keyfile)
+                    keyfile=None if keyfile is None else os.path.join(base_dir, keyfile),
+                    transformed_key=transformed_key
                 ),
                 password=password,
-                keyfile=None if keyfile is None else os.path.join(base_dir, keyfile)
+                keyfile=None if keyfile is None else os.path.join(base_dir, keyfile),
+                transformed_key=transformed_key
             )
 
 if __name__ == '__main__':

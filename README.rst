@@ -242,9 +242,9 @@ Adding Groups
 
 Miscellaneous
 -------------
-**read** (filename, password=None, keyfile=None)
+**read** (filename, password=None, keyfile=None, transformed_key=None)
 
-where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.
+where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.  Alternatively, the derived key can be supplied directly through ``transformed_key``.
 
 **save** (filename=None)
 

@@ -22,10 +22,15 @@ logger = logging.getLogger(__name__)
 
 class PyKeePass(object):
 
-    def __init__(self, filename, password=None, keyfile=None):
+    def __init__(self, filename, password=None, keyfile=None,
+                 transformed_key=None):
         self.filename = filename
 
-        self.read(password=password, keyfile=keyfile)
+        self.read(
+            password=password,
+            keyfile=keyfile,
+            transformed_key=transformed_key
+        )
 
     def __enter__(self):
         return self
@@ -33,7 +38,8 @@ class PyKeePass(object):
     def __exit__(self, typ, value, tb):
         del self.kdbx
 
-    def read(self, filename=None, password=None, keyfile=None):
+    def read(self, filename=None, password=None, keyfile=None,
+             transformed_key=None):
         self.password = password
         self.keyfile = keyfile
         if not filename:
@@ -42,11 +48,12 @@ class PyKeePass(object):
         self.kdbx = KDBX.parse_file(
             filename,
             password=password,
-            keyfile=keyfile
+            keyfile=keyfile,
+            transformed_key=transformed_key
         )
 
 
-    def save(self, filename=None):
+    def save(self, filename=None, transformed_key=None):
         if not filename:
             filename = self.filename
 
@@ -55,7 +62,8 @@ class PyKeePass(object):
                 KDBX.build(
                     self.kdbx,
                     password=self.password,
-                    keyfile=self.keyfile
+                    keyfile=self.keyfile,
+                    transformed_key=transformed_key
                 )
             )
 
@@ -80,6 +88,10 @@ class PyKeePass(object):
                 return 'argon2'
             elif kdf_parameters['$UUID'].value == kdf_uuids['aeskdf']:
                 return 'aeskdf'
+
+    @property
+    def transformed_key(self):
+        return self.kdbx.body.transformed_key
 
     @property
     def tree(self):
