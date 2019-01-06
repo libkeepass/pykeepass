@@ -10,18 +10,15 @@ import pykeepass.entry
 class Group(BaseElement):
 
     def __init__(self, name=None, element=None, icon=None, notes=None,
-                 version=None, expires=None, expiry_time=None):
+                 kp=None, expires=None, expiry_time=None):
 
-        assert type(version) is tuple, 'The provided version is not a tuple, but a {}'.format(
-            type(version)
-        )
-        self._version = version
+        self._kp = kp
 
 
         if element is None:
             super(Group, self).__init__(
                 element=Element('Group'),
-                version=version,
+                kp=kp,
                 expires=expires,
                 expiry_time=expiry_time,
                 icon=icon
@@ -62,17 +59,17 @@ class Group(BaseElement):
         # ... but that may become out of sync and what is supposed to happen
         # when an entry is updated?!
         # On the other side this would make things like "e in g.entries" work
-        return [pykeepass.entry.Entry(element=x, version=self._version) for x in self._element.findall('Entry')]
+        return [pykeepass.entry.Entry(element=x, kp=self._kp) for x in self._element.findall('Entry')]
 
     @property
     def subgroups(self):
-        return [Group(element=x, version=self._version) for x in self._element.findall('Group')]
+        return [Group(element=x, kp=self._kp) for x in self._element.findall('Group')]
 
     @property
     def parentgroup(self):
         if self._element.getparent() is None:
             return None
-        return Group(element=self._element.getparent(), version=self._version)
+        return Group(element=self._element.getparent(), kp=self._kp)
 
     @property
     def is_root_group(self):

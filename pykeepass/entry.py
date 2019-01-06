@@ -1,13 +1,18 @@
 from __future__ import unicode_literals
 from __future__ import absolute_import
-from pykeepass.baseelement import BaseElement
 from copy import deepcopy
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
 from lxml.builder import E
 import logging
-import pykeepass.group
 from datetime import datetime
+from collections import namedtuple
+import gzip
+import base64
+
+from pykeepass.baseelement import BaseElement
+import pykeepass.group
+import pykeepass.attachment
 
 logger = logging.getLogger(__name__)
 reserved_keys = [
@@ -27,17 +32,14 @@ class Entry(BaseElement):
     def __init__(self, title=None, username=None, password=None, url=None,
                  notes=None, tags=None, expires=False, expiry_time=None,
                  icon=None, autotype_sequence=None, autotype_enabled=True,
-                 element=None, version=None):
+                 element=None, kp=None):
 
-        assert type(version) is tuple, 'The provided version is not a tuple, but a {}'.format(
-            type(version)
-        )
-        self._version = version
+        self._kp = kp
 
         if element is None:
             super(Entry, self).__init__(
                 element=Element('Entry'),
-                version=version,
+                kp=kp,
                 expires=expires,
                 expiry_time=expiry_time,
                 icon=icon
@@ -80,7 +82,9 @@ class Entry(BaseElement):
     def _set_string_field(self, key, value):
         results = self._element.xpath('String/Key[text()="{}"]/..'.format(key))
         if results:
-            logger.debug('There is field named {}. Remove it and create again.'.format(key))
+            logger.debug(
+                'There is field named {}. Remove it and create again.'.format(key)
+            )
             self._element.remove(results[0])
         else:
             logger.debug('No field named {}. Create it.'.format(key))
@@ -92,6 +96,27 @@ class Entry(BaseElement):
             return [x for x in results if x not in reserved_keys]
         else:
             return results
+
+    @property
+    def attachments(self):
+        return self._kp.find_attachments(
+            element=self,
+            filename='.*',
+            regex=True,
+            recursive=False
+        )
+
+    def add_attachment(self, id, filename):
+        element = E.Binary(
+            E.Key(filename),
+            E.Value(Ref=str(id))
+        )
+        self._element.append(element)
+
+        return pykeepass.attachment.Attachment(element=element)
+
+    def delete_attachment(self, attachment):
+        attachment.delete()
 
     @property
     def title(self):
@@ -155,7 +180,7 @@ class Entry(BaseElement):
     @property
     def history(self):
         if self._element.find('History') is not None:
-            return [Entry(element=x, version=self._version) for x in self._element.find('History').findall('Entry')]
+            return [Entry(element=x, kp=self._kp) for x in self._element.find('History').findall('Entry')]
 
     @history.setter
     def history(self, value):
@@ -192,13 +217,15 @@ class Entry(BaseElement):
         return False
 
     @property
-    def parentgroup(self):
+    def group(self):
         if self.is_a_history_entry:
             ancestor = self._element.getparent().getparent()
         else:
             ancestor = self._element.getparent()
         if ancestor is not None:
-            return pykeepass.group.Group(element=ancestor, version=self._version)
+            return pykeepass.group.Group(element=ancestor, kp=self._kp)
+
+    parentgroup = group
 
     @property
     def path(self):
@@ -206,7 +233,7 @@ class Entry(BaseElement):
         if self.is_a_history_entry:
             pentry = Entry(
                 element=self._element.getparent().getparent(),
-                version=self._version
+                kp=self._kp
             ).title
             return '[History of: {}]'.format(pentry)
         if self.parentgroup is None:

@@ -229,7 +229,10 @@ InnerHeaderItem = Struct(
 # another binary header inside decrypted and decompressed Payload
 InnerHeader = DynamicDict(
     'type',
-    RepeatUntil(lambda item,a,b: item.type == 'end', InnerHeaderItem)
+    RepeatUntil(lambda item,a,b: item.type == 'end', InnerHeaderItem),
+    #FIXME - this is a hack because inner header is not truly a dict,
+    #  it has multiple binary elements.
+    lump=['binary']
 )
 
 UnpackedPayload = Reparsed(

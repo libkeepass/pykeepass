@@ -28,7 +28,7 @@ base_dir = os.path.dirname(os.path.realpath(__file__))
 logger = logging.getLogger("pykeepass")
 
 
-class EntryFunctionTests(unittest.TestCase):
+class EntryFindTests(unittest.TestCase):
 
     # get some things ready before testing
     def setUp(self):
@@ -73,9 +73,11 @@ class EntryFunctionTests(unittest.TestCase):
         self.assertEqual('root entry notes', results.notes)
 
     def test_find_entries_by_path(self):
-        results = self.kp.find_entries_by_path('foobar_group/group_entry')
+        results = self.kp.find_entries(path='foobar_group/', title='group_entry')
         self.assertEqual(len(results), 1)
-        results = self.kp.find_entries_by_path('foobar_group/Group_entry', regex=True, flags='i', first=True)
+        results = self.kp.find_entries(path='foobar_group/group_entry')
+        self.assertEqual(len(results), 1)
+        results = self.kp.find_entries(path='foobar_group/', title='Group_entry', regex=True, flags='i', first=True)
         self.assertIsInstance(results, Entry)
         self.assertEqual('group_entry', results.title)
 
@@ -148,7 +150,7 @@ class EntryFunctionTests(unittest.TestCase):
 
         sub_group = self.kp.add_group(self.kp.root_group, 'sub_group')
         self.kp.move_entry(entry, sub_group)
-        results = self.kp.find_entries(path='sub_group/' + 'test_add_entry_title', first=True)
+        results = self.kp.find_entries(path='sub_group/', title='test_add_entry_title', first=True)
         self.assertEqual(results.title, entry.title)
 
         self.kp.delete_entry(entry)
@@ -182,7 +184,7 @@ class EntryFunctionTests(unittest.TestCase):
     def test_print_entries(self):
         self.assertIsInstance(self.kp.entries.__repr__(), str)
 
-class GroupFunctionTests(unittest.TestCase):
+class GroupFindTests(unittest.TestCase):
 
     # get some things ready before testing
     def setUp(self):
@@ -208,7 +210,7 @@ class GroupFunctionTests(unittest.TestCase):
     def test_find_groups_by_path(self):
         results = self.kp.find_groups_by_path('/foobar_group/subgroup/')
         self.assertIsInstance(results[0], Group)
-        results = self.kp.find_groups_by_path('/foobar_group/subgroup/', first=True)
+        results = self.kp.find_groups(path='/foobar_group/', name='subgroup', first=True)
         self.assertEqual(results.name, 'subgroup')
 
     def test_find_groups_by_uuid(self):
@@ -223,9 +225,9 @@ class GroupFunctionTests(unittest.TestCase):
         self.assertEqual(results[0].uuid, 'lRVaMlMXoQ/U5NDCAwJktg==')
 
     def test_find_groups(self):
-        results = self.kp.find_groups(path='/foobar_group/subgroup/')
+        results = self.kp.find_groups(path='/foobar_group/')
         self.assertIsInstance(results[0], Group)
-        results = self.kp.find_groups_by_path('/foobar_group/subgroup/', first=True)
+        results = self.kp.find_groups(path='/foobar_group/', name='subgroup', first=True)
         self.assertEqual(results.name, 'subgroup')
 
     def test_groups(self):
@@ -245,17 +247,17 @@ class GroupFunctionTests(unittest.TestCase):
         base_group.notes = ''
         self.assertEqual(base_group.notes, '')
 
-        results = self.kp.find_groups_by_path('base_group/sub_group/', first=True)
+        results = self.kp.find_groups(path='base_group/', name='sub_group', first=True)
         self.assertIsInstance(results, Group)
         self.assertEqual(results.name, sub_group.name)
         self.assertTrue(results.uuid != None)
 
         self.kp.move_group(sub_group2, sub_group)
-        results = self.kp.find_groups(path='base_group/sub_group/sub_group2/', first=True)
+        results = self.kp.find_groups(path='base_group/sub_group/', name='sub_group2', first=True)
         self.assertEqual(results.name, sub_group2.name)
 
         self.kp.delete_group(sub_group)
-        results = self.kp.find_groups_by_path('base_group/sub_group/', first=True)
+        results = self.kp.find_groups(path='base_group/', name='sub_group', first=True)
         self.assertIsNone(results)
 
         # ---------- Groups representation -----------
@@ -285,7 +287,7 @@ class EntryTests(unittest.TestCase):
             expires=True,
             expiry_time=time,
             icon=icons.KEY,
-            version=self.kp.version
+            kp=self.kp
         )
 
         self.assertEqual(entry.title, 'title')
@@ -315,7 +317,7 @@ class EntryTests(unittest.TestCase):
             expires=True,
             expiry_time=time,
             icon=icons.KEY,
-            version=self.kp.version
+            kp=self.kp
         )
         entry.title = changed_string + 'title'
         entry.username = changed_string + 'username'
@@ -357,7 +359,7 @@ class EntryTests(unittest.TestCase):
             'password',
             expires=True,
             expiry_time=future_time,
-            version=self.kp.version
+            kp=self.kp
         )
         self.assertFalse(entry.expired)
 
@@ -371,9 +373,28 @@ class EntryTests(unittest.TestCase):
             'password',
             # create an element, but one without AutoType
             element=Element('Entry'),
-            version=self.kp.version
+            kp=self.kp
         )
         self.assertIsNone(entry.autotype_sequence)
+
+    def test_add_remove_attachment(self):
+        entry = self.kp.add_entry(
+            self.kp.root_group,
+            title='title',
+            username='username',
+            password='password',
+        )
+
+        num_attach = len(entry.attachments)
+        entry.add_attachment(0, 'foobar.txt')
+        entry.add_attachment(0, 'foobar2.txt')
+        self.assertEqual(len(entry.attachments), num_attach + 2)
+        a = self.kp.find_attachments(id=0, filename='foobar.txt', first=True)
+        self.assertEqual(a.filename, 'foobar.txt')
+        self.assertEqual(a.id, 0)
+        entry.delete_attachment(a)
+        self.assertEqual(len(entry.attachments), num_attach + 1)
+        self.assertEqual(entry.attachments[0].filename, 'foobar2.txt')
 
 
 class GroupTests(unittest.TestCase):
@@ -387,6 +408,69 @@ class GroupTests(unittest.TestCase):
 
     def test_fields(self):
         self.assertEqual(self.kp.find_groups(name='subgroup2', first=True).path, 'foobar_group/subgroup/subgroup2')
+
+
+class AttachmentTests(unittest.TestCase):
+    # get some things ready before testing
+    def setUp(self):
+        shutil.copy(
+            os.path.join(base_dir, 'test3.kdbx'),
+            os.path.join(base_dir, 'test3_attachments.kdbx')
+        )
+        shutil.copy(
+            os.path.join(base_dir, 'test4.kdbx'),
+            os.path.join(base_dir, 'test4_attachments.kdbx')
+        )
+        self.open()
+
+    def open(self):
+        self.kp3 = PyKeePass(
+            os.path.join(base_dir, 'test3_attachments.kdbx'),
+            password='password',
+            keyfile=os.path.join(base_dir, 'test3.key')
+        )
+        self.kp4 = PyKeePass(
+            os.path.join(base_dir, 'test4_attachments.kdbx'),
+            password='password',
+            keyfile=os.path.join(base_dir, 'test4.key')
+        )
+
+    def test_create_delete_attachment(self):
+        attachment_id3 = self.kp3.add_binary(b'Ronald McDonald Trump')
+        attachment_id4 = self.kp4.add_binary(b'Ronald McDonald Trump')
+        self.kp3.save()
+        self.kp4.save()
+        self.open()
+        self.assertEqual(self.kp3.binaries[-1], b'Ronald McDonald Trump')
+        self.assertEqual(self.kp4.binaries[-1], b'Ronald McDonald Trump')
+
+        num_attach3 = len(self.kp3.binaries)
+        num_attach4 = len(self.kp4.binaries)
+        self.kp3.delete_binary(len(self.kp3.binaries) - 1)
+        self.kp4.delete_binary(len(self.kp4.binaries) - 1)
+        self.kp3.save()
+        self.kp4.save()
+        self.open()
+        self.assertEqual(len(self.kp3.binaries), num_attach3 - 1)
+        self.assertEqual(len(self.kp4.binaries), num_attach4 - 1)
+
+    def test_attachment_reference_decrement(self):
+        e = self.kp3.entries[0]
+
+        attachment_id = self.kp3.add_binary(b'foobar')
+        attachment_id2 = self.kp3.add_binary(b'foobar2')
+
+        attachment1 = e.add_attachment(attachment_id, 'foo.txt')
+        attachment2 = e.add_attachment(attachment_id2, 'foo.txt')
+
+        self.kp3.delete_binary(attachment_id)
+
+        self.assertEqual(attachment2.id, attachment_id2 - 1)
+
+    def tearDown(self):
+        os.remove(os.path.join(base_dir, 'test3_attachments.kdbx'))
+        os.remove(os.path.join(base_dir, 'test4_attachments.kdbx'))
+
 
 class PyKeePassTests(unittest.TestCase):
     def setUp(self):
@@ -431,6 +515,7 @@ class PyKeePassTests(unittest.TestCase):
     def tearDown(self):
         os.remove(os.path.join(base_dir, 'change_creds.kdbx'))
 
+
 class CtxManagerTests(unittest.TestCase):
     def test_ctx_manager(self):
         with PyKeePass(os.path.join(base_dir, 'test.kdbx'), password='password', keyfile=base_dir + '/test.key') as kp:
@@ -467,7 +552,7 @@ class KDBXTests(unittest.TestCase):
             None,
             None,
             None,
-            b'\x07\xa9\xb2\xaaU:\x99lt)ob2\xb5\xa5\xdedS\xed3O\xc04\xca=.\xd1\xd3\xd0\xeb\xd4F',
+            b'&Kgm\x80\xb2tX\x19\x16~Y\xacz\xc4\x07\xc0\xbb\xe6eK\xd6 \xa13\xe8\x85Z\x1e{\x94\x93',
         ]
         keyfiles = [
             'test3.key',
@@ -502,10 +587,7 @@ class KDBXTests(unittest.TestCase):
                 databases, passwords, transformed_keys,
                 keyfiles, encryption_algorithms, kdf_algorithms
         ):
-            print('##########', database)
-            print('password:', password)
-            print('keyfile:', keyfile)
-            print('transformed_key:', transformed_key)
+
             kp = PyKeePass(
                 os.path.join(base_dir, database),
                 password,

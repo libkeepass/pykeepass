@@ -13,7 +13,7 @@ import struct
 class BaseElement(object):
     """Entry and Group inherit from this class"""
 
-    def __init__(self, element=None, version=None, icon=None, expires=False,
+    def __init__(self, element=None, kp=None, icon=None, expires=False,
                  expiry_time=None):
 
         self._element = element
@@ -86,7 +86,7 @@ class BaseElement(object):
     def _encode_time(self, value):
         """Convert datetime to base64 or plaintext string"""
 
-        if self._version >= (4, 0):
+        if self._kp.version >= (4, 0):
             diff_seconds = int(
                 (value - datetime(year=1, month=1, day=1)).total_seconds()
             )
@@ -99,7 +99,7 @@ class BaseElement(object):
     def _decode_time(self, text):
         """Convert base64 time or plaintext time to datetime"""
 
-        if self._version >= (4, 0):
+        if self._kp.version >= (4, 0):
             # decode KDBX4 date from b64 format
             try:
                 return (
