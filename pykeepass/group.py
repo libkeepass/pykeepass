@@ -70,10 +70,12 @@ class Group(BaseElement):
         return [Group(element=x, kp=self._kp) for x in self._element.findall('Group')]
 
     @property
-    def parentgroup(self):
+    def group(self):
         if self._element.getparent() is None:
             return None
         return Group(element=self._element.getparent(), kp=self._kp)
+
+    parentgroup = group
 
     @property
     def is_root_group(self):

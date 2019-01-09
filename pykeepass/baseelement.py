@@ -41,6 +41,9 @@ class BaseElement(object):
             )
         )
 
+    def _xpath(self, xpath, **kwargs):
+        return self._kp._xpath(xpath, tree=self._element, **kwargs)
+
     def _get_subelement_text(self, tag):
         v = self._element.find(tag)
         if v is not None:

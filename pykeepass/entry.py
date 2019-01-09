@@ -79,19 +79,14 @@ class Entry(BaseElement):
             self._element = element
 
     def _get_string_field(self, key):
-        results = self._element.xpath('String/Key[text()="{}"]/../Value'.format(key))
-        if results:
-            return results[0].text
+        field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), first=True)
+        if field is not None:
+            return field.text
 
     def _set_string_field(self, key, value):
-        results = self._element.xpath('String/Key[text()="{}"]/..'.format(key))
-        if results:
-            logger.debug(
-                'There is field named {}. Remove it and create again.'.format(key)
-            )
-            self._element.remove(results[0])
-        else:
-            logger.debug('No field named {}. Create it.'.format(key))
+        field = self._xpath('String/Key[text()="{}"]/..'.format(key), first=True)
+        if field is not None:
+            self._element.remove(field)
         self._element.append(E.String(E.Key(key), E.Value(value)))
 
     def _get_string_field_keys(self, exclude_reserved=False):
@@ -261,10 +256,10 @@ class Entry(BaseElement):
     def delete_custom_property(self, key):
         if key not in self._get_string_field_keys(exclude_reserved=True):
             raise AttributeError('No such key: {}'.format(key))
-        prop = self._element.xpath('String/Key[text()="{}"]/..'.format(key))
-        if len(prop) < 1:
+        prop = self._xpath('String/Key[text()="{}"]/..'.format(key), first=True)
+        if prop is None:
             raise AttributeError('Could not find property element')
-        self._element.remove(prop[0])
+        self._element.remove(prop)
 
     @property
     def custom_properties(self):

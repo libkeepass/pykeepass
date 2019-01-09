@@ -134,29 +134,40 @@ class PyKeePass(object):
                 )
             )
 
-    def _xpath(self, xpath_str, tree=None):
+    def _xpath(self, xpath_str, tree=None, first=False, history=False,
+               cast=False, **kwargs):
+
         if tree is None:
             tree = self.tree
         logger.debug(xpath_str)
-        result = tree.xpath(
+        elements = tree.xpath(
             xpath_str, namespaces={'re': 'http://exslt.org/regular-expressions'}
         )
-        # Typed result array
+
         res = []
-        for r in result:
-            if r.tag == 'Entry':
-                res.append(Entry(element=r, kp=self))
-            elif r.tag == 'Group':
-                res.append(Group(element=r, kp=self))
-            elif r.tag == 'Binary' and r.getparent().tag == 'Entry':
-                res.append(Attachment(element=r, kp=self))
-            else:
-                res.append(r)
+        for e in elements:
+            if history or e.getparent().tag != 'History':
+                if cast:
+                    if e.tag == 'Entry':
+                        res.append(Entry(element=e, kp=self))
+                    elif e.tag == 'Group':
+                        res.append(Group(element=e, kp=self))
+                    elif e.tag == 'Binary' and e.getparent().tag == 'Entry':
+                        res.append(Attachment(element=e, kp=self))
+                    else:
+                        raise Exception('Could not cast element {}'.format(e))
+                else:
+                    res.append(e)
+
+        # return first object in list or None
+        if first:
+            res = res[0] if res else None
+
         return res
 
 
-    def _find(self, prefix, keys_xp, path=None, tree=None, history=False, first=False,
-              regex=False, flags=None, **kwargs):
+    def _find(self, prefix, keys_xp, path=None, tree=None, first=False,
+              history=False, regex=False, flags=None, **kwargs):
 
         xp = ''
 
@@ -196,21 +207,24 @@ class PyKeePass(object):
 
             xp += keys_xp[regex][key].format(value, flags=flags)
 
-        res = self._xpath(xp, tree=tree._element if tree else None)
+        res = self._xpath(
+            xp,
+            tree=tree._element if tree else None,
+            first=first,
+            history=history,
+            cast=True,
+            **kwargs
+        )
 
         return res
 
     #---------- Groups ----------
 
-    def find_groups(self, first=False, recursive=True, path=None, group=None,
-                    **kwargs):
+    def find_groups(self, recursive=True, path=None, group=None, **kwargs):
 
         prefix = '//Group' if recursive else '/Group'
         res = self._find(prefix, group_xp, path=path, tree=group, **kwargs)
 
-        # return first object in list or None
-        if first:
-            res = res[0] if res else None
 
         return res
 
@@ -291,18 +305,10 @@ class PyKeePass(object):
 
     #---------- Entries ----------
 
-    def find_entries(self, history=False, first=False, recursive=True,
-                     path=None, group=None, **kwargs):
+    def find_entries(self, recursive=True, path=None, group=None, **kwargs):
 
         prefix = '//Entry' if recursive else '/Entry'
         res = self._find(prefix, entry_xp, path=path, tree=group, **kwargs)
-
-        if history is False:
-            res = [item for item in res if item._element.getparent().tag != 'History']
-
-        # return first object in list or None
-        if first:
-            res = res[0] if res else None
 
         return res
 
@@ -439,17 +445,10 @@ class PyKeePass(object):
 
     #---------- Attachments ----------
 
-    def find_attachments(self, history=False, first=False, recursive=True,
-                         path=None, element=None, **kwargs):
+    def find_attachments(self, recursive=True, path=None, element=None, **kwargs):
 
         prefix = '//Binary' if recursive else '/Binary'
         res = self._find(prefix, attachment_xp, path=path, tree=element, **kwargs)
-
-        if history is False:
-            res = [item for item in res if item._element.getparent().getparent().tag != 'History']
-        # return first object in list or None
-        if first:
-            res = res[0] if res else None
 
         return res
 
@@ -487,7 +486,10 @@ class PyKeePass(object):
             c = Container(type='binary', data=data)
             self.kdbx.body.payload.inner_header.binary.append(c)
         else:
-            binaries = self._xpath('/KeePassFile/Meta/Binaries')[0]
+            binaries = self._xpath(
+                '/KeePassFile/Meta/Binaries',
+                first=True
+            )
             if compressed:
                 # gzip compression
                 data = zlib.compress(data)
@@ -508,7 +510,7 @@ class PyKeePass(object):
                 self.kdbx.body.payload.inner_header.binary.pop(id)
             else:
                 # remove binary element from XML
-                binaries = self._xpath('/KeePassFile/Meta/Binaries')[0]
+                binaries = self._xpath('/KeePassFile/Meta/Binaries', first=True)
                 binaries.remove(binaries.getchildren()[id])
         except IndexError:
             raise AttachmentError('No such attachment with id {}'.format(id))
@@ -518,5 +520,9 @@ class PyKeePass(object):
             reference.delete()
 
         # decrement references greater than this id
-        for reference in self._xpath('//Binary/Value[@Ref > "{}"]/..'.format(id)):
+        binaries_gt = self._xpath(
+            '//Binary/Value[@Ref > "{}"]/..'.format(id),
+            cast=True
+        )
+        for reference in binaries_gt:
             reference.id = reference.id - 1
