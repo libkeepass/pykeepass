@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from __future__ import print_function
+# FIXME python2
 from __future__ import unicode_literals
+from __future__ import print_function
 from __future__ import absolute_import
+from future.utils import python_2_unicode_compatible
+
 import base64
 import logging
 import os
@@ -25,6 +28,8 @@ from pykeepass.exceptions import *
 
 logger = logging.getLogger(__name__)
 
+# FIXME python2
+@python_2_unicode_compatible
 class PyKeePass(object):
 
     def __init__(self, filename, password=None, keyfile=None,

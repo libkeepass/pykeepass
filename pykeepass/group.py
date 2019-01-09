@@ -1,12 +1,16 @@
+# FIXME python2
 from __future__ import unicode_literals
 from __future__ import absolute_import
+from future.utils import python_2_unicode_compatible
+
 from pykeepass.baseelement import BaseElement
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
 from lxml.builder import E
 import pykeepass.entry
 
-
+# FIXME python2
+@python_2_unicode_compatible
 class Group(BaseElement):
 
     def __init__(self, name=None, element=None, icon=None, notes=None,
@@ -96,4 +100,4 @@ class Group(BaseElement):
             self._element.append(entries._element)
 
     def __str__(self):
-        return str('Group: "{}"'.format(self.path).encode('utf-8'))
+        return 'Group: "{}"'.format(self.path)

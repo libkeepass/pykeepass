@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+
+# FIXME python2
+from __future__ import unicode_literals
+
 from datetime import datetime, timedelta
 from dateutil import tz
 from pykeepass import icons, PyKeePass
@@ -183,6 +188,11 @@ class EntryFindTests(unittest.TestCase):
 
     def test_print_entries(self):
         self.assertIsInstance(self.kp.entries.__repr__(), str)
+
+        e = self.kp.find_entries(title='Тест', first=True)
+        e.save_history()
+        self.assertIsInstance(e.__repr__(), str)
+        self.assertIsInstance(e.history.__repr__(), str)
 
 class GroupFindTests(unittest.TestCase):
 

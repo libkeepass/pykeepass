@@ -1,5 +1,8 @@
+# FIXME python2
 from __future__ import unicode_literals
 from __future__ import absolute_import
+from future.utils import python_2_unicode_compatible
+
 from copy import deepcopy
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
@@ -26,7 +29,8 @@ reserved_keys = [
     'History'
 ]
 
-
+# FIXME python2
+@python_2_unicode_compatible
 class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
@@ -293,9 +297,8 @@ class Entry(BaseElement):
             self._element.append(history)
 
     def __str__(self):
-        return str(
-            'Entry: "{} ({})"'.format(self.path, self.username).encode('utf-8')
-        )
+        return 'Entry: "{} ({})"'.format(self.path, self.username)
+
 
     def __eq__(self, other):
         return (

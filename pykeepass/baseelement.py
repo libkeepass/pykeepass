@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from __future__ import absolute_import
 from lxml import etree
 from lxml.etree import Element
@@ -92,7 +91,7 @@ class BaseElement(object):
             )
             return base64.b64encode(
                 struct.pack('<Q', diff_seconds)
-            ).decode('utf-8')
+            )
         else:
             return self._datetime_to_utc(value).isoformat()
 
