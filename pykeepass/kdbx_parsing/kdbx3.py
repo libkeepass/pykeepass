@@ -18,12 +18,26 @@ from .common import (
 
 # -------------------- Key Derivation --------------------
 
-# https://github.com/keepassxreboot/keepassxc/blob/8324d03f0a015e62b6182843b4478226a5197090/src/format/KeePass2.cpp#L24-L26 
+# https://github.com/keepassxreboot/keepassxc/blob/8324d03f0a015e62b6182843b4478226a5197090/src/format/KeePass2.cpp#L24-L26
 kdf_uuids = {
     'aes': b'\xc9\xd9\xf3\x9ab\x8aD`\xbft\r\x08\xc1\x8aO\xea',
-    'twofish': b'\xadh\xf2\x9fWoK\xb9\xa3j\xd4z\xf9e4l',
-    'chacha20': b'\xd6\x03\x8a+\x8boL\xb5\xa5$3\x9a1\xdb\xb5\x9a'
 }
+
+def compute_transformed(context):
+    """Compute transformed key for opening database"""
+
+    if context._._.transformed_key is not None:
+        transformed_key = context._._transformed_key
+    else:
+        transformed_key = aes_kdf(
+            context._.header.value.dynamic_header.transform_seed.data,
+            context._.header.value.dynamic_header.transform_rounds.data,
+            password=context._._.password,
+            keyfile=context._._.keyfile
+        )
+
+    return transformed_key
+
 
 
 # -------------------- Dynamic Header --------------------
@@ -137,15 +151,8 @@ UnpackedPayload = Reparsed(
 # -------------------- Main KDBX Structure --------------------
 
 Body = Struct(
-    "transformed_key" / Computed(
-        lambda this: aes_kdf(
-            this._.header.value.dynamic_header.transform_seed.data,
-            this._.header.value.dynamic_header.transform_rounds.data,
-            password=this._._.password,
-            keyfile=this._._.keyfile
-        )
-    ),
-    "master_key" / Computed(lambda cont: compute_master(cont)),
+    "transformed_key" / Computed(compute_transformed),
+    "master_key" / Computed(compute_master),
     "payload" / UnpackedPayload(
         Switch(
             this._.header.value.dynamic_header.cipher_id.data,

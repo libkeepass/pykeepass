@@ -26,20 +26,41 @@ class PayloadChecksumError(Exception):
 class DynamicDict(Adapter):
     """ListContainer <---> Container
     Convenience mapping so we dont have to iterate ListContainer to find
-    the right item"""
+    the right item
 
-    def __init__(self, key, subcon):
+    FIXME: lump kwarg was added to get around the fact that InnerHeader is
+    not truly a dict.  We lump all 'binary' InnerHeaderItems into a single list
+    """
+
+    def __init__(self, key, subcon, lump=[]):
         super(DynamicDict, self).__init__(subcon)
         self.key = key
+        self.lump = lump
 
     # map ListContainer to Container
     def _decode(self, obj, context, path):
-        d = OrderedDict((item[self.key], item) for item in obj)
+        d = OrderedDict()
+        for item in obj:
+            if item[self.key] in self.lump:
+                if item[self.key] in d:
+                    d[item[self.key]].append(item)
+                else:
+                    d[item[self.key]] = ListContainer([item])
+            else:
+                d[item[self.key]] = item
+
         return Container(d)
 
     # map Container to ListContainer
     def _encode(self, obj, context, path):
-        return ListContainer(obj.values())
+        l = []
+        for key in obj:
+            if key in self.lump:
+                l += obj[key]
+            else:
+                l.append(obj[key])
+
+        return ListContainer(l)
 
 def Reparsed(subcon_out):
     class Reparsed(Adapter):
