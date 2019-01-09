@@ -337,6 +337,8 @@ class EntryTests(unittest.TestCase):
         self.assertEqual(entry.icon, icons.GLOBE)
         self.assertEqual(entry.get_custom_property('foo'), 'bar')
         self.assertIn('foo', entry.custom_properties)
+        entry.delete_custom_property('foo')
+        self.assertEqual(entry.get_custom_property('foo'), None)
         # test time properties
         self.assertEqual(entry.expires, False)
         self.assertEqual(entry.expiry_time,
