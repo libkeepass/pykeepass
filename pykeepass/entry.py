@@ -283,14 +283,3 @@ class Entry(BaseElement):
 
     def __str__(self):
         return 'Entry: "{} ({})"'.format(self.path, self.username)
-
-
-    def __eq__(self, other):
-        return (
-            (self.title, self.username, self.password, self.url,
-             self.notes, self.icon, self.tags, self.atime, self.ctime,
-             self.mtime, self.expires, self.uuid) ==
-            (other.title, other.username, other.password, other.url,
-             other.notes, other.icon, other.tags, other.atime, other.ctime,
-             other.mtime, other.expires, other.uuid)
-        )

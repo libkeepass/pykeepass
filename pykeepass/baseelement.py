@@ -207,3 +207,9 @@ class BaseElement(object):
 
     def __repr__(self):
         return self.__str__()
+
+    def __eq__(self, other):
+        if hasattr(other, 'uuid'):
+            return self.uuid == other.uuid
+        else:
+            return False

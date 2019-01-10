@@ -312,6 +312,10 @@ class EntryTests(unittest.TestCase):
         self.assertEqual(entry.icon, icons.KEY)
         self.assertEqual(entry.is_a_history_entry, False)
         self.assertEqual(self.kp.find_entries(title='subentry', first=True).path, 'foobar_group/subgroup/subentry')
+        self.assertEqual(
+            self.kp.find_entries(title='root_entry', first=True).history[0].group,
+            self.kp.root_group
+        )
 
     def test_set_and_get_fields(self):
         time = datetime.now()
