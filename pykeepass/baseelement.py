@@ -55,6 +55,16 @@ class BaseElement(object):
             self._element.remove(v)
         self._element.append(getattr(E, tag)(value))
 
+    @property
+    def group(self):
+        return self._xpath(
+            '(ancestor::Group)[last()]',
+            first=True,
+            cast=True
+        )
+
+    parentgroup = group
+
     def dump_xml(self, pretty_print=False):
         return etree.tostring(self._element, pretty_print=pretty_print)
 

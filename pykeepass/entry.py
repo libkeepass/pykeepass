@@ -215,16 +215,6 @@ class Entry(BaseElement):
             return parent.tag == 'History'
         return False
 
-    @property
-    def group(self):
-        if self.is_a_history_entry:
-            ancestor = self._element.getparent().getparent()
-        else:
-            ancestor = self._element.getparent()
-        if ancestor is not None:
-            return pykeepass.group.Group(element=ancestor, kp=self._kp)
-
-    parentgroup = group
 
     @property
     def path(self):
