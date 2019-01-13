@@ -2,11 +2,20 @@ pykeepass
 ============
 
 .. image:: https://travis-ci.org/pschmitt/pykeepass.svg?branch=master
-    :target: https://travis-ci.org/pschmitt/pykeepass
-    
-This library allows you to write entries to a KeePass database
+   :target: https://travis-ci.org/pschmitt/pykeepass
 
-Simple Example
+.. image:: https://img.shields.io/matrix/pykeepass:matrix.org.svg
+   :target: https://matrix.to/#/#pykeepass:matrix.org
+
+    
+This library allows you to write entries to a KeePass database.
+
+Come chat at `#pykeepass`_ on Freenode or `#pykeepass:matrix.org`_ on Matrix.
+
+.. _#pykeepass: irc://irc.freenode.net
+.. _#pykeepass\:matrix.org: https://matrix.to/#/%23pykeepass:matrix.org 
+
+Example
 --------------
 .. code:: python
 
@@ -42,13 +51,12 @@ Simple Example
    # save database
    >>> kp.save()
 
-Context Manager Example
---------------
-.. code:: python
+   # opening in a context
    >>> with PyKeePass('db.kdbx', password='somePassw0rd') as kp:
-      >>> entry = kp.find_entries(title='facebook', first=True)
-      >>> entry.password
-      's3cure_p455w0rd'
+   >>>     entry = kp.find_entries(title='facebook', first=True)
+   >>>     entry.password
+   's3cure_p455w0rd'
+
 
 Finding Entries
 ----------------------
@@ -98,23 +106,6 @@ a flattened list of all entries in the database
    >>> kp.find_entries(title='facebook', group=group, recursive=False, first=True)
    Entry: "social/facebook (myusername)"
 
-For backwards compatibility, the following function are also available:
-
-**find_entries_by_title** (title, regex=False, flags=None, tree=None, history=False, first=False)
-
-**find_entries_by_username** (username, regex=False, flags=None, tree=None, history=False, first=False)
-
-**find_entries_by_password** (password, regex=False, flags=None, tree=None, history=False, first=False)
-
-**find_entries_by_url** (url, regex=False, flags=None, tree=None, history=False, first=False)
-
-**find_entries_by_notes** (notes, regex=False, flags=None, tree=None, history=False, first=False)
-
-**find_entries_by_path** (path, regex=False, flags=None, tree=None, history=False, first=False)
-
-**find_entries_by_uuid** (uuid, regex=False, flags=None, tree=None, history=False, first=False)
-
-**find_entries_by_string** (string, regex=False, flags=None, tree=None, history=False, first=False)
 
 Finding Groups
 ----------------------
@@ -162,16 +153,6 @@ a flattened list of all groups in the database
 
    >>> kp.root_group
    Group: "/"
-
-For backwards compatibility, the following functions are also available:
-
-**find_groups_by_name** (name, tree=None, regex=False, flags=None, first=False)
-
-**find_groups_by_path** (path, tree=None, regex=False, flags=None, first=False)
-
-**find_groups_by_uuid** (uuid, tree=None, regex=False, flags=None, first=False)
-
-**find_groups_by_notes** (notes, tree=None, regex=False, flags=None, first=False)
 
 
 Adding Entries
@@ -240,11 +221,91 @@ Adding Groups
    # save the database
    >>> kp.save()
 
+Attachments
+-----------
+**add_binary** (data, compressed=True, protected=True)
+
+where ``data`` is bytes.  Adds a blob of data to the database. The attachment reference must still be added to an entry (see below).  ``compressed`` only applies to KDBX3 and ``protected`` only applies to KDBX4.  Returns id of attachment.
+
+**delete_binary** (id)
+
+where ``id`` is an int.  Removes attachment data from the database and deletes any references to it within entries.  Note that since attachments are ID'ed by their index, reference ids greater than ``id`` will be automatically decremented.
+
+**find_attachments** (id=None, filename=None, element=None, recursive=True, regex=False, flags=None, history=False, first=False)
+
+where ``id`` is an int, ``filename`` is a string, and element is an ``Entry`` or ``Group`` to search under.
+
+**binaries**
+
+list containing attachment data.  List index corresponds to attachment id.
+
+**attachments**
+
+list containing all ``Attachment`` s in the database.
+
+**Entry.add_attachment** (id, filename)
+
+where ``id`` is an int and ``filename`` is a string.  Creates a reference using the given filename to a database attachment.  The existence of an attachment with the given id is not checked.
+
+**Entry.delete_attachment** (attachment)
+
+where ``attachment`` is an ``Attachment``.  Deletes a reference to a database attachment.
+
+**Entry.attachments**
+
+list of ``Attachment`` s for this Entry.
+
+**Attachment.id**
+
+id of data that this attachment points to
+
+**Attachment.filename**
+
+string representing this attachment
+
+**Attachment.data**
+
+the data that this attachment points to.  Raises ``AttachmentError`` if data does not exist.
+
+.. code:: python
+
+   >>> e = kp.add_entry(kp.root_group, title='foo', username='', password='')
+
+   # add attachment data to the db
+   >>> attachment_id = kp.add_binary(b'Hello world')
+   >>> kp.attachments
+   [b'Hello world']
+
+   # add attachment reference to entry
+   >>> a = e.add_attachment(attachment_id, 'hello.txt')
+   >>> a
+   Attachment: 'hello.txt' -> 0
+     
+   # access attachments
+   >>> a.id
+   0
+   >>> a.filename
+   'hello.txt'
+   >>> a.data
+   b'Hello world'
+   >>> e.attachments
+   [Attachment: 'hello.txt' -> 0]
+
+   # search attachments
+   >>> kp.find_attachments(filename='he.*', regex=True)
+   [Attachment: 'hello.txt' -> 0]
+
+   # delete attachment reference
+   >>> e.delete_attachment(a)
+
+   # or, delete both attachment reference and binary
+   >>> kp.delete_binary(attachment_id)
+
 Miscellaneous
 -------------
-**read** (filename, password=None, keyfile=None)
+**read** (filename, password=None, keyfile=None, transformed_key=None)
 
-where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.
+where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.  Alternatively, the derived key can be supplied directly through ``transformed_key``.
 
 **save** (filename=None)
 
