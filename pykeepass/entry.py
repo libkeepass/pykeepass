@@ -1,5 +1,8 @@
+# FIXME python2
 from __future__ import unicode_literals
 from __future__ import absolute_import
+from future.utils import python_2_unicode_compatible
+
 from copy import deepcopy
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
@@ -26,7 +29,8 @@ reserved_keys = [
     'History'
 ]
 
-
+# FIXME python2
+@python_2_unicode_compatible
 class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
@@ -75,19 +79,14 @@ class Entry(BaseElement):
             self._element = element
 
     def _get_string_field(self, key):
-        results = self._element.xpath('String/Key[text()="{}"]/../Value'.format(key))
-        if results:
-            return results[0].text
+        field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), first=True)
+        if field is not None:
+            return field.text
 
     def _set_string_field(self, key, value):
-        results = self._element.xpath('String/Key[text()="{}"]/..'.format(key))
-        if results:
-            logger.debug(
-                'There is field named {}. Remove it and create again.'.format(key)
-            )
-            self._element.remove(results[0])
-        else:
-            logger.debug('No field named {}. Create it.'.format(key))
+        field = self._xpath('String/Key[text()="{}"]/..'.format(key), first=True)
+        if field is not None:
+            self._element.remove(field)
         self._element.append(E.String(E.Key(key), E.Value(value)))
 
     def _get_string_field_keys(self, exclude_reserved=False):
@@ -216,16 +215,6 @@ class Entry(BaseElement):
             return parent.tag == 'History'
         return False
 
-    @property
-    def group(self):
-        if self.is_a_history_entry:
-            ancestor = self._element.getparent().getparent()
-        else:
-            ancestor = self._element.getparent()
-        if ancestor is not None:
-            return pykeepass.group.Group(element=ancestor, kp=self._kp)
-
-    parentgroup = group
 
     @property
     def path(self):
@@ -257,10 +246,10 @@ class Entry(BaseElement):
     def delete_custom_property(self, key):
         if key not in self._get_string_field_keys(exclude_reserved=True):
             raise AttributeError('No such key: {}'.format(key))
-        prop = self._element.xpath('String/Key[text()="{}"]/..'.format(key))
-        if len(prop) < 1:
+        prop = self._xpath('String/Key[text()="{}"]/..'.format(key), first=True)
+        if prop is None:
             raise AttributeError('Could not find property element')
-        self._element.remove(prop[0])
+        self._element.remove(prop)
 
     @property
     def custom_properties(self):
@@ -293,16 +282,4 @@ class Entry(BaseElement):
             self._element.append(history)
 
     def __str__(self):
-        return str(
-            'Entry: "{} ({})"'.format(self.path, self.username).encode('utf-8')
-        )
-
-    def __eq__(self, other):
-        return (
-            (self.title, self.username, self.password, self.url,
-             self.notes, self.icon, self.tags, self.atime, self.ctime,
-             self.mtime, self.expires, self.uuid) ==
-            (other.title, other.username, other.password, other.url,
-             other.notes, other.icon, other.tags, other.atime, other.ctime,
-             other.mtime, other.expires, other.uuid)
-        )
+        return 'Entry: "{} ({})"'.format(self.path, self.username)

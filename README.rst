@@ -235,9 +235,12 @@ where ``id`` is an int.  Removes attachment data from the database and deletes a
 
 where ``id`` is an int, ``filename`` is a string, and element is an ``Entry`` or ``Group`` to search under.
 
+* if ``first=False``, the function returns a list of ``Attachment`` s or ``[]`` if there are no matches
+* if ``first=True``, the function returns the first ``Attachment`` match, or ``None`` if there are no matches
+
 **binaries**
 
-list containing attachment data.  List index corresponds to attachment id.
+list of bytes containing attachment data.  List index corresponds to attachment id.
 
 **attachments**
 
@@ -245,7 +248,7 @@ list containing all ``Attachment`` s in the database.
 
 **Entry.add_attachment** (id, filename)
 
-where ``id`` is an int and ``filename`` is a string.  Creates a reference using the given filename to a database attachment.  The existence of an attachment with the given id is not checked.
+where ``id`` is an int and ``filename`` is a string.  Creates a reference using the given filename to a database attachment.  The existence of an attachment with the given id is not checked.  Returns ``Attachment``.
 
 **Entry.delete_attachment** (attachment)
 

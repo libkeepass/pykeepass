@@ -1,12 +1,16 @@
+# FIXME python2
 from __future__ import unicode_literals
 from __future__ import absolute_import
+from future.utils import python_2_unicode_compatible
+
 from pykeepass.baseelement import BaseElement
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
 from lxml.builder import E
 import pykeepass.entry
 
-
+# FIXME python2
+@python_2_unicode_compatible
 class Group(BaseElement):
 
     def __init__(self, name=None, element=None, icon=None, notes=None,
@@ -66,12 +70,6 @@ class Group(BaseElement):
         return [Group(element=x, kp=self._kp) for x in self._element.findall('Group')]
 
     @property
-    def parentgroup(self):
-        if self._element.getparent() is None:
-            return None
-        return Group(element=self._element.getparent(), kp=self._kp)
-
-    @property
     def is_root_group(self):
         return self._element.getparent().tag == 'Root'
 
@@ -96,4 +94,4 @@ class Group(BaseElement):
             self._element.append(entries._element)
 
     def __str__(self):
-        return str('Group: "{}"'.format(self.path).encode('utf-8'))
+        return 'Group: "{}"'.format(self.path)

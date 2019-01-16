@@ -1,10 +1,10 @@
-from __future__ import unicode_literals
 from __future__ import absolute_import
 from lxml import etree
 from lxml.etree import Element
 from lxml.builder import E
 from datetime import datetime, timedelta
 import base64
+from binascii import Error as BinasciiError
 from dateutil import parser, tz
 import uuid
 import struct
@@ -42,6 +42,9 @@ class BaseElement(object):
             )
         )
 
+    def _xpath(self, xpath, **kwargs):
+        return self._kp._xpath(xpath, tree=self._element, **kwargs)
+
     def _get_subelement_text(self, tag):
         v = self._element.find(tag)
         if v is not None:
@@ -52,6 +55,16 @@ class BaseElement(object):
         if v is not None:
             self._element.remove(v)
         self._element.append(getattr(E, tag)(value))
+
+    @property
+    def group(self):
+        return self._xpath(
+            '(ancestor::Group)[last()]',
+            first=True,
+            cast=True
+        )
+
+    parentgroup = group
 
     def dump_xml(self, pretty_print=False):
         return etree.tostring(self._element, pretty_print=pretty_print)
@@ -88,7 +101,15 @@ class BaseElement(object):
 
         if self._kp.version >= (4, 0):
             diff_seconds = int(
-                (value - datetime(year=1, month=1, day=1)).total_seconds()
+                (
+                    self._datetime_to_utc(value) -
+                    datetime(
+                        year=1,
+                        month=1,
+                        day=1,
+                        tzinfo=tz.gettz('UTC')
+                    )
+                ).total_seconds()
             )
             return base64.b64encode(
                 struct.pack('<Q', diff_seconds)
@@ -103,11 +124,9 @@ class BaseElement(object):
             # decode KDBX4 date from b64 format
             try:
                 return (
-                    datetime(year=1, month=1, day=1) +
+                    datetime(year=1, month=1, day=1, tzinfo=tz.gettz('UTC')) +
                     timedelta(
-                        seconds=int.from_bytes(
-                            base64.b64decode(text), 'little'
-                        )
+                        seconds = struct.unpack('<Q', base64.b64decode(text))[0]
                     )
                 )
             except BinasciiError:
@@ -195,3 +214,9 @@ class BaseElement(object):
 
     def __repr__(self):
         return self.__str__()
+
+    def __eq__(self, other):
+        if hasattr(other, 'uuid'):
+            return self.uuid == other.uuid
+        else:
+            return False

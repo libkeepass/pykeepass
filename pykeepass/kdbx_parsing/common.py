@@ -40,12 +40,11 @@ class DynamicDict(Adapter):
     # map ListContainer to Container
     def _decode(self, obj, context, path):
         d = OrderedDict()
+        for l in self.lump:
+            d[l] = ListContainer([])
         for item in obj:
             if item[self.key] in self.lump:
-                if item[self.key] in d:
-                    d[item[self.key]].append(item)
-                else:
-                    d[item[self.key]] = ListContainer([item])
+                d[item[self.key]].append(item)
             else:
                 d[item[self.key]] = item
 

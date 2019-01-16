@@ -17,7 +17,9 @@ setup(
         "construct",
         "argon2_cffi",
         "pycryptodome",
-        "lxml"
+        "lxml",
+        # FIXME python2
+        future
     ],
     include_package_data=True
 )
