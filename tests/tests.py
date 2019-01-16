@@ -32,16 +32,25 @@ Missing Tests:
 base_dir = os.path.dirname(os.path.realpath(__file__))
 logger = logging.getLogger("pykeepass")
 
-
-class EntryFindTests(unittest.TestCase):
+class KDBX3Tests(unittest.TestCase):
+    database = 'test3.kdbx'
+    password = 'password'
+    keyfile = 'test3.key'
 
     # get some things ready before testing
     def setUp(self):
         self.kp = PyKeePass(
-            os.path.join(base_dir, 'test.kdbx'),
-            password='password',
-            keyfile=os.path.join(base_dir, 'test.key')
+            os.path.join(base_dir, self.database),
+            password=self.password,
+            keyfile=os.path.join(base_dir, self.keyfile)
         )
+
+class KDBX4Tests(KDBX3Tests):
+    database = 'test4.kdbx'
+    password = 'password'
+    keyfile = 'test4.key'
+
+class EntryFindTests3(KDBX3Tests):
 
     #---------- Finding entries -----------
 
@@ -194,15 +203,7 @@ class EntryFindTests(unittest.TestCase):
         self.assertIsInstance(e.__repr__(), str)
         self.assertIsInstance(e.history.__repr__(), str)
 
-class GroupFindTests(unittest.TestCase):
-
-    # get some things ready before testing
-    def setUp(self):
-        self.kp = PyKeePass(
-            os.path.join(base_dir, 'test.kdbx'),
-            password='password',
-            keyfile=os.path.join(base_dir, 'test.key')
-        )
+class GroupFindTests3(KDBX3Tests):
 
     #---------- Finding groups -----------
 
@@ -276,17 +277,10 @@ class GroupFindTests(unittest.TestCase):
         self.assertIsInstance(self.kp.groups.__repr__(), str)
 
 
-class EntryTests(unittest.TestCase):
-    # get some things ready before testing
-    def setUp(self):
-        self.kp = PyKeePass(
-            os.path.join(base_dir, 'test.kdbx'),
-            password='password',
-            keyfile=os.path.join(base_dir, 'test.key')
-        )
+class EntryTests3(KDBX3Tests):
 
     def test_fields(self):
-        time = datetime.now()
+        time = datetime.now().replace(microsecond=0)
         entry = Entry(
             'title',
             'username',
@@ -318,8 +312,8 @@ class EntryTests(unittest.TestCase):
         )
 
     def test_set_and_get_fields(self):
-        time = datetime.now()
-        changed_time = datetime.now() + timedelta(hours=9)
+        time = datetime.now().replace(microsecond=0)
+        changed_time = time + timedelta(hours=9)
         changed_string = 'changed_'
         entry = Entry(
             'title',
@@ -413,96 +407,74 @@ class EntryTests(unittest.TestCase):
         self.assertEqual(entry.attachments[0].filename, 'foobar2.txt')
 
 
-class GroupTests(unittest.TestCase):
-    # get some things ready before testing
-    def setUp(self):
-        self.kp = PyKeePass(
-            os.path.join(base_dir, 'test.kdbx'),
-            password='password',
-            keyfile=os.path.join(base_dir, 'test.key')
-        )
+
+class GroupTests3(KDBX3Tests):
 
     def test_fields(self):
         self.assertEqual(self.kp.find_groups(name='subgroup2', first=True).path, 'foobar_group/subgroup/subgroup2')
 
 
-class AttachmentTests(unittest.TestCase):
+class AttachmentTests3(KDBX3Tests):
     # get some things ready before testing
     def setUp(self):
         shutil.copy(
-            os.path.join(base_dir, 'test3.kdbx'),
-            os.path.join(base_dir, 'test3_attachments.kdbx')
-        )
-        shutil.copy(
-            os.path.join(base_dir, 'test4.kdbx'),
-            os.path.join(base_dir, 'test4_attachments.kdbx')
+            os.path.join(base_dir, self.database),
+            os.path.join(base_dir, 'test_attachment.kdbx')
         )
         self.open()
 
     def open(self):
-        self.kp3 = PyKeePass(
-            os.path.join(base_dir, 'test3_attachments.kdbx'),
-            password='password',
-            keyfile=os.path.join(base_dir, 'test3.key')
-        )
-        self.kp4 = PyKeePass(
-            os.path.join(base_dir, 'test4_attachments.kdbx'),
-            password='password',
-            keyfile=os.path.join(base_dir, 'test4.key')
+        self.kp = PyKeePass(
+            os.path.join(base_dir, 'test_attachment.kdbx'),
+            password=self.password,
+            keyfile=os.path.join(base_dir, self.keyfile)
         )
 
     def test_create_delete_attachment(self):
-        attachment_id3 = self.kp3.add_binary(b'Ronald McDonald Trump')
-        attachment_id4 = self.kp4.add_binary(b'Ronald McDonald Trump')
-        self.kp3.save()
-        self.kp4.save()
+        attachment_id = self.kp.add_binary(b'Ronald McDonald Trump')
+        self.kp.save()
         self.open()
-        self.assertEqual(self.kp3.binaries[-1], b'Ronald McDonald Trump')
-        self.assertEqual(self.kp4.binaries[-1], b'Ronald McDonald Trump')
+        self.assertEqual(self.kp.binaries[-1], b'Ronald McDonald Trump')
 
-        num_attach3 = len(self.kp3.binaries)
-        num_attach4 = len(self.kp4.binaries)
-        self.kp3.delete_binary(len(self.kp3.binaries) - 1)
-        self.kp4.delete_binary(len(self.kp4.binaries) - 1)
-        self.kp3.save()
-        self.kp4.save()
+        num_attach = len(self.kp.binaries)
+        self.kp.delete_binary(len(self.kp.binaries) - 1)
+        self.kp.save()
         self.open()
-        self.assertEqual(len(self.kp3.binaries), num_attach3 - 1)
-        self.assertEqual(len(self.kp4.binaries), num_attach4 - 1)
+        self.assertEqual(len(self.kp.binaries), num_attach - 1)
 
     def test_attachment_reference_decrement(self):
-        e = self.kp3.entries[0]
+        e = self.kp.entries[0]
 
-        attachment_id = self.kp3.add_binary(b'foobar')
-        attachment_id2 = self.kp3.add_binary(b'foobar2')
+        attachment_id1 = self.kp.add_binary(b'foobar')
+        attachment_id2 = self.kp.add_binary(b'foobar2')
 
-        attachment1 = e.add_attachment(attachment_id, 'foo.txt')
+        attachment1 = e.add_attachment(attachment_id1, 'foo.txt')
         attachment2 = e.add_attachment(attachment_id2, 'foo.txt')
 
-        self.kp3.delete_binary(attachment_id)
+        self.kp.delete_binary(attachment_id1)
 
         self.assertEqual(attachment2.id, attachment_id2 - 1)
 
     def tearDown(self):
-        os.remove(os.path.join(base_dir, 'test3_attachments.kdbx'))
-        os.remove(os.path.join(base_dir, 'test4_attachments.kdbx'))
+        os.remove(os.path.join(base_dir, 'test_attachment.kdbx'))
 
 
-class PyKeePassTests(unittest.TestCase):
+
+class PyKeePassTests3(KDBX3Tests):
     def setUp(self):
         shutil.copy(
-            os.path.join(base_dir, 'test.kdbx'),
+            os.path.join(base_dir, self.database),
             os.path.join(base_dir, 'change_creds.kdbx')
         )
         self.kp = PyKeePass(
-            os.path.join(base_dir, 'test.kdbx'),
-            password='password',
-            keyfile=os.path.join(base_dir, 'test.key')
+            os.path.join(base_dir, self.database),
+            password=self.password,
+            keyfile=os.path.join(base_dir, self.keyfile)
         )
         self.kp_tmp = PyKeePass(
             os.path.join(base_dir, 'change_creds.kdbx'),
-            password='password',
-            keyfile=os.path.join(base_dir, 'test.key')
+            password=self.password,
+            keyfile=os.path.join(base_dir, self.keyfile)
         )
 
     def test_set_credentials(self):
@@ -524,17 +496,26 @@ class PyKeePassTests(unittest.TestCase):
             first_line = f.readline()
             self.assertEqual(first_line, '<?xml version=\'1.0\' encoding=\'utf-8\' standalone=\'yes\'?>\n')
 
-    def test_db_info(self):
-        self.assertEqual(self.kp.version, (3, 1))
-        self.assertEqual(self.kp.encryption_algorithm, 'aes256')
-
     def tearDown(self):
         os.remove(os.path.join(base_dir, 'change_creds.kdbx'))
+
+class EntryFindTests4(KDBX4Tests, EntryFindTests3):
+    pass
+class GroupFindTests4(KDBX4Tests, GroupFindTests3):
+    pass
+class EntryTests4(KDBX4Tests, EntryTests3):
+    pass
+class GroupTests3(KDBX4Tests, GroupTests3):
+    pass
+class AttachmentTests4(KDBX4Tests, AttachmentTests3):
+    pass
+class PyKeePassTests4(KDBX4Tests, PyKeePassTests3):
+    pass
 
 
 class CtxManagerTests(unittest.TestCase):
     def test_ctx_manager(self):
-        with PyKeePass(os.path.join(base_dir, 'test.kdbx'), password='password', keyfile=base_dir + '/test.key') as kp:
+        with PyKeePass(os.path.join(base_dir, 'test4.kdbx'), password='password', keyfile=base_dir + '/test4.key') as kp:
             results = kp.find_entries_by_username('foobar_user', first=True)
             self.assertEqual('foobar_user', results.username)
 
@@ -550,7 +531,7 @@ class KDBXTests(unittest.TestCase):
             'test4_chacha20.kdbx', # KDBX v4 ChaCha test
             'test4_twofish.kdbx',  # KDBX v4 Twofish test
             'test4_hex.kdbx',      # legacy 64 byte hexadecimal keyfile test
-            'test4.kdbx',          # KDBX v4 transformed_key open test
+            'test4_hex.kdbx',          # KDBX v4 transformed_key open test
         ]
         passwords = [
             'password',
@@ -568,7 +549,7 @@ class KDBXTests(unittest.TestCase):
             None,
             None,
             None,
-            b'&Kgm\x80\xb2tX\x19\x16~Y\xacz\xc4\x07\xc0\xbb\xe6eK\xd6 \xa13\xe8\x85Z\x1e{\x94\x93',
+            b'M\xb7\x08\xf6\xa7\xd1v\xb1{&\x06\x8f\xae\xe9\r\xeb\x9a\x1b\x02b\xce\xf2\x8aR\xaea)7\x1fs\xe9\xc0'
         ]
         keyfiles = [
             'test3.key',
@@ -597,11 +578,20 @@ class KDBXTests(unittest.TestCase):
             'argon2',
             'argon2',
         ]
+        versions = [
+            (3, 1),
+            (4, 0),
+            (4, 0),
+            (4, 0),
+            (4, 0),
+            (4, 0),
+            (4, 0),
+        ]
 
         for (database, password, transformed_key,
-             keyfile, encryption_algorithm, kdf_algorithm) in zip(
-                databases, passwords, transformed_keys,
-                keyfiles, encryption_algorithms, kdf_algorithms
+             keyfile, encryption_algorithm, kdf_algorithm, version) in zip(
+                 databases, passwords, transformed_keys,
+                 keyfiles, encryption_algorithms, kdf_algorithms, versions
         ):
 
             kp = PyKeePass(
@@ -612,6 +602,7 @@ class KDBXTests(unittest.TestCase):
             )
             self.assertEqual(kp.encryption_algorithm, encryption_algorithm)
             self.assertEqual(kp.kdf_algorithm, kdf_algorithm)
+            self.assertEqual(kp.version, version)
 
             KDBX.parse(
                 KDBX.build(

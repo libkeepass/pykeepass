@@ -4,6 +4,7 @@ from lxml.etree import Element
 from lxml.builder import E
 from datetime import datetime, timedelta
 import base64
+from binascii import Error as BinasciiError
 from dateutil import parser, tz
 import uuid
 import struct
@@ -100,11 +101,19 @@ class BaseElement(object):
 
         if self._kp.version >= (4, 0):
             diff_seconds = int(
-                (value - datetime(year=1, month=1, day=1)).total_seconds()
+                (
+                    self._datetime_to_utc(value) -
+                    datetime(
+                        year=1,
+                        month=1,
+                        day=1,
+                        tzinfo=tz.gettz('UTC')
+                    )
+                ).total_seconds()
             )
             return base64.b64encode(
                 struct.pack('<Q', diff_seconds)
-            )
+            ).decode('utf-8')
         else:
             return self._datetime_to_utc(value).isoformat()
 
@@ -115,11 +124,9 @@ class BaseElement(object):
             # decode KDBX4 date from b64 format
             try:
                 return (
-                    datetime(year=1, month=1, day=1) +
+                    datetime(year=1, month=1, day=1, tzinfo=tz.gettz('UTC')) +
                     timedelta(
-                        seconds=int.from_bytes(
-                            base64.b64decode(text), 'little'
-                        )
+                        seconds = struct.unpack('<Q', base64.b64decode(text))[0]
                     )
                 )
             except BinasciiError:
