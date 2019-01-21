@@ -19,7 +19,7 @@ setup(
         "pycryptodome",
         "lxml",
         # FIXME python2
-        future
+        "future"
     ],
     include_package_data=True
 )
