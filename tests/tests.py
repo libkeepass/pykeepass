@@ -110,6 +110,7 @@ class EntryFindTests3(KDBX3Tests):
     def test_find_entries_by_autotype_sequence(self):
         results = self.kp.find_entries(autotype_sequence='{TAB}', regex=True)
         self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].autotype_sequence, '{USERNAME}{TAB}{PASSWORD}{ENTER}')
 
     def test_find_entries_by_autotype_enabled(self):
         results = self.kp.find_entries(autotype_enabled=True)
