@@ -195,7 +195,7 @@ class Entry(BaseElement):
     def autotype_enabled(self, value):
         enabled = self._element.find('AutoType/Enabled')
         if value is not None:
-            enabled.text= str(value)
+            enabled.text = str(value)
         else:
             enabled.text = None
 
