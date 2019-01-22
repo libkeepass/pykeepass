@@ -202,7 +202,7 @@ class Entry(BaseElement):
     @property
     def autotype_sequence(self):
         sequence = self._element.find('AutoType/DefaultSequence')
-        return sequence.text if sequence else None
+        return sequence.text if sequence is not None else None
 
     @autotype_sequence.setter
     def autotype_sequence(self, value):
