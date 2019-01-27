@@ -68,7 +68,7 @@ Returns entries which match all provided parameters, where ``title``, ``username
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
 .. _flags: https://www.w3.org/TR/xpath-functions/#flags 
 
-The ``path`` string can be a direct path to an entry, or (when ending in ``/``) the path to the group to recursively search under.
+The ``path`` string is a full path to an entry (ex. ``'foobar_group/foobar_entry'``).  This implies ``first=True``.  All other arguments are ignored when this is given.  This is useful for handling user input.
 
 The ``string`` dict allows for searching custom string fields.  ex. ``{'custom_field1': 'custom value', 'custom_field2': 'custom value'}``
 
@@ -117,7 +117,7 @@ where ``name``, ``path``, ``uuid`` and ``notes`` are strings.  This function has
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
 .. _flags: https://www.w3.org/TR/xpath-functions/#flags 
 
-The ``path`` string must end in ``/``.
+The ``path`` string is a full path to a group (ex. ``'foobar_group/sub_group'``).  This implies ``first=True``.  All other arguments are ignored when this is given.  This is useful for handling user input.
 
 The ``group`` argument determines what ``Group`` to search under, and the ``recursive`` boolean controls whether to search recursively.
 
