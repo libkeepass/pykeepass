@@ -26,7 +26,8 @@ reserved_keys = [
     'Tags',
     'IconID',
     'Times',
-    'History'
+    'History',
+    'Notes'
 ]
 
 # FIXME python2
