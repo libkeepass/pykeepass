@@ -184,7 +184,7 @@ class PyKeePass(object):
             if group_path:
                 for group in group_path.split('/'):
                     xp += path_xp[regex]['group'].format(group, flags=flags)
-            if element and 'Entry' in prefix:
+            if 'Entry' in prefix:
                 xp += path_xp[regex]['entry'].format(element, flags=flags)
             elif element and 'Group' in prefix:
                 xp += path_xp[regex]['group'].format(element, flags=flags)
