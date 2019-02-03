@@ -275,12 +275,12 @@ the data that this attachment points to.  Raises ``AttachmentError`` if data doe
    >>> e = kp.add_entry(kp.root_group, title='foo', username='', password='')
 
    # add attachment data to the db
-   >>> attachment_id = kp.add_binary(b'Hello world')
-   >>> kp.attachments
+   >>> binary_id = kp.add_binary(b'Hello world')
+   >>> kp.binaries
    [b'Hello world']
 
    # add attachment reference to entry
-   >>> a = e.add_attachment(attachment_id, 'hello.txt')
+   >>> a = e.add_attachment(binary_id, 'hello.txt')
    >>> a
    Attachment: 'hello.txt' -> 0
      
@@ -294,14 +294,18 @@ the data that this attachment points to.  Raises ``AttachmentError`` if data doe
    >>> e.attachments
    [Attachment: 'hello.txt' -> 0]
 
+   # list all attachments in the database
+   >>> kp.attachments
+   [Attachment: 'hello.txt' -> 0]
+
    # search attachments
-   >>> kp.find_attachments(filename='he.*', regex=True)
+   >>> kp.find_attachments(filename='hello.txt')
    [Attachment: 'hello.txt' -> 0]
 
    # delete attachment reference
    >>> e.delete_attachment(a)
 
-   # or, delete both attachment reference and binary
+   # or, delete binary and all associated references
    >>> kp.delete_binary(attachment_id)
 
 Miscellaneous

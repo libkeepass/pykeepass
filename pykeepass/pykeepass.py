@@ -457,7 +457,7 @@ class PyKeePass(object):
 
     @property
     def attachments(self):
-        self.find_attachments(filename='.*', regex=True)
+        return self.find_attachments(filename='.*', regex=True)
 
     @property
     def binaries(self):

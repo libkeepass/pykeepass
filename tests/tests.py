@@ -8,6 +8,7 @@ from dateutil import tz
 from pykeepass import icons, PyKeePass
 from pykeepass.entry import Entry
 from pykeepass.group import Group
+from pykeepass.attachment import Attachment
 from pykeepass.kdbx_parsing import KDBX
 from lxml.etree import Element
 import os
@@ -426,8 +427,15 @@ class AttachmentTests3(KDBX3Tests):
             keyfile=os.path.join(base_dir, self.keyfile)
         )
 
+    def test_attachments(self):
+        binary_id = self.kp.add_binary(b'foo')
+        e = self.kp.entries[0]
+        e.add_attachment(binary_id, 'foobar.txt')
+        self.assertEqual(len(self.kp.attachments), 1)
+        self.assertEqual(type(self.kp.attachments[0]), Attachment)
+
     def test_create_delete_attachment(self):
-        attachment_id = self.kp.add_binary(b'Ronald McDonald Trump')
+        binary_id = self.kp.add_binary(b'Ronald McDonald Trump')
         self.kp.save()
         self.open()
         self.assertEqual(self.kp.binaries[-1], b'Ronald McDonald Trump')
@@ -441,15 +449,15 @@ class AttachmentTests3(KDBX3Tests):
     def test_attachment_reference_decrement(self):
         e = self.kp.entries[0]
 
-        attachment_id1 = self.kp.add_binary(b'foobar')
-        attachment_id2 = self.kp.add_binary(b'foobar2')
+        binary_id1 = self.kp.add_binary(b'foobar')
+        binary_id2 = self.kp.add_binary(b'foobar2')
 
-        attachment1 = e.add_attachment(attachment_id1, 'foo.txt')
-        attachment2 = e.add_attachment(attachment_id2, 'foo.txt')
+        attachment1 = e.add_attachment(binary_id1, 'foo.txt')
+        attachment2 = e.add_attachment(binary_id2, 'foo.txt')
 
-        self.kp.delete_binary(attachment_id1)
+        self.kp.delete_binary(binary_id1)
 
-        self.assertEqual(attachment2.id, attachment_id2 - 1)
+        self.assertEqual(attachment2.id, binary_id2 - 1)
 
     def tearDown(self):
         os.remove(os.path.join(base_dir, 'test_attachment.kdbx'))
