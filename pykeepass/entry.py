@@ -195,14 +195,14 @@ class Entry(BaseElement):
     def autotype_enabled(self, value):
         enabled = self._element.find('AutoType/Enabled')
         if value is not None:
-            enabled.text= str(value)
+            enabled.text = str(value)
         else:
             enabled.text = None
 
     @property
     def autotype_sequence(self):
         sequence = self._element.find('AutoType/DefaultSequence')
-        return sequence.text if sequence else None
+        return sequence.text if sequence is not None else None
 
     @autotype_sequence.setter
     def autotype_sequence(self, value):
