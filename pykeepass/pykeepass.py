@@ -516,7 +516,7 @@ class PyKeePass(object):
                 binaries = self._xpath('/KeePassFile/Meta/Binaries', first=True)
                 binaries.remove(binaries.getchildren()[id])
         except IndexError:
-            raise AttachmentError('No such attachment with id {}'.format(id))
+            raise BinaryError('No such binary with id {}'.format(id))
 
         # remove all entry references to this attachment
         for reference in self.find_attachments(id=id):
