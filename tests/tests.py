@@ -9,6 +9,7 @@ from pykeepass import icons, PyKeePass
 from pykeepass.entry import Entry
 from pykeepass.group import Group
 from pykeepass.kdbx_parsing import KDBX
+from pykeepass.exceptions import BinaryError
 from lxml.etree import Element
 import os
 import shutil
@@ -431,14 +432,21 @@ class AttachmentTests3(KDBX3Tests):
             keyfile=os.path.join(base_dir, self.keyfile)
         )
 
-    def test_create_delete_attachment(self):
+    def test_create_delete_binary(self):
+        with self.assertRaises(BinaryError):
+            self.kp.delete_binary(999)
+        with self.assertRaises(BinaryError):
+            e = self.kp.entries[0]
+            e.add_attachment(filename='foo.txt', id=123)
+            e.attachments[0].data
+
         binary_id = self.kp.add_binary(b'Ronald McDonald Trump')
         self.kp.save()
         self.open()
         self.assertEqual(self.kp.binaries[binary_id], b'Ronald McDonald Trump')
 
         num_attach = len(self.kp.binaries)
-        self.kp.delete_binary(len(self.kp.binaries) - 1)
+        self.kp.delete_binary(binary_id)
         self.kp.save()
         self.open()
         self.assertEqual(len(self.kp.binaries), num_attach - 1)

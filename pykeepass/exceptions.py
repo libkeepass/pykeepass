@@ -1,7 +1,7 @@
 # ----- binary parsing exceptions -----
 
 # ----- pykeepass exceptions -----
-class AttachmentError(Exception):
+class BinaryError(Exception):
     pass
 
 # ----- Entry exceptions -----
