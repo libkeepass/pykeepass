@@ -432,10 +432,10 @@ class AttachmentTests3(KDBX3Tests):
         )
 
     def test_create_delete_attachment(self):
-        attachment_id = self.kp.add_binary(b'Ronald McDonald Trump')
+        binary_id = self.kp.add_binary(b'Ronald McDonald Trump')
         self.kp.save()
         self.open()
-        self.assertEqual(self.kp.binaries[-1], b'Ronald McDonald Trump')
+        self.assertEqual(self.kp.binaries[binary_id], b'Ronald McDonald Trump')
 
         num_attach = len(self.kp.binaries)
         self.kp.delete_binary(len(self.kp.binaries) - 1)
@@ -466,7 +466,6 @@ class AttachmentTests3(KDBX3Tests):
 
     def tearDown(self):
         os.remove(os.path.join(base_dir, 'test_attachment.kdbx'))
-
 
 
 class PyKeePassTests3(KDBX3Tests):

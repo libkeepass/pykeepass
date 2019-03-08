@@ -504,7 +504,7 @@ class PyKeePass(object):
             )
 
         # return attachment id
-        return len(self.binaries)
+        return len(self.binaries) - 1
 
     def delete_binary(self, id):
         try:

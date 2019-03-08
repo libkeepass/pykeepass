@@ -270,6 +270,10 @@ string representing this attachment
 
 the data that this attachment points to.  Raises ``AttachmentError`` if data does not exist.
 
+**Attachment.entry**
+
+the entry that this attachment is attached to
+
 .. code:: python
 
    >>> e = kp.add_entry(kp.root_group, title='foo', username='', password='')
