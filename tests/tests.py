@@ -438,7 +438,7 @@ class AttachmentTests3(KDBX3Tests):
         with self.assertRaises(BinaryError):
             e = self.kp.entries[0]
             e.add_attachment(filename='foo.txt', id=123)
-            e.attachments[0].data
+            e.attachments[0].binary
 
         binary_id = self.kp.add_binary(b'Ronald McDonald Trump')
         self.kp.save()
