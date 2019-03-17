@@ -470,7 +470,7 @@ class PyKeePass(object):
                         zlib.MAX_WBITS | 32
                     )
                 else:
-                    data = base64.b64decode(elem.text)
+                    data = base64.b64decode(elem.text).decode()
                 attachments.append(data)
 
         return attachments
@@ -493,12 +493,15 @@ class PyKeePass(object):
             if compressed:
                 # gzip compression
                 data = zlib.compress(data)
-            data = base64.b64encode(data).decode
-
+            data = base64.b64encode(data).decode()
+            # set ID for Binary Element
+            ID = str(len(self.binaries) + 1)
+            
             # add binary element to XML
             binaries.append(
-                E.Binary(data, Compressed=str(compressed))
+                E.Binary(data, ID=ID, Compressed=str(compressed))
             )
+            #print(len(self.binaries), self._xpath('/KeePassFile/Meta/Binaries'), len(binaries))
 
         # return attachment id
         return len(self.binaries)
