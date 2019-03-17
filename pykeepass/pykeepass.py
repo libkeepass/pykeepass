@@ -494,14 +494,14 @@ class PyKeePass(object):
                 # gzip compression
                 data = zlib.compress(data)
             data = base64.b64encode(data).decode()
+
             # set ID for Binary Element
             ID = str(len(self.binaries) + 1)
-            
+
             # add binary element to XML
             binaries.append(
                 E.Binary(data, ID=ID, Compressed=str(compressed))
             )
-            #print(len(self.binaries), self._xpath('/KeePassFile/Meta/Binaries'), len(binaries))
 
         # return attachment id
         return len(self.binaries)
