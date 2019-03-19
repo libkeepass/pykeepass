@@ -471,7 +471,7 @@ class PyKeePass(object):
                     )
                 else:
                     data = base64.b64decode(elem.text).decode()
-                attachments.append(data)
+                attachments.insert(int(elem.attrib['ID']), data)
 
         return attachments
 

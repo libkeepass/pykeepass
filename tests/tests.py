@@ -456,6 +456,14 @@ class AttachmentTests3(KDBX3Tests):
 
         self.assertEqual(attachment2.id, attachment_id2 - 1)
 
+    def test_fields(self):
+        e = self.kp.entries[0]
+        binary_id = self.kp.add_binary(b'foobar')
+        a = e.add_attachment(filename='test.txt', id=binary_id)
+        self.assertEqual(a.data, b'foobar')
+        self.assertEqual(a.id, binary_id)
+        self.assertEqual(a.filename, 'test.txt')
+
     def tearDown(self):
         os.remove(os.path.join(base_dir, 'test_attachment.kdbx'))
 
