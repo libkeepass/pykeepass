@@ -113,7 +113,7 @@ class Entry(BaseElement):
         )
         self._element.append(element)
 
-        return pykeepass.attachment.Attachment(element=element)
+        return pykeepass.attachment.Attachment(element=element, kp=self._kp)
 
     def delete_attachment(self, attachment):
         attachment.delete()
