@@ -279,16 +279,16 @@ the entry that this attachment is attached to
    >>> e = kp.add_entry(kp.root_group, title='foo', username='', password='')
 
    # add attachment data to the db
-   >>> attachment_id = kp.add_binary(b'Hello world')
+   >>> binary_id = kp.add_binary(b'Hello world')
    >>> kp.attachments
    [b'Hello world']
 
    # add attachment reference to entry
-   >>> a = e.add_attachment(attachment_id, 'hello.txt')
-   >>> a
-   Attachment: 'hello.txt' -> 0
+   >>> a = e.add_attachment(binary_id, 'hello.txt')
      
    # access attachments
+   >>> a
+   Attachment: 'hello.txt' -> 0
    >>> a.id
    0
    >>> a.filename
@@ -306,7 +306,7 @@ the entry that this attachment is attached to
    >>> e.delete_attachment(a)
 
    # or, delete both attachment reference and binary
-   >>> kp.delete_binary(attachment_id)
+   >>> kp.delete_binary(binary_id)
 
 Miscellaneous
 -------------

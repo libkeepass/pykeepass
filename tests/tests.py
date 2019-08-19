@@ -444,6 +444,7 @@ class AttachmentTests3(KDBX3Tests):
         self.kp.save()
         self.open()
         self.assertEqual(self.kp.binaries[binary_id], b'Ronald McDonald Trump')
+        self.assertEqual(len(self.kp.attachments), 1)
 
         num_attach = len(self.kp.binaries)
         self.kp.delete_binary(binary_id)

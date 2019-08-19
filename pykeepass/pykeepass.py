@@ -454,15 +454,15 @@ class PyKeePass(object):
 
     @property
     def attachments(self):
-        self.find_attachments(filename='.*', regex=True)
+        return self.find_attachments(filename='.*', regex=True)
 
     @property
     def binaries(self):
         if self.version >= (4, 0):
             # first byte is a prepended flag
-            attachments = [a.data[1:] for a in self.kdbx.body.payload.inner_header.binary]
+            binaries = [a.data[1:] for a in self.kdbx.body.payload.inner_header.binary]
         else:
-            attachments = []
+            binaries = []
             for elem in self._xpath('/KeePassFile/Meta/Binaries/Binary'):
                 if elem.attrib['Compressed'] == 'True':
                     data = zlib.decompress(
@@ -471,9 +471,9 @@ class PyKeePass(object):
                     )
                 else:
                     data = base64.b64decode(elem.text).decode()
-                attachments.insert(int(elem.attrib['ID']), data)
+                binaries.insert(int(elem.attrib['ID']), data)
 
-        return attachments
+        return binaries
 
     def add_binary(self, data, compressed=True, protected=True):
         if self.version >= (4, 0):
@@ -492,7 +492,9 @@ class PyKeePass(object):
             )
             if compressed:
                 # gzip compression
-                data = zlib.compress(data)
+                compressor = zlib.compressobj(wbits=zlib.MAX_WBITS | 16)
+                data = compressor.compress(data)
+                data += compressor.flush()
             data = base64.b64encode(data).decode()
 
             # set ID for Binary Element
