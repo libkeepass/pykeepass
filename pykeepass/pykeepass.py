@@ -497,11 +497,11 @@ class PyKeePass(object):
 
             # add binary element to XML
             binaries.append(
-                E.Binary(data, Compressed=str(compressed))
+                E.Binary(data, ID=str(len(self.binaries)), Compressed=str(compressed))
             )
 
         # return attachment id
-        return len(self.binaries)
+        return len(self.binaries) - 1
 
     def delete_binary(self, id):
         try:
