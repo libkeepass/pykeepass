@@ -492,7 +492,14 @@ class PyKeePass(object):
             )
             if compressed:
                 # gzip compression
-                data = zlib.compress(data)
+                compressobj = zlib.compressobj(
+                    6,
+                    zlib.DEFLATED,
+                    16 + 15,
+                    zlib.DEF_MEM_LEVEL,
+                    0
+                )
+                data = compressobj.compress(data) + compressobj.flush()
             data = base64.b64encode(data).decode
 
             # add binary element to XML
