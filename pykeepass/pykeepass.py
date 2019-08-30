@@ -17,7 +17,7 @@ from pykeepass.kdbx_parsing.kdbx import KDBX
 from pykeepass.kdbx_parsing.kdbx4 import kdf_uuids
 from lxml import etree
 from lxml.builder import E
-import zlib
+import gzip
 from construct import Container
 
 from pykeepass.entry import Entry
@@ -465,10 +465,13 @@ class PyKeePass(object):
             attachments = []
             for elem in self._xpath('/KeePassFile/Meta/Binaries/Binary'):
                 if elem.attrib['Compressed'] == 'True':
-                    data = zlib.decompress(
-                        base64.b64decode(elem.text),
-                        zlib.MAX_WBITS | 32
-                    )
+                    if not elem.text:
+                        logger.warning('Binary data {} is empty'.format(elem))
+                        continue
+                    else:
+                        data = gzip.decompress(
+                            base64.b64decode(elem.text)
+                        )
                 else:
                     data = base64.b64decode(elem.text)
                 attachments.append(data)
@@ -492,7 +495,7 @@ class PyKeePass(object):
             )
             if compressed:
                 # gzip compression
-                data = zlib.compress(data)
+                data = gzip.compress(data)
             data = base64.b64encode(data).decode
 
             # add binary element to XML
