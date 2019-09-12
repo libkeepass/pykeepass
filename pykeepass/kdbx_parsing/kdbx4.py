@@ -51,11 +51,14 @@ def compute_transformed(context):
             version=kdf_parameters['V'].value
         )
     elif kdf_parameters['$UUID'].value == kdf_uuids['aeskdf']:
+        key_composite = compute_key_composite(
+            password=context._._.password,
+            keyfile=context._._.keyfile
+        )
         transformed_key = aes_kdf(
             kdf_parameters['S'].value,
             kdf_parameters['R'].value,
-            context._._.password,
-            context._._.keyfile
+            key_composite
         )
     else:
         raise Exception('Unsupported key derivation method')

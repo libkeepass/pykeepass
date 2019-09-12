@@ -542,12 +542,14 @@ class KDBXTests(unittest.TestCase):
             'test3.kdbx',          # KDBX v3 test
             'test4.kdbx',          # KDBX v4 test
             'test4_aes.kdbx',      # KDBX v4 AES test
+            'test4_aeskdf.kdbx',   # KDBX v3 AESKDF test
             'test4_chacha20.kdbx', # KDBX v4 ChaCha test
             'test4_twofish.kdbx',  # KDBX v4 Twofish test
             'test4_hex.kdbx',      # legacy 64 byte hexadecimal keyfile test
             'test4_hex.kdbx',          # KDBX v4 transformed_key open test
         ]
         passwords = [
+            'password',
             'password',
             'password',
             'password',
@@ -563,10 +565,12 @@ class KDBXTests(unittest.TestCase):
             None,
             None,
             None,
+            None,
             b'M\xb7\x08\xf6\xa7\xd1v\xb1{&\x06\x8f\xae\xe9\r\xeb\x9a\x1b\x02b\xce\xf2\x8aR\xaea)7\x1fs\xe9\xc0'
         ]
         keyfiles = [
             'test3.key',
+            'test4.key',
             'test4.key',
             'test4.key',
             'test4.key',
@@ -578,6 +582,7 @@ class KDBXTests(unittest.TestCase):
             'aes256',
             'chacha20',
             'aes256',
+            'aes256',
             'chacha20',
             'twofish',
             'chacha20',
@@ -587,6 +592,7 @@ class KDBXTests(unittest.TestCase):
             'aeskdf',
             'argon2',
             'argon2',
+            'aeskdf',
             'argon2',
             'argon2',
             'argon2',
@@ -594,6 +600,7 @@ class KDBXTests(unittest.TestCase):
         ]
         versions = [
             (3, 1),
+            (4, 0),
             (4, 0),
             (4, 0),
             (4, 0),
