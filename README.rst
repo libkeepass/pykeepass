@@ -51,12 +51,6 @@ Example
    # save database
    >>> kp.save()
 
-   # opening in a context
-   >>> with PyKeePass('db.kdbx', password='somePassw0rd') as kp:
-   >>>     entry = kp.find_entries(title='facebook', first=True)
-   >>>     entry.password
-   's3cure_p455w0rd'
-
 
 Finding Entries
 ----------------------

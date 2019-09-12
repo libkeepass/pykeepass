@@ -46,7 +46,8 @@ class PyKeePass(object):
         return self
 
     def __exit__(self, typ, value, tb):
-        del self.kdbx
+        # see issue 137
+        pass
 
     def read(self, filename=None, password=None, keyfile=None,
              transformed_key=None):
