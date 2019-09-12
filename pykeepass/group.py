@@ -84,7 +84,7 @@ class Group(BaseElement):
             if p.name is not None: # dont make the root group appear
                 ppath = '{}/{}'.format(p.name, ppath)
             p = p.parentgroup
-        return '{}{}'.format(ppath, self.name)
+        return '{}{}/'.format(ppath, self.name)
 
     def append(self, entries):
         if type(entries) is list:

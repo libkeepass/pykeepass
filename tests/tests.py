@@ -410,7 +410,7 @@ class EntryTests3(KDBX3Tests):
 class GroupTests3(KDBX3Tests):
 
     def test_fields(self):
-        self.assertEqual(self.kp.find_groups(name='subgroup2', first=True).path, 'foobar_group/subgroup/subgroup2')
+        self.assertEqual(self.kp.find_groups(name='subgroup2', first=True).path, 'foobar_group/subgroup/subgroup2/')
 
 
 class AttachmentTests3(KDBX3Tests):
