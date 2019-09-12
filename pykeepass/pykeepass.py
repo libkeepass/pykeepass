@@ -495,20 +495,24 @@ class PyKeePass(object):
             )
             if compressed:
                 # gzip compression
-                compressor = zlib.compressobj(wbits=zlib.MAX_WBITS | 16)
+                compressor = zlib.compressobj(
+                    zlib.Z_DEFAULT_COMPRESSION,
+                    zlib.DEFLATED,
+                    zlib.MAX_WBITS | 16
+                )
                 data = compressor.compress(data)
                 data += compressor.flush()
             data = base64.b64encode(data).decode()
 
             # set ID for Binary Element
-            ID = str(len(self.binaries) + 1)
+            binary_id = len(self.binaries) - 1
 
             # add binary element to XML
             binaries.append(
-                E.Binary(data, ID=ID, Compressed=str(compressed))
+                E.Binary(data, ID=str(binary_id), Compressed=str(compressed))
             )
 
-        # return attachment id
+        # return binary id
         return len(self.binaries) - 1
 
     def delete_binary(self, id):
