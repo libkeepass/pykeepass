@@ -81,14 +81,10 @@ CompressionFlags = BitsSwapped(
 
 # -------------------- Key Computation --------------------
 
-def aes_kdf(key, rounds, password=None, keyfile=None):
+def aes_kdf(key, rounds, key_composite):
     """Set up a context for AES128-ECB encryption to find transformed_key"""
 
     cipher = AES.new(key, AES.MODE_ECB)
-    key_composite = compute_key_composite(
-        password=password,
-        keyfile=keyfile
-    )
 
     # get the number of rounds from the header and transform the key_composite
     transformed_key = key_composite

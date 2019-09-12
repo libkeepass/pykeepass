@@ -29,11 +29,14 @@ def compute_transformed(context):
     if context._._.transformed_key is not None:
         transformed_key = context._._transformed_key
     else:
+        key_composite = compute_key_composite(
+            password=context._._.password,
+            keyfile=context._._.keyfile
+        )
         transformed_key = aes_kdf(
             context._.header.value.dynamic_header.transform_seed.data,
             context._.header.value.dynamic_header.transform_rounds.data,
-            password=context._._.password,
-            keyfile=context._._.keyfile
+            key_composite
         )
 
     return transformed_key
