@@ -463,9 +463,9 @@ class PyKeePass(object):
     def binaries(self):
         if self.version >= (4, 0):
             # first byte is a prepended flag
-            attachments = [a.data[1:] for a in self.kdbx.body.payload.inner_header.binary]
+            binaries = [a.data[1:] for a in self.kdbx.body.payload.inner_header.binary]
         else:
-            attachments = []
+            binaries = []
             for elem in self._xpath('/KeePassFile/Meta/Binaries/Binary'):
                 if elem.attrib['Compressed'] == 'True':
                     data = zlib.decompress(
@@ -473,10 +473,10 @@ class PyKeePass(object):
                         zlib.MAX_WBITS | 32
                     )
                 else:
-                    data = base64.b64decode(elem.text)
-                attachments.append(data)
+                    data = base64.b64decode(elem.text).decode()
+                binaries.insert(int(elem.attrib['ID']), data)
 
-        return attachments
+        return binaries
 
     def add_binary(self, data, compressed=True, protected=True):
         if self.version >= (4, 0):
@@ -495,16 +495,21 @@ class PyKeePass(object):
             )
             if compressed:
                 # gzip compression
-                data = zlib.compress(data)
-            data = base64.b64encode(data).decode
+                compressor = zlib.compressobj(wbits=zlib.MAX_WBITS | 16)
+                data = compressor.compress(data)
+                data += compressor.flush()
+            data = base64.b64encode(data).decode()
+
+            # set ID for Binary Element
+            ID = str(len(self.binaries) + 1)
 
             # add binary element to XML
             binaries.append(
-                E.Binary(data, Compressed=str(compressed))
+                E.Binary(data, ID=ID, Compressed=str(compressed))
             )
 
         # return attachment id
-        return len(self.binaries)
+        return len(self.binaries) - 1
 
     def delete_binary(self, id):
         try:
@@ -516,7 +521,7 @@ class PyKeePass(object):
                 binaries = self._xpath('/KeePassFile/Meta/Binaries', first=True)
                 binaries.remove(binaries.getchildren()[id])
         except IndexError:
-            raise AttachmentError('No such attachment with id {}'.format(id))
+            raise BinaryError('No such binary with id {}'.format(id))
 
         # remove all entry references to this attachment
         for reference in self.find_attachments(id=id):

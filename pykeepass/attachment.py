@@ -7,6 +7,8 @@ from future.utils import python_2_unicode_compatible
 import pykeepass.entry
 from collections import namedtuple
 
+from pykeepass.exceptions import BinaryError
+
 # FIXME python2
 @python_2_unicode_compatible
 class Attachment(object):
@@ -39,11 +41,13 @@ class Attachment(object):
         return pykeepass.entry.Entry(element=ancestor, kp=self._kp)
 
     @property
-    def data(self):
+    def binary(self):
         try:
             return self._kp.binaries[self.id]
         except IndexError:
-            raise AttachmentError('No such attachment id')
+            raise BinaryError('No such binary with id {}'.format(self.id))
+
+    data = binary
 
     def delete(self):
         self._element.getparent().remove(self._element)

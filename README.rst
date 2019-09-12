@@ -270,12 +270,17 @@ string representing this attachment
 
 the data that this attachment points to.  Raises ``AttachmentError`` if data does not exist.
 
+**Attachment.entry**
+
+the entry that this attachment is attached to
+
 .. code:: python
 
    >>> e = kp.add_entry(kp.root_group, title='foo', username='', password='')
 
    # add attachment data to the db
    >>> binary_id = kp.add_binary(b'Hello world')
+
    >>> kp.binaries
    [b'Hello world']
 
@@ -285,6 +290,8 @@ the data that this attachment points to.  Raises ``AttachmentError`` if data doe
    Attachment: 'hello.txt' -> 0
      
    # access attachments
+   >>> a
+   Attachment: 'hello.txt' -> 0
    >>> a.id
    0
    >>> a.filename
@@ -305,8 +312,8 @@ the data that this attachment points to.  Raises ``AttachmentError`` if data doe
    # delete attachment reference
    >>> e.delete_attachment(a)
 
-   # or, delete binary and all associated references
-   >>> kp.delete_binary(attachment_id)
+   # or, delete both attachment reference and binary
+   >>> kp.delete_binary(binary_id)
 
 Miscellaneous
 -------------

@@ -10,6 +10,7 @@ from pykeepass.entry import Entry
 from pykeepass.group import Group
 from pykeepass.attachment import Attachment
 from pykeepass.kdbx_parsing import KDBX
+from pykeepass.exceptions import BinaryError
 from lxml.etree import Element
 import os
 import shutil
@@ -428,21 +429,22 @@ class AttachmentTests3(KDBX3Tests):
             keyfile=os.path.join(base_dir, self.keyfile)
         )
 
-    def test_attachments(self):
-        binary_id = self.kp.add_binary(b'foo')
-        e = self.kp.entries[0]
-        e.add_attachment(binary_id, 'foobar.txt')
-        self.assertEqual(len(self.kp.attachments), 1)
-        self.assertEqual(type(self.kp.attachments[0]), Attachment)
+    def test_create_delete_binary(self):
+        with self.assertRaises(BinaryError):
+            self.kp.delete_binary(999)
+        with self.assertRaises(BinaryError):
+            e = self.kp.entries[0]
+            e.add_attachment(filename='foo.txt', id=123)
+            e.attachments[0].binary
 
-    def test_create_delete_attachment(self):
         binary_id = self.kp.add_binary(b'Ronald McDonald Trump')
         self.kp.save()
         self.open()
-        self.assertEqual(self.kp.binaries[-1], b'Ronald McDonald Trump')
+        self.assertEqual(self.kp.binaries[binary_id], b'Ronald McDonald Trump')
+        self.assertEqual(len(self.kp.attachments), 1)
 
         num_attach = len(self.kp.binaries)
-        self.kp.delete_binary(len(self.kp.binaries) - 1)
+        self.kp.delete_binary(binary_id)
         self.kp.save()
         self.open()
         self.assertEqual(len(self.kp.binaries), num_attach - 1)
@@ -460,9 +462,16 @@ class AttachmentTests3(KDBX3Tests):
 
         self.assertEqual(attachment2.id, binary_id2 - 1)
 
+    def test_fields(self):
+        e = self.kp.entries[0]
+        binary_id = self.kp.add_binary(b'foobar')
+        a = e.add_attachment(filename='test.txt', id=binary_id)
+        self.assertEqual(a.data, b'foobar')
+        self.assertEqual(a.id, binary_id)
+        self.assertEqual(a.filename, 'test.txt')
+
     def tearDown(self):
         os.remove(os.path.join(base_dir, 'test_attachment.kdbx'))
-
 
 
 class PyKeePassTests3(KDBX3Tests):
