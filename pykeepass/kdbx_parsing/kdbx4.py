@@ -54,7 +54,8 @@ def compute_transformed(context):
         transformed_key = aes_kdf(
             kdf_parameters['S'].value,
             kdf_parameters['R'].value,
-            key_composite
+            context._._.password,
+            context._._.keyfile
         )
     else:
         raise Exception('Unsupported key derivation method')
