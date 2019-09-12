@@ -171,41 +171,44 @@ class PyKeePass(object):
 
         xp = ''
 
-        # resolve path before handling any keys
         if path is not None:
 
+            first = True
+
             xp += '/KeePassFile/Root/Group'
-            # split provided path into group and entry
-            group_path = os.path.dirname(path).lstrip('/')
-            entry = os.path.basename(path)
-            # build xpath from group_path and entry
+            path = path.strip('/')
+            # split provided path into group and element
+            group_path = os.path.dirname(path)
+            element = os.path.basename(path)
+            # build xpath from group_path and element
             if group_path:
                 for group in group_path.split('/'):
                     xp += path_xp[regex]['group'].format(group, flags=flags)
-            if entry:
-                xp += path_xp[regex]['entry'].format(entry, flags=flags)
+            if 'Entry' in prefix:
+                xp += path_xp[regex]['entry'].format(element, flags=flags)
+            elif element and 'Group' in prefix:
+                xp += path_xp[regex]['group'].format(element, flags=flags)
 
-        elif tree is not None:
-            xp += '.'
-            
-        # FIXME: ideally, this should be 'if kwargs.keys() or path is not None'
-        #        but this is a breaking change. Pending issue 127
-        if kwargs.keys():
-            xp += prefix
+        else:
+            if tree is not None:
+                xp += '.'
 
-        # handle searching custom string fields
-        if 'string' in kwargs.keys():
-            for key, value in kwargs['string'].items():
-                xp += keys_xp[regex]['string'].format(key, value, flags=flags)
+            if kwargs.keys():
+                xp += prefix
 
-            kwargs.pop('string')
+            # handle searching custom string fields
+            if 'string' in kwargs.keys():
+                for key, value in kwargs['string'].items():
+                    xp += keys_xp[regex]['string'].format(key, value, flags=flags)
 
-        # build xpath to filter results with specified attributes
-        for key, value in kwargs.items():
-            if key not in keys_xp[regex].keys():
-                raise TypeError('Invalid keyword argument "{}"'.format(key))
+                kwargs.pop('string')
 
-            xp += keys_xp[regex][key].format(value, flags=flags)
+            # build xpath to filter results with specified attributes
+            for key, value in kwargs.items():
+                if key not in keys_xp[regex].keys():
+                    raise TypeError('Invalid keyword argument "{}"'.format(key))
+
+                xp += keys_xp[regex][key].format(value, flags=flags)
 
         res = self._xpath(
             xp,

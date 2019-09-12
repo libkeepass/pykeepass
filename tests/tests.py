@@ -8,6 +8,7 @@ from dateutil import tz
 from pykeepass import icons, PyKeePass
 from pykeepass.entry import Entry
 from pykeepass.group import Group
+from pykeepass.attachment import Attachment
 from pykeepass.kdbx_parsing import KDBX
 from pykeepass.exceptions import BinaryError
 from lxml.etree import Element
@@ -88,11 +89,11 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual('root entry notes', results.notes)
 
     def test_find_entries_by_path(self):
-        results = self.kp.find_entries(path='foobar_group/', title='group_entry')
-        self.assertEqual(len(results), 1)
         results = self.kp.find_entries(path='foobar_group/group_entry')
-        self.assertEqual(len(results), 1)
-        results = self.kp.find_entries(path='foobar_group/', title='Group_entry', regex=True, flags='i', first=True)
+        self.assertIsInstance(results, Entry)
+        results = self.kp.find_entries(path='foobar_group/')
+        self.assertEqual(results, None)
+        results = self.kp.find_entries(path='foobar_group/Group_entry', regex=True, flags='i', first=True)
         self.assertIsInstance(results, Entry)
         self.assertEqual('group_entry', results.title)
 
@@ -166,7 +167,7 @@ class EntryFindTests3(KDBX3Tests):
 
         sub_group = self.kp.add_group(self.kp.root_group, 'sub_group')
         self.kp.move_entry(entry, sub_group)
-        results = self.kp.find_entries(path='sub_group/', title='test_add_entry_title', first=True)
+        results = self.kp.find_entries(path='sub_group/test_add_entry_title', first=True)
         self.assertEqual(results.title, entry.title)
 
         self.kp.delete_entry(entry)
@@ -222,9 +223,11 @@ class GroupFindTests3(KDBX3Tests):
 
     def test_find_groups_by_path(self):
         results = self.kp.find_groups_by_path('/foobar_group/subgroup/')
-        self.assertIsInstance(results[0], Group)
-        results = self.kp.find_groups(path='/foobar_group/', name='subgroup', first=True)
+        self.assertIsInstance(results, Group)
+        results = self.kp.find_groups(path='/foobar_group/subgroup/', first=True)
         self.assertEqual(results.name, 'subgroup')
+        results = self.kp.find_groups(path='foobar_group/group_entry')
+        self.assertEqual(results, None)
 
     def test_find_groups_by_uuid(self):
         results = self.kp.find_groups_by_uuid('lRVaMlMXoQ/U5NDCAwJktg==', first=True)
@@ -236,12 +239,6 @@ class GroupFindTests3(KDBX3Tests):
         results = self.kp.find_groups(notes='group notes')
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].uuid, 'lRVaMlMXoQ/U5NDCAwJktg==')
-
-    def test_find_groups(self):
-        results = self.kp.find_groups(path='/foobar_group/')
-        self.assertIsInstance(results[0], Group)
-        results = self.kp.find_groups(path='/foobar_group/', name='subgroup', first=True)
-        self.assertEqual(results.name, 'subgroup')
 
     def test_groups(self):
         results = self.kp.groups
@@ -260,17 +257,17 @@ class GroupFindTests3(KDBX3Tests):
         base_group.notes = ''
         self.assertEqual(base_group.notes, '')
 
-        results = self.kp.find_groups(path='base_group/', name='sub_group', first=True)
+        results = self.kp.find_groups(path='base_group/sub_group/', first=True)
         self.assertIsInstance(results, Group)
         self.assertEqual(results.name, sub_group.name)
         self.assertTrue(results.uuid != None)
 
         self.kp.move_group(sub_group2, sub_group)
-        results = self.kp.find_groups(path='base_group/sub_group/', name='sub_group2', first=True)
+        results = self.kp.find_groups(path='base_group/sub_group/sub_group2/', first=True)
         self.assertEqual(results.name, sub_group2.name)
 
         self.kp.delete_group(sub_group)
-        results = self.kp.find_groups(path='base_group/', name='sub_group', first=True)
+        results = self.kp.find_groups(path='base_group/sub_group/', first=True)
         self.assertIsNone(results)
 
         # ---------- Groups representation -----------
@@ -455,15 +452,15 @@ class AttachmentTests3(KDBX3Tests):
     def test_attachment_reference_decrement(self):
         e = self.kp.entries[0]
 
-        attachment_id1 = self.kp.add_binary(b'foobar')
-        attachment_id2 = self.kp.add_binary(b'foobar2')
+        binary_id1 = self.kp.add_binary(b'foobar')
+        binary_id2 = self.kp.add_binary(b'foobar2')
 
-        attachment1 = e.add_attachment(attachment_id1, 'foo.txt')
-        attachment2 = e.add_attachment(attachment_id2, 'foo.txt')
+        attachment1 = e.add_attachment(binary_id1, 'foo.txt')
+        attachment2 = e.add_attachment(binary_id2, 'foo.txt')
 
-        self.kp.delete_binary(attachment_id1)
+        self.kp.delete_binary(binary_id1)
 
-        self.assertEqual(attachment2.id, attachment_id2 - 1)
+        self.assertEqual(attachment2.id, binary_id2 - 1)
 
     def test_fields(self):
         e = self.kp.entries[0]
