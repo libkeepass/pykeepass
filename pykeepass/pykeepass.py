@@ -233,17 +233,6 @@ class PyKeePass(object):
         return res
 
 
-    def find_groups_by_path(self, group_path_str=None, regex=False, flags=None,
-                            group=None, first=False):
-
-        return self.find_groups(name=group_name,
-                                regex=regex,
-                                flags=flags,
-                                group=group,
-                                first=first
-        )
-
-
     def find_groups_by_name(self, group_name, regex=False, flags=None,
                             group=None, first=False):
 
