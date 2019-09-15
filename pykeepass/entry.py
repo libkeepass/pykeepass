@@ -264,9 +264,10 @@ class Entry(BaseElement):
         '''
         Update last access time of an entry
         '''
-        self._element.Times.LastAccessTime = datetime.utcnow()
+        now = datetime.now()
+        self.atime = now
         if modify:
-            self._element.Times.LastModificationTime = datetime.utcnow()
+            self.mtime = now
 
     def save_history(self):
         '''
