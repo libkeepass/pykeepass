@@ -449,6 +449,158 @@ class EntryTests3(KDBX3Tests):
 
 
 
+class EntryHistoryTests3(KDBX3Tests):
+
+    #---------- History -----------
+
+    def test_find_history_entries(self):
+        '''run some tests on entries created by pykeepass'''
+        prefix = 'TFE_'
+        postfix = '_tmpA'
+        changed = 'tfe_changed_'
+        # create a new copy of the file to ensure the original file remains unchanged
+        a = self.kp.filename.split('.')
+        fn = '.'.join(('.'.join(a[:-1]) + postfix, a[-1]))
+        keyfile = os.path.join(base_dir, self.keyfile)
+        self.kp.save(filename=fn)
+
+        # create some new entries to have clean start
+        with PyKeePass(fn, password=self.password, keyfile=keyfile) as kp2:
+            e1 = kp2.add_entry(kp2.root_group,
+                prefix + 'title',
+                prefix + 'user',
+                prefix + 'pass'
+            )
+            g1 = kp2.add_group(kp2.root_group, prefix + 'group')
+            e2 = kp2.add_entry(g1,
+                prefix + 'title',
+                prefix + 'user',
+                prefix + 'pass'
+            )
+            g2 = kp2.add_group(g1, prefix + 'sub_group')
+            e2 = kp2.add_entry(g2,
+                prefix + 'title',
+                prefix + 'user',
+                prefix + 'pass'
+            )
+            kp2.save()
+
+        # no history tests
+        with PyKeePass(fn, password=self.password, keyfile=keyfile) as kp2:
+            res1 = kp2.find_entries_by_title(prefix + 'title')
+            self.assertEqual(len(res1), 3)
+            for entry in res1:
+                self.assertFalse(entry.is_a_history_entry)
+                hist = entry.history
+                self.assertIsInstance(hist, list)
+                self.assertEqual(len(hist), 0)
+
+            res2 = kp2.find_entries_by_title(prefix + 'title', history=True)
+            self.assertEqual(len(res2), 3)
+
+            # create history
+            for entry in res1:
+                entry.save_history()
+            kp2.save()
+
+        # first history tests
+        with PyKeePass(fn, password=self.password, keyfile=keyfile) as kp2:
+            # we should not find any history items
+            res1 = kp2.find_entries_by_title(prefix + 'title')
+            self.assertEqual(len(res1), 3)
+            for entry in res1:
+                self.assertFalse(entry.is_a_history_entry)
+                hist = entry.history
+                self.assertEqual(len(hist), 1)
+                for item in hist:
+                    self.assertTrue(item.is_a_history_entry)
+                    self.assertEqual(item.group, entry.group)
+                    self.assertEqual(item.path, '[History of: {}]'.format(entry.title))
+                    # check if everthing was copied as expected
+                    # of course there are many more things to test
+                    # but this should be good enough for a PoC
+                    self.assertEqual(item.title, entry.title)
+                    self.assertEqual(item.username, entry.username)
+                    self.assertEqual(item.password, entry.password)
+                    self.assertEqual(item.uuid, entry.uuid)
+                    self.assertEqual(item.atime, entry.atime)
+                    self.assertEqual(item.mtime, entry.mtime)
+                    self.assertEqual(item.ctime, entry.ctime)
+
+            # here history items are expected
+            res2 = kp2.find_entries_by_title(prefix + 'title', history=True)
+            self.assertEqual(len(res2), 6)
+            for entry in res2:
+                if entry not in res1:
+                    self.assertTrue(entry.is_a_history_entry)
+
+            # change the active entries to test integrity of the history items
+            backup = {}
+            now = datetime.now()
+            for entry in res1:
+                backup[entry.uuid] = {"atime": entry.atime, "mtime": entry.mtime, "ctime": entry.ctime}
+                entry.title = changed + 'title'
+                entry.username = changed + 'user'
+                entry.password = changed + 'pass'
+                entry.atime = now
+                entry.mtime = now
+            kp2.save()
+
+        # changed entries tests
+        with PyKeePass(fn, password=self.password, keyfile=keyfile) as kp2:
+            # title of active entries has changed, so we shouldn't find anything
+            res = kp2.find_entries_by_title(prefix + 'title')
+            self.assertEqual(len(res), 0)
+            # title of history items should still be intact
+            res = kp2.find_entries_by_title(prefix + 'title', history=True)
+            self.assertEqual(len(res), 3)
+
+            # dito username, assuming if this works, it will also work for all other find_by cases
+            res = kp2.find_entries_by_username(prefix + 'user')
+            self.assertEqual(len(res), 0)
+            res = kp2.find_entries_by_username(prefix + 'user', history=True)
+            self.assertEqual(len(res), 3)
+
+            # testing integrity of history item
+            res = kp2.find_entries_by_title(changed + 'title')
+            for entry in res:
+                for item in entry.history:
+                    self.assertEqual(item.title, prefix + 'title')
+                    self.assertEqual(item.username, prefix + 'user')
+                    self.assertEqual(item.password, prefix + 'pass')
+                    self.assertEqual(item.atime, backup[entry.uuid]["atime"])
+                    self.assertEqual(item.mtime, backup[entry.uuid]["mtime"])
+                    self.assertEqual(item.ctime, backup[entry.uuid]["ctime"])
+
+            # create a second history item
+            # back in time I once had the problem that the first call to save_history() worked but not the second
+            for entry in res:
+                entry.save_history()
+            kp2.save()
+
+        # second history tests
+        with PyKeePass(fn, password=self.password, keyfile=keyfile) as kp2:
+            res1 = kp2.find_entries_by_title(changed + 'title')
+            self.assertEqual(len(res1), 3)
+            for entry in res1:
+                self.assertFalse(entry.is_a_history_entry)
+                hist = entry.history
+                self.assertEqual(len(hist), 2)
+                for item in hist:
+                    self.assertTrue(item.is_a_history_entry)
+                    self.assertEqual(item.group, entry.group)
+                    self.assertEqual(item.path, '[History of: {}]'.format(entry.title))
+
+            res2 = kp2.find_entries_by_title(changed + 'title', history=True)
+            self.assertEqual(len(res2), 6)
+            for entry in res2:
+                if entry not in res1:
+                    self.assertTrue(entry.is_a_history_entry)
+
+        # delete temporary file
+        os.unlink(fn)
+
+
 class GroupTests3(KDBX3Tests):
 
     def test_fields(self):
