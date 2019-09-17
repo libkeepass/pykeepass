@@ -136,6 +136,48 @@ class EntryFindTests3(KDBX3Tests):
         results = self.kp.find_entries(title='foobar_entry', group=group)
         self.assertEqual(len(results), 2)
 
+    #---------- History -----------
+
+    def test_is_a_history_entry(self):
+        for title in ["root_entry", "subentry"]:
+            res1 = self.kp.find_entries_by_title(title)
+            for entry in res1:
+                self.assertFalse(entry.is_a_history_entry)
+            res2 = self.kp.find_entries_by_title(title, history=True)
+            self.assertTrue(len(res2) > len(res1))
+            for entry in res2:
+                if entry not in res1:
+                    self.assertTrue(entry.is_a_history_entry)
+
+    def test_history(self):
+        entry = self.kp.find_entries_by_title("subentry2", first=True)
+        hist = entry.history
+        self.assertIsInstance(hist, list)
+        self.assertEqual(len(hist), 0)
+
+        entry = self.kp.find_entries_by_title("subentry", first=True)
+        hist = entry.history
+        self.assertIsInstance(hist, list)
+        self.assertEqual(len(hist), 4)
+
+    def test_history_path(self):
+        for title in ["root_entry", "subentry"]:
+            entry = self.kp.find_entries_by_title(title, first=True)
+            hist = entry.history
+            self.assertTrue(len(hist) > 0)
+            for item in hist:
+                self.assertEqual(item.path, '[History of: {}]'.format(entry.title))
+
+    def test_history_group(self):
+        for title in ["root_entry", "subentry"]:
+            entry = self.kp.find_entries_by_title(title, first=True)
+            grp1 = entry.group
+            hist = entry.history
+            self.assertTrue(len(hist) > 0)
+            for item in hist:
+                grp2 = item.group
+                self.assertEqual(grp1, grp2)
+
     #---------- Adding/Deleting entries -----------
 
     def test_add_delete_move_entry(self):
