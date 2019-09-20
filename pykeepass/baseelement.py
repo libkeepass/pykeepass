@@ -22,13 +22,11 @@ class BaseElement(object):
         )
         if icon:
             self._element.append(E.IconID(icon))
-        current_time_str = self._encode_time(datetime.utcnow())
+        current_time_str = self._encode_time(datetime.now())
         if expiry_time:
-            expiry_time_str = self._encode_time(
-                self._datetime_to_utc(expiry_time)
-            )
+            expiry_time_str = self._encode_time(expiry_time)
         else:
-            expiry_time_str = self._encode_time(datetime.utcnow())
+            expiry_time_str = current_time_str
 
         self._element.append(
             E.Times(
