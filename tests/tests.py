@@ -375,6 +375,26 @@ class EntryTests3(KDBX3Tests):
         entry.expiry_time = past_time
         self.assertTrue(entry.expired)
 
+    def test_touch(self):
+        """Test for https://github.com/pschmitt/pykeepass/issues/120"""
+        entry = self.kp.find_entries_by_title('root_entry', first=True)
+        atime = entry.atime
+        mtime = entry.mtime
+        ctime = entry.ctime
+        entry.touch()
+        self.assertTrue(atime < entry.atime)
+        self.assertEqual(mtime, entry.mtime)
+        self.assertEqual(ctime, entry.ctime)
+
+        entry = self.kp.find_entries_by_title('foobar_entry', first=True)
+        atime = entry.atime
+        mtime = entry.mtime
+        ctime = entry.ctime
+        entry.touch(modify=True)
+        self.assertTrue(atime < entry.atime)
+        self.assertTrue(mtime < entry.mtime)
+        self.assertEqual(ctime, entry.ctime)
+
     def test_autotype_no_default_sequence(self):
         entry = Entry(
             'title',
