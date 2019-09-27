@@ -181,6 +181,8 @@ class Entry(BaseElement):
     def history(self):
         if self._element.find('History') is not None:
             return [Entry(element=x, kp=self._kp) for x in self._element.find('History').findall('Entry')]
+        else:
+            return []
 
     @history.setter
     def history(self, value):

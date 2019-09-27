@@ -136,6 +136,48 @@ class EntryFindTests3(KDBX3Tests):
         results = self.kp.find_entries(title='foobar_entry', group=group)
         self.assertEqual(len(results), 2)
 
+    #---------- History -----------
+
+    def test_is_a_history_entry(self):
+        for title in ["root_entry", "subentry"]:
+            res1 = self.kp.find_entries(title=title)
+            for entry in res1:
+                self.assertFalse(entry.is_a_history_entry)
+            res2 = self.kp.find_entries(title=title, history=True)
+            self.assertTrue(len(res2) > len(res1))
+            for entry in res2:
+                if entry not in res1:
+                    self.assertTrue(entry.is_a_history_entry)
+
+    def test_history(self):
+        entry = self.kp.find_entries(title="subentry2", first=True)
+        hist = entry.history
+        self.assertIsInstance(hist, list)
+        self.assertEqual(len(hist), 0)
+
+        entry = self.kp.find_entries(title="subentry", first=True)
+        hist = entry.history
+        self.assertIsInstance(hist, list)
+        self.assertEqual(len(hist), 4)
+
+    def test_history_path(self):
+        for title in ["root_entry", "subentry"]:
+            entry = self.kp.find_entries(title=title, first=True)
+            hist = entry.history
+            self.assertTrue(len(hist) > 0)
+            for item in hist:
+                self.assertEqual(item.path, '[History of: {}]'.format(entry.title))
+
+    def test_history_group(self):
+        for title in ["root_entry", "subentry"]:
+            entry = self.kp.find_entries(title=title, first=True)
+            grp1 = entry.group
+            hist = entry.history
+            self.assertTrue(len(hist) > 0)
+            for item in hist:
+                grp2 = item.group
+                self.assertEqual(grp1, grp2)
+
     #---------- Adding/Deleting entries -----------
 
     def test_add_delete_move_entry(self):
@@ -425,6 +467,129 @@ class EntryTests3(KDBX3Tests):
         self.assertEqual(len(entry.attachments), num_attach + 1)
         self.assertEqual(entry.attachments[0].filename, 'foobar2.txt')
 
+
+class EntryHistoryTests3(KDBX3Tests):
+
+    #---------- History -----------
+
+    def test_find_history_entries(self):
+        '''run some tests on entries created by pykeepass'''
+        prefix = 'TFE_'
+        changed = 'tfe_changed_'
+
+        # create some new entries to have clean start
+        e1 = self.kp.add_entry(self.kp.root_group,
+            prefix + 'title',
+            prefix + 'user',
+            prefix + 'pass'
+        )
+        g1 = self.kp.add_group(self.kp.root_group, prefix + 'group')
+        e2 = self.kp.add_entry(g1,
+            prefix + 'title',
+            prefix + 'user',
+            prefix + 'pass'
+        )
+        g2 = self.kp.add_group(g1, prefix + 'sub_group')
+        e2 = self.kp.add_entry(g2,
+            prefix + 'title',
+            prefix + 'user',
+            prefix + 'pass'
+        )
+
+        # no history tests
+        res1 = self.kp.find_entries(title=prefix + 'title')
+        self.assertEqual(len(res1), 3)
+        for entry in res1:
+            self.assertFalse(entry.is_a_history_entry)
+            hist = entry.history
+            self.assertIsInstance(hist, list)
+            self.assertEqual(len(hist), 0)
+
+        res2 = self.kp.find_entries(title=prefix + 'title', history=True)
+        self.assertEqual(len(res2), 3)
+
+        # create history
+        for entry in res1:
+            entry.save_history()
+
+        # first history tests
+        # we should not find any history items
+        res1 = self.kp.find_entries(title=prefix + 'title')
+        self.assertEqual(len(res1), 3)
+        for entry in res1:
+            self.assertFalse(entry.is_a_history_entry)
+            hist = entry.history
+            self.assertEqual(len(hist), 1)
+            for item in hist:
+                self.assertTrue(item.is_a_history_entry)
+                self.assertEqual(item.group, entry.group)
+                self.assertEqual(item.path, '[History of: {}]'.format(entry.title))
+
+        # here history items are expected
+        res2 = self.kp.find_entries(title=prefix + 'title', history=True)
+        self.assertEqual(len(res2), 6)
+        for entry in res2:
+            if entry not in res1:
+                self.assertTrue(entry.is_a_history_entry)
+
+        # change the active entries to test integrity of the history items
+        backup = {}
+        now = datetime.now()
+        for entry in res1:
+            backup[entry.uuid] = {"atime": entry.atime, "mtime": entry.mtime, "ctime": entry.ctime}
+            entry.title = changed + 'title'
+            entry.username = changed + 'user'
+            entry.password = changed + 'pass'
+            entry.atime = now
+            entry.mtime = now
+
+        # changed entries tests
+        # title of active entries has changed, so we shouldn't find anything
+        res = self.kp.find_entries(title=prefix + 'title')
+        self.assertEqual(len(res), 0)
+        # title of history items should still be intact
+        res = self.kp.find_entries(title=prefix + 'title', history=True)
+        self.assertEqual(len(res), 3)
+
+        # dito username, assuming if this works, it will also work for all other find_by cases
+        res = self.kp.find_entries(username=prefix + 'user')
+        self.assertEqual(len(res), 0)
+        res = self.kp.find_entries(username=prefix + 'user', history=True)
+        self.assertEqual(len(res), 3)
+
+        # testing integrity of history item
+        res = self.kp.find_entries(title=changed + 'title')
+        for entry in res:
+            for item in entry.history:
+                self.assertEqual(item.title, prefix + 'title')
+                self.assertEqual(item.username, prefix + 'user')
+                self.assertEqual(item.password, prefix + 'pass')
+                self.assertEqual(item.atime, backup[entry.uuid]["atime"])
+                self.assertEqual(item.mtime, backup[entry.uuid]["mtime"])
+                self.assertEqual(item.ctime, backup[entry.uuid]["ctime"])
+
+        # create a second history item
+        # back in time I had the problem that the first call to save_history() worked but not the second
+        for entry in res:
+            entry.save_history()
+
+        # second history tests
+        res1 = self.kp.find_entries(title=changed + 'title')
+        self.assertEqual(len(res1), 3)
+        for entry in res1:
+            self.assertFalse(entry.is_a_history_entry)
+            hist = entry.history
+            self.assertEqual(len(hist), 2)
+            for item in hist:
+                self.assertTrue(item.is_a_history_entry)
+                self.assertEqual(item.group, entry.group)
+                self.assertEqual(item.path, '[History of: {}]'.format(entry.title))
+
+        res2 = self.kp.find_entries(title=changed + 'title', history=True)
+        self.assertEqual(len(res2), 6)
+        for entry in res2:
+            if entry not in res1:
+                self.assertTrue(entry.is_a_history_entry)
 
 
 class GroupTests3(KDBX3Tests):
