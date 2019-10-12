@@ -3,9 +3,7 @@ from .twofish import Twofish
 from Crypto.Util import Padding as CryptoPadding
 import hashlib
 from construct import (
-    Adapter, BitStruct, BitsSwapped, Container, Flag, Padding, RepeatUntil,
-    Subconstruct, Construct, ListContainer, Mapping, GreedyBytes, Int32ul,
-    Switch
+    Adapter, BitStruct, BitsSwapped, Container, Flag, Padding, ListContainer, Mapping, GreedyBytes, Int32ul, Switch
 )
 from lxml import etree
 import base64
@@ -15,10 +13,15 @@ import codecs
 from io import BytesIO
 from collections import OrderedDict
 
+
 class HeaderChecksumError(Exception):
     pass
+
+
 class CredentialsError(Exception):
     pass
+
+
 class PayloadChecksumError(Exception):
     pass
 
@@ -61,6 +64,7 @@ class DynamicDict(Adapter):
 
         return ListContainer(l)
 
+
 def Reparsed(subcon_out):
     class Reparsed(Adapter):
         """Bytes <---> Parsed subcon result
@@ -74,13 +78,14 @@ def Reparsed(subcon_out):
 
     return Reparsed
 
+
 # is the payload compressed?
 CompressionFlags = BitsSwapped(
     BitStruct("compression" / Flag, Padding(8 * 4 - 1))
 )
 
-# -------------------- Key Computation --------------------
 
+# -------------------- Key Computation --------------------
 def aes_kdf(key, rounds, key_composite):
     """Set up a context for AES128-ECB encryption to find transformed_key"""
 
@@ -126,7 +131,7 @@ def compute_key_composite(password=None, keyfile=None):
                         keyfile_composite = key
                     # if the length is 64 bytes we assume the key is hex encoded
                     elif len(key) == 64 and is_hex:
-                        keyfile_composite =  codecs.decode(key, 'hex')
+                        keyfile_composite = codecs.decode(key, 'hex')
                     # anything else may be a file to hash for the key
                     else:
                         keyfile_composite = hashlib.sha256(key).digest()
@@ -138,6 +143,7 @@ def compute_key_composite(password=None, keyfile=None):
 
     # create composite key from password and keyfile composites
     return hashlib.sha256(password_composite + keyfile_composite).digest()
+
 
 def compute_master(context):
     """Computes master key from transformed key and master seed.
@@ -161,6 +167,7 @@ class XML(Adapter):
 
     def _encode(self, tree, con, path):
         return etree.tostring(tree)
+
 
 class UnprotectedStream(Adapter):
     """lxml etree <---> unprotected lxml etree
@@ -203,6 +210,7 @@ class ARCFourVariantStream(UnprotectedStream):
     def get_cipher(self, protected_stream_key):
         raise Exception("ARCFourVariant not implemented")
 
+
 # https://github.com/dlech/KeePass2.x/blob/97141c02733cd3abf8d4dce1187fa7959ded58a8/KeePassLib/Cryptography/CryptoRandomStream.cs#L115-L119
 class Salsa20Stream(UnprotectedStream):
     def get_cipher(self, protected_stream_key):
@@ -211,6 +219,7 @@ class Salsa20Stream(UnprotectedStream):
             key=key,
             nonce=b'\xE8\x30\x09\x4B\x97\x20\x5D\x2A'
         )
+
 
 # https://github.com/dlech/KeePass2.x/blob/97141c02733cd3abf8d4dce1187fa7959ded58a8/KeePassLib/Cryptography/CryptoRandomStream.cs#L103-L111
 class ChaCha20Stream(UnprotectedStream):
@@ -232,7 +241,7 @@ def Unprotect(protected_stream_id, protected_stream_key, subcon):
         {'arcfourvariant': ARCFourVariantStream(protected_stream_key, subcon),
          'salsa20': Salsa20Stream(protected_stream_key, subcon),
          'chacha20': ChaCha20Stream(protected_stream_key, subcon),
-        },
+         },
         default=subcon
     )
 
@@ -256,6 +265,7 @@ class Concatenated(Adapter):
 
         return blocks
 
+
 class DecryptedPayload(Adapter):
     """Encrypted Bytes <---> Decrypted Bytes"""
 
@@ -278,13 +288,16 @@ class DecryptedPayload(Adapter):
 
         return payload_data
 
+
 class AES256Payload(DecryptedPayload):
     def get_cipher(self, master_key, encryption_iv):
         return AES.new(master_key, AES.MODE_CBC, encryption_iv)
 
+
 class ChaCha20Payload(DecryptedPayload):
     def get_cipher(self, master_key, encryption_iv):
         return ChaCha20.new(key=master_key, nonce=encryption_iv)
+
 
 class TwoFishPayload(DecryptedPayload):
     def get_cipher(self, master_key, encryption_iv):
@@ -310,7 +323,6 @@ class Decompressed(Adapter):
         return data
 
 
-
 # -------------------- Cipher Enums --------------------
 
 # payload encryption method
@@ -320,7 +332,7 @@ CipherId = Mapping(
     {'aes256': b'1\xc1\xf2\xe6\xbfqCP\xbeX\x05!j\xfcZ\xff',
      'twofish': b'\xadh\xf2\x9fWoK\xb9\xa3j\xd4z\xf9e4l',
      'chacha20': b'\xd6\x03\x8a+\x8boL\xb5\xa5$3\x9a1\xdb\xb5\x9a'
-    }
+     }
 )
 
 # protected entry encryption method
@@ -331,5 +343,5 @@ ProtectedStreamId = Mapping(
      'arcfourvariant': 1,
      'salsa20': 2,
      'chacha20': 3,
-    }
+     }
 )

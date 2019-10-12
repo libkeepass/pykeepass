@@ -14,19 +14,18 @@ from construct import (
 from .common import (
     aes_kdf, Concatenated, AES256Payload, ChaCha20Payload, TwoFishPayload,
     DynamicDict, compute_key_composite, Reparsed, Decompressed,
-    compute_master, CompressionFlags, HeaderChecksumError, CredentialsError,
-    PayloadChecksumError, XML, CipherId, ProtectedStreamId,
-    ARCFourVariantStream, Salsa20Stream, ChaCha20Stream, Unprotect
+    compute_master, CompressionFlags, XML, CipherId, ProtectedStreamId, Unprotect
 )
 
 
 # -------------------- Key Derivation --------------------
 
-# https://github.com/keepassxreboot/keepassxc/blob/8324d03f0a015e62b6182843b4478226a5197090/src/format/KeePass2.cpp#L24-L26 
+# https://github.com/keepassxreboot/keepassxc/blob/8324d03f0a015e62b6182843b4478226a5197090/src/format/KeePass2.cpp#L24-L26
 kdf_uuids = {
     'argon2': b'\xefcm\xdf\x8c)DK\x91\xf7\xa9\xa4\x03\xe3\n\x0c',
     'aeskdf': b'\xc9\xd9\xf3\x9ab\x8aD`\xbft\r\x08\xc1\x8aO\xea',
 }
+
 
 def compute_transformed(context):
     """Compute transformed key for opening database"""
@@ -65,6 +64,7 @@ def compute_transformed(context):
 
     return transformed_key
 
+
 def compute_header_hmac_hash(context):
     """Compute HMAC-SHA256 hash of header.
     Used to prevent header tampering."""
@@ -83,8 +83,7 @@ def compute_header_hmac_hash(context):
     ).digest()
 
 
-#--------------- KDF Params / Plugin Data ----------------
-
+# --------------- KDF Params / Plugin Data ----------------
 VariantDictionaryItem = Struct(
     "type" / Byte,
     "key" / Prefixed(Int32ul, GreedyString('utf-8')),
@@ -99,7 +98,7 @@ VariantDictionaryItem = Struct(
              0x0D: Int64sl,
              0x42: GreedyBytes,
              0x18: GreedyString('utf-8')
-            }
+             }
         )
     ),
     "next_byte" / Peek(Byte)
@@ -111,7 +110,7 @@ VariantDictionary = Struct(
     "dict" / DynamicDict(
         'key',
         RepeatUntil(
-            lambda item,a,b: item.next_byte == 0x00,
+            lambda item, a, b: item.next_byte == 0x00,
             VariantDictionaryItem
         )
     ),
@@ -133,7 +132,7 @@ DynamicHeaderItem = Struct(
          'encryption_iv': 7,
          'kdf_parameters': 11,
          'public_custom_data': 12
-        }
+         }
     ),
     "data" / Prefixed(
         Int32ul,
@@ -142,7 +141,7 @@ DynamicHeaderItem = Struct(
             {'compression_flags': CompressionFlags,
              'kdf_parameters': VariantDictionary,
              'cipher_id': CipherId
-            },
+             },
             default=GreedyBytes
         )
     )
@@ -155,8 +154,9 @@ DynamicHeader = DynamicDict(
         DynamicHeaderItem
     )
 )
-# -------------------- Payload Verification --------------------
 
+
+# -------------------- Payload Verification --------------------
 def compute_payload_block_hash(this):
     """Compute hash of each payload block.
     Used to prevent payload corruption and tampering."""
@@ -175,10 +175,7 @@ def compute_payload_block_hash(this):
     ).digest()
 
 
-
 # -------------------- Payload Decryption/Decompression --------------------
-
-
 # encrypted payload is split into multiple data blocks with hashes
 EncryptedPayloadBlock = Struct(
     "hmac_hash_offset" / Tell,
@@ -207,7 +204,7 @@ DecryptedPayload = Switch(
     {'aes256': AES256Payload(EncryptedPayload),
      'chacha20': ChaCha20Payload(EncryptedPayload),
      'twofish': TwoFishPayload(EncryptedPayload)
-    }
+     }
 )
 
 
@@ -218,7 +215,7 @@ InnerHeaderItem = Struct(
          'protected_stream_id': 0x01,
          'protected_stream_key': 0x02,
          'binary': 0x03
-        }
+         }
     ),
     "data" / Prefixed(
         Int32ul,
@@ -233,8 +230,8 @@ InnerHeaderItem = Struct(
 # another binary header inside decrypted and decompressed Payload
 InnerHeader = DynamicDict(
     'type',
-    RepeatUntil(lambda item,a,b: item.type == 'end', InnerHeaderItem),
-    #FIXME - this is a hack because inner header is not truly a dict,
+    RepeatUntil(lambda item, a, b: item.type == 'end', InnerHeaderItem),
+    # FIXME - this is a hack because inner header is not truly a dict,
     #  it has multiple binary elements.
     lump=['binary']
 )

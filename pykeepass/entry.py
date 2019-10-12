@@ -9,9 +9,6 @@ from lxml.objectify import ObjectifiedElement
 from lxml.builder import E
 import logging
 from datetime import datetime
-from collections import namedtuple
-import gzip
-import base64
 
 from pykeepass.baseelement import BaseElement
 import pykeepass.group
@@ -168,7 +165,7 @@ class Entry(BaseElement):
 
     @property
     def tags(self):
-        val =  self._get_subelement_text('Tags')
+        val = self._get_subelement_text('Tags')
         return val.split(';') if val else val
 
     @tags.setter
@@ -218,7 +215,6 @@ class Entry(BaseElement):
             return parent.tag == 'History'
         return False
 
-
     @property
     def path(self):
         # The root group is an orphan
@@ -233,7 +229,7 @@ class Entry(BaseElement):
         p = self.parentgroup
         ppath = ''
         while p is not None and not p.is_root_group:
-            if p.name is not None: # dont make the root group appear
+            if p.name is not None:  # dont make the root group appear
                 ppath = '{}/{}'.format(p.name, ppath)
             p = p.parentgroup
         return '{}{}'.format(ppath, self.title)

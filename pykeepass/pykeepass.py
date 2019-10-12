@@ -10,9 +10,6 @@ from future.utils import python_2_unicode_compatible
 import base64
 import logging
 import os
-import re
-from uuid import UUID
-from io import BytesIO
 from pykeepass.kdbx_parsing.kdbx import KDBX
 from pykeepass.kdbx_parsing.kdbx4 import kdf_uuids
 from lxml import etree
@@ -62,7 +59,6 @@ class PyKeePass(object):
             keyfile=keyfile,
             transformed_key=transformed_key
         )
-
 
     def save(self, filename=None, transformed_key=None):
         if not filename:
@@ -166,7 +162,6 @@ class PyKeePass(object):
 
         return res
 
-
     def _find(self, prefix, keys_xp, path=None, tree=None, first=False,
               history=False, regex=False, flags=None, **kwargs):
 
@@ -222,41 +217,36 @@ class PyKeePass(object):
 
         return res
 
-    #---------- Groups ----------
+    # ---------- Groups ----------
 
     def find_groups(self, recursive=True, path=None, group=None, **kwargs):
 
         prefix = '//Group' if recursive else '/Group'
         res = self._find(prefix, group_xp, path=path, tree=group, **kwargs)
-
-
         return res
-
 
     def find_groups_by_name(self, group_name, regex=False, flags=None,
                             group=None, first=False):
-
-        return self.find_groups(name=group_name,
-                                regex=regex,
-                                flags=flags,
-                                group=group,
-                                first=first
+        return self.find_groups(
+            name=group_name,
+            regex=regex,
+            flags=flags,
+            group=group,
+            first=first
         )
-
 
     def find_groups_by_path(self, group_path_str=None, regex=False, flags=None,
                             group=None, first=False):
-
-        return self.find_groups(path=group_path_str,
-                                regex=regex,
-                                flags=flags,
-                                group=group,
-                                first=first
+        return self.find_groups(
+            path=group_path_str,
+            regex=regex,
+            flags=flags,
+            group=group,
+            first=first
         )
 
     def find_groups_by_uuid(self, uuid, regex=False, flags=None,
-                              group=None, history=False, first=False):
-
+                            group=None, history=False, first=False):
         return self.find_groups(
             uuid=uuid,
             regex=regex,
@@ -267,8 +257,7 @@ class PyKeePass(object):
         )
 
     def find_groups_by_notes(self, notes, regex=False, flags=None,
-                              group=None, history=False, first=False):
-
+                             group=None, history=False, first=False):
         return self.find_groups(
             notes=notes,
             regex=regex,
@@ -296,7 +285,7 @@ class PyKeePass(object):
     def move_group(self, group, destination_group):
         destination_group.append(group)
 
-    #---------- Entries ----------
+    # ---------- Entries ----------
 
     def find_entries(self, recursive=True, path=None, group=None, **kwargs):
 
@@ -304,7 +293,6 @@ class PyKeePass(object):
         res = self._find(prefix, entry_xp, path=path, tree=group, **kwargs)
 
         return res
-
 
     def find_entries_by_title(self, title, regex=False, flags=None,
                               group=None, history=False, first=False):
@@ -373,7 +361,7 @@ class PyKeePass(object):
         )
 
     def find_entries_by_uuid(self, uuid, regex=False, flags=None,
-                              group=None, history=False, first=False):
+                             group=None, history=False, first=False):
         return self.find_entries(
             uuid=uuid,
             regex=regex,
@@ -384,7 +372,7 @@ class PyKeePass(object):
         )
 
     def find_entries_by_string(self, string, regex=False, flags=None,
-                              group=None, history=False, first=False):
+                               group=None, history=False, first=False):
         return self.find_entries(
             string=string,
             regex=regex,
@@ -436,7 +424,7 @@ class PyKeePass(object):
     def move_entry(self, entry, destination_group):
         destination_group.append(entry)
 
-    #---------- Attachments ----------
+    # ---------- Attachments ----------
 
     def find_attachments(self, recursive=True, path=None, element=None, **kwargs):
 

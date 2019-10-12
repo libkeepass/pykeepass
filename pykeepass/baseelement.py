@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 from lxml import etree
-from lxml.etree import Element
 from lxml.builder import E
 from datetime import datetime, timedelta
 import base64
@@ -124,20 +123,19 @@ class BaseElement(object):
                 return (
                     datetime(year=1, month=1, day=1, tzinfo=tz.gettz('UTC')) +
                     timedelta(
-                        seconds = struct.unpack('<Q', base64.b64decode(text))[0]
+                        seconds=struct.unpack('<Q', base64.b64decode(text))[0]
                     )
                 )
             except BinasciiError:
                 return parser.parse(
                     text,
-                    tzinfos={'UTC':tz.gettz('UTC')}
+                    tzinfos={'UTC': tz.gettz('UTC')}
                 )
         else:
             return parser.parse(
                 text,
-                tzinfos={'UTC':tz.gettz('UTC')}
+                tzinfos={'UTC': tz.gettz('UTC')}
             )
-
 
     def _get_times_property(self, prop):
         times = self._element.find('Times')
@@ -170,7 +168,6 @@ class BaseElement(object):
         if self.expires:
             return self._datetime_to_utc(datetime.utcnow()) > self._datetime_to_utc(self.expiry_time)
         return False
-
 
     @property
     def expiry_time(self):

@@ -5,7 +5,6 @@ from __future__ import absolute_import
 from future.utils import python_2_unicode_compatible
 
 import pykeepass.entry
-from collections import namedtuple
 
 from pykeepass.exceptions import BinaryError
 
