@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from future.utils import python_2_unicode_compatible
 
 import base64
+import codecs
 import logging
 import os
 import re
@@ -281,6 +282,29 @@ class PyKeePass(object):
 
     def delete_group(self, group):
         group.delete()
+
+    def deref(self, value):
+        if not value:
+            return value
+        references = set(re.findall(r'({REF:([TUPANI])@([TUPANI]):([^}]+)})', value))
+        if not references:
+            return value
+        field_to_attribute = {
+            'T': 'title',
+            'U': 'username',
+            'P': 'password',
+            'A': 'url',
+            'N': 'notes',
+            'I': 'uuid',
+        }
+        for ref, wanted_field, search_in, search_value in references:
+            wanted_field = field_to_attribute[wanted_field]
+            search_in = field_to_attribute[search_in]
+            if search_in == 'uuid':
+                search_value = codecs.encode(codecs.decode(search_value, 'hex'), 'base64')[:-1].decode()
+            ref_entry = self.find_entries(**{search_in: search_value}, first=True)
+            value = value.replace(ref, getattr(ref_entry, wanted_field))
+        return self.deref(value)
 
     def move_group(self, group, destination_group):
         destination_group.append(group)
