@@ -2,26 +2,26 @@
 # coding: utf-8
 
 # FIXME python2
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
 from future.utils import python_2_unicode_compatible
 
 import base64
 import logging
 import os
-from pykeepass.kdbx_parsing.kdbx import KDBX
-from pykeepass.kdbx_parsing.kdbx4 import kdf_uuids
+import re
+import zlib
+
+from construct import Container
 from lxml import etree
 from lxml.builder import E
-import zlib
-from construct import Container
 
-from pykeepass.entry import Entry
-from pykeepass.xpath import entry_xp, group_xp, attachment_xp, path_xp
-from pykeepass.group import Group
 from pykeepass.attachment import Attachment
+from pykeepass.entry import Entry
 from pykeepass.exceptions import *
+from pykeepass.group import Group
+from pykeepass.kdbx_parsing.kdbx import KDBX
+from pykeepass.kdbx_parsing.kdbx4 import kdf_uuids
+from pykeepass.xpath import attachment_xp, entry_xp, group_xp, path_xp
 
 logger = logging.getLogger(__name__)
 

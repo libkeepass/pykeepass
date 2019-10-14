@@ -1,13 +1,14 @@
 # FIXME python2
-from __future__ import unicode_literals
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 from future.utils import python_2_unicode_compatible
 
-from pykeepass.baseelement import BaseElement
+from lxml.builder import E
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
-from lxml.builder import E
+
 import pykeepass.entry
+from pykeepass.baseelement import BaseElement
+
 
 # FIXME python2
 @python_2_unicode_compatible

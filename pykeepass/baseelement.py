@@ -1,12 +1,14 @@
 from __future__ import absolute_import
+
+import base64
+import struct
+import uuid
+from binascii import Error as BinasciiError
+from datetime import datetime, timedelta
+
+from dateutil import parser, tz
 from lxml import etree
 from lxml.builder import E
-from datetime import datetime, timedelta
-import base64
-from binascii import Error as BinasciiError
-from dateutil import parser, tz
-import uuid
-import struct
 
 
 class BaseElement(object):
