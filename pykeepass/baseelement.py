@@ -69,11 +69,15 @@ class BaseElement(object):
 
     @property
     def uuid(self):
-        return self._get_subelement_text('UUID')
+        """Returns uuid of this element as a uuid.UUID object"""
+        b64_uuid = self._get_subelement_text('UUID')
+        return uuid.UUID(bytes=base64.b64decode(b64_uuid))
 
     @uuid.setter
-    def uuid(self, value):
-        return self._set_subelement_text('UUID', value)
+    def uuid(self, uuid):
+        """Set element uuid. `uuid` is a uuid.UUID object"""
+        b64_uuid = base64.b64encode(uuid.bytes).decode('utf-8')
+        return self._set_subelement_text('UUID', b64_uuid)
 
     @property
     def icon(self):

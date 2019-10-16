@@ -204,6 +204,10 @@ class PyKeePass(object):
 
                 kwargs.pop('string')
 
+            # convert uuid to base64 form before building xpath
+            if 'uuid' in kwargs.keys():
+                kwargs['uuid'] = base64.b64encode(kwargs['uuid'].bytes).decode('utf-8')
+
             # build xpath to filter results with specified attributes
             for key, value in kwargs.items():
                 if key not in keys_xp[regex].keys():

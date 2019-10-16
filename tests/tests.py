@@ -12,6 +12,7 @@ from pykeepass.attachment import Attachment
 from pykeepass.kdbx_parsing import KDBX
 from pykeepass.exceptions import BinaryError
 from lxml.etree import Element
+import uuid
 import os
 import shutil
 import unittest
@@ -98,16 +99,18 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual('group_entry', results.title)
 
     def test_find_entries_by_uuid(self):
-        results = self.kp.find_entries_by_uuid('zF9+zSoASMqWIcIio0ewuw==')[0]
+        uu = uuid.UUID('cc5f7ecd-2a00-48ca-9621-c222a347b0bb')
+        results = self.kp.find_entries_by_uuid(uu)[0]
         self.assertIsInstance(results, Entry)
-        self.assertEqual('zF9+zSoASMqWIcIio0ewuw==', results.uuid)
+        self.assertEqual(uu, results.uuid)
         self.assertEqual('foobar_user', results.username)
 
     def test_find_entries_by_string(self):
         results = self.kp.find_entries_by_string({'custom_field': 'custom field value'})[0]
         self.assertIsInstance(results, Entry)
         self.assertEqual('custom field value', results.get_custom_property('custom_field'))
-        self.assertEqual('HnN4bHSVjEybPf8nOq1bVA==', results.uuid)
+        uu = uuid.UUID('1e73786c-7495-8c4c-9b3d-ff273aad5b54')
+        self.assertEqual(uu, results.uuid)
 
     def test_find_entries_by_autotype_sequence(self):
         results = self.kp.find_entries(autotype_sequence='{TAB}', regex=True)
@@ -272,15 +275,17 @@ class GroupFindTests3(KDBX3Tests):
         self.assertEqual(results, None)
 
     def test_find_groups_by_uuid(self):
-        results = self.kp.find_groups_by_uuid('lRVaMlMXoQ/U5NDCAwJktg==', first=True)
+        uu = uuid.UUID('95155a32-5317-a10f-d4e4-d0c2030264b6')
+        results = self.kp.find_groups_by_uuid(uu, first=True)
         self.assertIsInstance(results, Group)
-        results = self.kp.find_groups(uuid='^lRVaMlMX|^kwTZdSoU', regex=True)
-        self.assertEqual(len(results), 2)
+        results = self.kp.find_groups(uuid=uu, regex=True)
+        self.assertEqual(len(results), 1)
 
     def test_find_groups_by_notes(self):
         results = self.kp.find_groups(notes='group notes')
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].uuid, 'lRVaMlMXoQ/U5NDCAwJktg==')
+        uu = uuid.UUID('95155a32-5317-a10f-d4e4-d0c2030264b6')
+        self.assertEqual(results[0].uuid, uu)
 
     def test_groups(self):
         results = self.kp.groups
