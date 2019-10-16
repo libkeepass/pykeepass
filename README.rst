@@ -1,4 +1,4 @@
-pykeepass
+pykeepass!
 ============
 
 .. image:: https://travis-ci.org/pschmitt/pykeepass.svg?branch=master
