@@ -362,6 +362,18 @@ class EntryTests3(KDBX3Tests):
             self.kp.root_group
         )
 
+    def test_references(self):
+        original_entry = self.kp.find_entries(title='foobar_entry', first=True)
+        clone1 = self.kp.find_entries(title='foobar_entry - Clone', first=True)
+        clone2 = self.kp.find_entries(title='foobar_entry - Clone of clone', first=True)
+        prefixed = self.kp.find_entries(title='foobar_entry - Clone with prefix and suffix', first=True)
+        self.assertEqual(self.kp.deref(clone2.username), original_entry.username)
+        self.assertEqual(clone2.deref('username'), original_entry.username)
+        self.assertEqual(clone2.deref('password'), original_entry.password)
+        self.assertEqual(original_entry.ref('username'), clone1.username)
+        self.assertEqual(prefixed.deref('username'), 'domain\\{}2'.format(original_entry.username))
+        self.assertEqual(prefixed.deref('password'), 'A{}BC'.format(original_entry.password))
+
     def test_set_and_get_fields(self):
         time = datetime.now().replace(microsecond=0)
         changed_time = time + timedelta(hours=9)
