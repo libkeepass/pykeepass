@@ -15,6 +15,7 @@ from uuid import UUID
 from io import BytesIO
 from pykeepass.kdbx_parsing.kdbx import KDBX
 from pykeepass.kdbx_parsing.kdbx4 import kdf_uuids
+from construct import ChecksumError
 from lxml import etree
 from lxml.builder import E
 import zlib
@@ -56,12 +57,15 @@ class PyKeePass(object):
         if not filename:
             filename = self.filename
 
-        self.kdbx = KDBX.parse_file(
-            filename,
-            password=password,
-            keyfile=keyfile,
-            transformed_key=transformed_key
-        )
+        try:
+            self.kdbx = KDBX.parse_file(
+                filename,
+                password=password,
+                keyfile=keyfile,
+                transformed_key=transformed_key
+            )
+        except ChecksumError:
+            raise CredentialsIntegrityError
 
 
     def save(self, filename=None, transformed_key=None):

@@ -10,7 +10,7 @@ from pykeepass.entry import Entry
 from pykeepass.group import Group
 from pykeepass.attachment import Attachment
 from pykeepass.kdbx_parsing import KDBX
-from pykeepass.exceptions import BinaryError
+from pykeepass.exceptions import BinaryError, CredentialsIntegrityError
 from lxml.etree import Element
 import uuid
 import os
@@ -825,6 +825,26 @@ class KDBXTests(unittest.TestCase):
                 password=password,
                 keyfile=None if keyfile is None else os.path.join(base_dir, keyfile),
                 transformed_key=transformed_key
+            )
+
+    def test_open_error(self):
+        with self.assertRaises(CredentialsIntegrityError):
+            database = 'test4.kdbx'
+            invalid_password = 'foobar'
+            keyfile = os.path.join(base_dir, 'test4.key')
+            PyKeePass(
+                os.path.join(base_dir, database),
+                password=invalid_password,
+                keyfile=keyfile
+            )
+        with self.assertRaises(CredentialsIntegrityError):
+            database = 'test4.kdbx'
+            password = 'password'
+            invalid_keyfile = os.path.join(base_dir, 'test3.key')
+            PyKeePass(
+                os.path.join(base_dir, database),
+                password=password,
+                keyfile=invalid_keyfile
             )
 
 if __name__ == '__main__':
