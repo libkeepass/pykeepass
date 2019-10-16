@@ -115,6 +115,9 @@ class Entry(BaseElement):
     def delete_attachment(self, attachment):
         attachment.delete()
 
+    def deref(self, attribute):
+        return self._kp.deref(getattr(self, attribute))
+
     @property
     def title(self):
         return self._get_string_field('Title')
@@ -257,6 +260,18 @@ class Entry(BaseElement):
         for k in keys:
             props[k] = self._get_string_field(k)
         return props
+
+    def ref(self, attribute):
+        """Create reference to an attribute of this element."""
+        attribute_to_field = {
+            'title': 'T',
+            'username': 'U',
+            'password': 'P',
+            'url': 'A',
+            'notes': 'N',
+            'uuid': 'I',
+        }
+        return '{{REF:{}@I:{}}}'.format(attribute_to_field[attribute], self.uuid.hex.upper())
 
     def touch(self, modify=False):
         '''

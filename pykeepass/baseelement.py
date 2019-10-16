@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import base64
-import codecs
 import struct
 import uuid
 from binascii import Error as BinasciiError
@@ -56,9 +55,6 @@ class BaseElement(object):
             self._element.remove(v)
         self._element.append(getattr(E, tag)(value))
 
-    def deref(self, attribute):
-        return self._kp.deref(getattr(self, attribute))
-
     @property
     def group(self):
         return self._xpath(
@@ -71,19 +67,6 @@ class BaseElement(object):
 
     def dump_xml(self, pretty_print=False):
         return etree.tostring(self._element, pretty_print=pretty_print)
-
-    def ref(self, attribute):
-        """Create reference to an attribute of this element."""
-        attribute_to_field = {
-            'title': 'T',
-            'username': 'U',
-            'password': 'P',
-            'url': 'A',
-            'notes': 'N',
-            'uuid': 'I',
-        }
-        return '{{REF:{}@I:{}}}'.format(attribute_to_field[attribute],
-                                        codecs.encode(codecs.decode(self.uuid, 'base64'), 'hex').decode().upper())
 
     @property
     def uuid(self):

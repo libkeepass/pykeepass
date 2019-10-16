@@ -6,10 +6,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 from future.utils import python_2_unicode_compatible
 
 import base64
-import codecs
 import logging
 import os
 import re
+import uuid
 import zlib
 
 from construct import Container
@@ -305,8 +305,8 @@ class PyKeePass(object):
             wanted_field = field_to_attribute[wanted_field]
             search_in = field_to_attribute[search_in]
             if search_in == 'uuid':
-                search_value = codecs.encode(codecs.decode(search_value, 'hex'), 'base64')[:-1].decode()
-            ref_entry = self.find_entries(**{search_in: search_value}, first=True)
+                search_value = uuid.UUID(search_value)
+            ref_entry = self.find_entries(first=True, **{search_in: search_value})
             value = value.replace(ref, getattr(ref_entry, wanted_field))
         return self.deref(value)
 
