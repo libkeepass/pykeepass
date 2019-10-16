@@ -1,8 +1,8 @@
 pykeepass
 ============
 
-.. image:: https://travis-ci.org/pschmitt/pykeepass.svg?branch=master
-   :target: https://travis-ci.org/pschmitt/pykeepass
+.. image:: https://travis-ci.org/libkeepass/pykeepass.svg?branch=master
+   :target: https://travis-ci.org/libkeepass/pykeepass
 
 .. image:: https://img.shields.io/matrix/pykeepass:matrix.org.svg
    :target: https://matrix.to/#/#pykeepass:matrix.org
