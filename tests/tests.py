@@ -3,20 +3,21 @@
 # FIXME python2
 from __future__ import unicode_literals
 
-from datetime import datetime, timedelta
-from dateutil import tz
-from pykeepass import icons, PyKeePass
-from pykeepass.entry import Entry
-from pykeepass.group import Group
-from pykeepass.attachment import Attachment
-from pykeepass.kdbx_parsing import KDBX
-from pykeepass.exceptions import BinaryError
-from lxml.etree import Element
-import uuid
+import logging
 import os
 import shutil
 import unittest
-import logging
+import uuid
+from datetime import datetime, timedelta
+
+from dateutil import tz
+from lxml.etree import Element
+
+from pykeepass import PyKeePass, icons
+from pykeepass.entry import Entry
+from pykeepass.exceptions import BinaryError
+from pykeepass.group import Group
+from pykeepass.kdbx_parsing import KDBX
 
 """
 Missing Tests:
@@ -35,6 +36,7 @@ Missing Tests:
 base_dir = os.path.dirname(os.path.realpath(__file__))
 logger = logging.getLogger("pykeepass")
 
+
 class KDBX3Tests(unittest.TestCase):
     database = 'test3.kdbx'
     password = 'password'
@@ -48,14 +50,16 @@ class KDBX3Tests(unittest.TestCase):
             keyfile=os.path.join(base_dir, self.keyfile)
         )
 
+
 class KDBX4Tests(KDBX3Tests):
     database = 'test4.kdbx'
     password = 'password'
     keyfile = 'test4.key'
 
+
 class EntryFindTests3(KDBX3Tests):
 
-    #---------- Finding entries -----------
+    # ---------- Finding entries -----------
 
     def test_find_entries_by_title(self):
         results = self.kp.find_entries_by_title('root_entry')
@@ -139,7 +143,7 @@ class EntryFindTests3(KDBX3Tests):
         results = self.kp.find_entries(title='foobar_entry', group=group)
         self.assertEqual(len(results), 2)
 
-    #---------- History -----------
+    # ---------- History -----------
 
     def test_is_a_history_entry(self):
         for title in ["root_entry", "subentry"]:
@@ -181,7 +185,7 @@ class EntryFindTests3(KDBX3Tests):
                 grp2 = item.group
                 self.assertEqual(grp1, grp2)
 
-    #---------- Adding/Deleting entries -----------
+    # ---------- Adding/Deleting entries -----------
 
     def test_add_delete_move_entry(self):
         unique_str = 'test_add_entry_'
@@ -227,7 +231,7 @@ class EntryFindTests3(KDBX3Tests):
         self.kp.add_entry(subgroup, title='foobar_entry2', username='foobar', password='foobar')
         self.kp.add_entry(self.kp.root_group, title='foobar_entry2', username='foobar', password='foobar')
 
-    #---------- Entries name collision exception -----------
+    # ---------- Entries name collision exception -----------
 
     def test_raise_exception_entry(self):
         unique_str = 'test_add_entry_'
@@ -251,9 +255,10 @@ class EntryFindTests3(KDBX3Tests):
         self.assertIsInstance(e.__repr__(), str)
         self.assertIsInstance(e.history.__repr__(), str)
 
+
 class GroupFindTests3(KDBX3Tests):
 
-    #---------- Finding groups -----------
+    # ---------- Finding groups -----------
 
     def test_find_groups_by_name(self):
         results = self.kp.find_groups_by_name('subgroup')
@@ -292,7 +297,7 @@ class GroupFindTests3(KDBX3Tests):
 
         self.assertEqual(len(results), 6)
 
-    #---------- Adding/Deleting Groups -----------
+    # ---------- Adding/Deleting Groups -----------
 
     def test_add_delete_move_group(self):
         notes_text = "this is a note for a group!"
@@ -475,7 +480,7 @@ class EntryTests3(KDBX3Tests):
 
 class EntryHistoryTests3(KDBX3Tests):
 
-    #---------- History -----------
+    # ---------- History -----------
 
     def test_find_history_entries(self):
         '''run some tests on entries created by pykeepass'''
@@ -483,19 +488,22 @@ class EntryHistoryTests3(KDBX3Tests):
         changed = 'tfe_changed_'
 
         # create some new entries to have clean start
-        e1 = self.kp.add_entry(self.kp.root_group,
+        e1 = self.kp.add_entry(
+            self.kp.root_group,
             prefix + 'title',
             prefix + 'user',
             prefix + 'pass'
         )
         g1 = self.kp.add_group(self.kp.root_group, prefix + 'group')
-        e2 = self.kp.add_entry(g1,
+        e2 = self.kp.add_entry(
+            g1,
             prefix + 'title',
             prefix + 'user',
             prefix + 'pass'
         )
         g2 = self.kp.add_group(g1, prefix + 'sub_group')
-        e2 = self.kp.add_entry(g2,
+        e2 = self.kp.add_entry(
+            g2,
             prefix + 'title',
             prefix + 'user',
             prefix + 'pass'
@@ -703,16 +711,27 @@ class PyKeePassTests3(KDBX3Tests):
     def tearDown(self):
         os.remove(os.path.join(base_dir, 'change_creds.kdbx'))
 
+
 class EntryFindTests4(KDBX4Tests, EntryFindTests3):
     pass
+
+
 class GroupFindTests4(KDBX4Tests, GroupFindTests3):
     pass
+
+
 class EntryTests4(KDBX4Tests, EntryTests3):
     pass
+
+
 class GroupTests3(KDBX4Tests, GroupTests3):
     pass
+
+
 class AttachmentTests4(KDBX4Tests, AttachmentTests3):
     pass
+
+
 class PyKeePassTests4(KDBX4Tests, PyKeePassTests3):
     pass
 
@@ -723,20 +742,21 @@ class CtxManagerTests(unittest.TestCase):
             results = kp.find_entries_by_username('foobar_user', first=True)
             self.assertEqual('foobar_user', results.username)
 
+
 class KDBXTests(unittest.TestCase):
 
     def test_open_save(self):
         """try to open all databases, save them, then open the result"""
 
         databases = [
-            'test3.kdbx',          # KDBX v3 test
-            'test4.kdbx',          # KDBX v4 test
-            'test4_aes.kdbx',      # KDBX v4 AES test
-            'test4_aeskdf.kdbx',   # KDBX v3 AESKDF test
-            'test4_chacha20.kdbx', # KDBX v4 ChaCha test
-            'test4_twofish.kdbx',  # KDBX v4 Twofish test
-            'test4_hex.kdbx',      # legacy 64 byte hexadecimal keyfile test
-            'test4_hex.kdbx',          # KDBX v4 transformed_key open test
+            'test3.kdbx',           # KDBX v3 test
+            'test4.kdbx',           # KDBX v4 test
+            'test4_aes.kdbx',       # KDBX v4 AES test
+            'test4_aeskdf.kdbx',    # KDBX v3 AESKDF test
+            'test4_chacha20.kdbx',  # KDBX v4 ChaCha test
+            'test4_twofish.kdbx',   # KDBX v4 Twofish test
+            'test4_hex.kdbx',       # legacy 64 byte hexadecimal keyfile test
+            'test4_hex.kdbx',       # KDBX v4 transformed_key open test
         ]
         passwords = [
             'password',
@@ -826,6 +846,7 @@ class KDBXTests(unittest.TestCase):
                 keyfile=None if keyfile is None else os.path.join(base_dir, keyfile),
                 transformed_key=transformed_key
             )
+
 
 if __name__ == '__main__':
     unittest.main()
