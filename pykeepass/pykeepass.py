@@ -2,29 +2,27 @@
 # coding: utf-8
 
 # FIXME python2
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
 from future.utils import python_2_unicode_compatible
 
 import base64
 import logging
 import os
 import re
-from uuid import UUID
-from io import BytesIO
-from pykeepass.kdbx_parsing.kdbx import KDBX
-from pykeepass.kdbx_parsing.kdbx4 import kdf_uuids
+import uuid
+import zlib
+
+from construct import Container
 from lxml import etree
 from lxml.builder import E
-import zlib
-from construct import Container
 
-from pykeepass.entry import Entry
-from pykeepass.xpath import entry_xp, group_xp, attachment_xp, path_xp
-from pykeepass.group import Group
 from pykeepass.attachment import Attachment
+from pykeepass.entry import Entry
 from pykeepass.exceptions import *
+from pykeepass.group import Group
+from pykeepass.kdbx_parsing.kdbx import KDBX
+from pykeepass.kdbx_parsing.kdbx4 import kdf_uuids
+from pykeepass.xpath import attachment_xp, entry_xp, group_xp, path_xp
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +60,6 @@ class PyKeePass(object):
             keyfile=keyfile,
             transformed_key=transformed_key
         )
-
 
     def save(self, filename=None, transformed_key=None):
         if not filename:
@@ -166,7 +163,6 @@ class PyKeePass(object):
 
         return res
 
-
     def _find(self, prefix, keys_xp, path=None, tree=None, first=False,
               history=False, regex=False, flags=None, **kwargs):
 
@@ -226,41 +222,36 @@ class PyKeePass(object):
 
         return res
 
-    #---------- Groups ----------
+    # ---------- Groups ----------
 
     def find_groups(self, recursive=True, path=None, group=None, **kwargs):
 
         prefix = '//Group' if recursive else '/Group'
         res = self._find(prefix, group_xp, path=path, tree=group, **kwargs)
-
-
         return res
-
 
     def find_groups_by_name(self, group_name, regex=False, flags=None,
                             group=None, first=False):
-
-        return self.find_groups(name=group_name,
-                                regex=regex,
-                                flags=flags,
-                                group=group,
-                                first=first
+        return self.find_groups(
+            name=group_name,
+            regex=regex,
+            flags=flags,
+            group=group,
+            first=first
         )
-
 
     def find_groups_by_path(self, group_path_str=None, regex=False, flags=None,
                             group=None, first=False):
-
-        return self.find_groups(path=group_path_str,
-                                regex=regex,
-                                flags=flags,
-                                group=group,
-                                first=first
+        return self.find_groups(
+            path=group_path_str,
+            regex=regex,
+            flags=flags,
+            group=group,
+            first=first
         )
 
     def find_groups_by_uuid(self, uuid, regex=False, flags=None,
-                              group=None, history=False, first=False):
-
+                            group=None, history=False, first=False):
         return self.find_groups(
             uuid=uuid,
             regex=regex,
@@ -271,8 +262,7 @@ class PyKeePass(object):
         )
 
     def find_groups_by_notes(self, notes, regex=False, flags=None,
-                              group=None, history=False, first=False):
-
+                             group=None, history=False, first=False):
         return self.find_groups(
             notes=notes,
             regex=regex,
@@ -297,10 +287,33 @@ class PyKeePass(object):
     def delete_group(self, group):
         group.delete()
 
+    def deref(self, value):
+        if not value:
+            return value
+        references = set(re.findall(r'({REF:([TUPANI])@([TUPANI]):([^}]+)})', value))
+        if not references:
+            return value
+        field_to_attribute = {
+            'T': 'title',
+            'U': 'username',
+            'P': 'password',
+            'A': 'url',
+            'N': 'notes',
+            'I': 'uuid',
+        }
+        for ref, wanted_field, search_in, search_value in references:
+            wanted_field = field_to_attribute[wanted_field]
+            search_in = field_to_attribute[search_in]
+            if search_in == 'uuid':
+                search_value = uuid.UUID(search_value)
+            ref_entry = self.find_entries(first=True, **{search_in: search_value})
+            value = value.replace(ref, getattr(ref_entry, wanted_field))
+        return self.deref(value)
+
     def move_group(self, group, destination_group):
         destination_group.append(group)
 
-    #---------- Entries ----------
+    # ---------- Entries ----------
 
     def find_entries(self, recursive=True, path=None, group=None, **kwargs):
 
@@ -308,7 +321,6 @@ class PyKeePass(object):
         res = self._find(prefix, entry_xp, path=path, tree=group, **kwargs)
 
         return res
-
 
     def find_entries_by_title(self, title, regex=False, flags=None,
                               group=None, history=False, first=False):
@@ -377,7 +389,7 @@ class PyKeePass(object):
         )
 
     def find_entries_by_uuid(self, uuid, regex=False, flags=None,
-                              group=None, history=False, first=False):
+                             group=None, history=False, first=False):
         return self.find_entries(
             uuid=uuid,
             regex=regex,
@@ -388,7 +400,7 @@ class PyKeePass(object):
         )
 
     def find_entries_by_string(self, string, regex=False, flags=None,
-                              group=None, history=False, first=False):
+                               group=None, history=False, first=False):
         return self.find_entries(
             string=string,
             regex=regex,
@@ -440,7 +452,7 @@ class PyKeePass(object):
     def move_entry(self, entry, destination_group):
         destination_group.append(entry)
 
-    #---------- Attachments ----------
+    # ---------- Attachments ----------
 
     def find_attachments(self, recursive=True, path=None, element=None, **kwargs):
 

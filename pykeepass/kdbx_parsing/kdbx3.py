@@ -11,8 +11,7 @@ from construct import (
 from .common import (
     aes_kdf, AES256Payload, ChaCha20Payload, TwoFishPayload, Concatenated,
     DynamicDict, compute_key_composite, Decompressed, Reparsed,
-    compute_master, CompressionFlags, CredentialsError, PayloadChecksumError,
-    XML, CipherId, ProtectedStreamId, Unprotect
+    compute_master, CompressionFlags, XML, CipherId, ProtectedStreamId, Unprotect
 )
 
 
@@ -22,6 +21,7 @@ from .common import (
 kdf_uuids = {
     'aes': b'\xc9\xd9\xf3\x9ab\x8aD`\xbft\r\x08\xc1\x8aO\xea',
 }
+
 
 def compute_transformed(context):
     """Compute transformed key for opening database"""
@@ -42,7 +42,6 @@ def compute_transformed(context):
     return transformed_key
 
 
-
 # -------------------- Dynamic Header --------------------
 
 # https://github.com/dlech/KeePass2.x/blob/dbb9d60095ef39e6abc95d708fb7d03ce5ae865e/KeePassLib/Serialization/KdbxFile.cs#L234-L246
@@ -60,7 +59,7 @@ DynamicHeaderItem = Struct(
          'protected_stream_key': 8,
          'stream_start_bytes': 9,
          'protected_stream_id': 10,
-        }
+         }
     ),
     "data" / Prefixed(
         Int16ul,
@@ -70,7 +69,7 @@ DynamicHeaderItem = Struct(
              'cipher_id': CipherId,
              'transform_rounds': Int32ul,
              'protected_stream_id': ProtectedStreamId
-            },
+             },
             default=GreedyBytes
         )
     ),
@@ -118,7 +117,7 @@ PayloadBlock = Struct(
 )
 
 PayloadBlocks = RepeatUntil(
-    lambda item, a, b: len(item.block_data) == 0, # and item.block_hash == b'\x00' * 32,
+    lambda item, a, b: len(item.block_data) == 0,  # and item.block_hash == b'\x00' * 32,
     PayloadBlock
 )
 
@@ -162,7 +161,7 @@ Body = Struct(
             {'aes256': AES256Payload(GreedyBytes),
              'chacha20': ChaCha20Payload(GreedyBytes),
              'twofish': TwoFishPayload(GreedyBytes),
-            }
+             }
         )
     ),
 )

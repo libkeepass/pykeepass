@@ -1,21 +1,18 @@
 # FIXME python2
-from __future__ import unicode_literals
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 from future.utils import python_2_unicode_compatible
 
+import logging
 from copy import deepcopy
+from datetime import datetime
+
+from lxml.builder import E
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
-from lxml.builder import E
-import logging
-from datetime import datetime
-from collections import namedtuple
-import gzip
-import base64
 
-from pykeepass.baseelement import BaseElement
-import pykeepass.group
 import pykeepass.attachment
+import pykeepass.group
+from pykeepass.baseelement import BaseElement
 
 logger = logging.getLogger(__name__)
 reserved_keys = [
@@ -118,6 +115,9 @@ class Entry(BaseElement):
     def delete_attachment(self, attachment):
         attachment.delete()
 
+    def deref(self, attribute):
+        return self._kp.deref(getattr(self, attribute))
+
     @property
     def title(self):
         return self._get_string_field('Title')
@@ -168,7 +168,7 @@ class Entry(BaseElement):
 
     @property
     def tags(self):
-        val =  self._get_subelement_text('Tags')
+        val = self._get_subelement_text('Tags')
         return val.split(';') if val else val
 
     @tags.setter
@@ -218,7 +218,6 @@ class Entry(BaseElement):
             return parent.tag == 'History'
         return False
 
-
     @property
     def path(self):
         # The root group is an orphan
@@ -233,7 +232,7 @@ class Entry(BaseElement):
         p = self.parentgroup
         ppath = ''
         while p is not None and not p.is_root_group:
-            if p.name is not None: # dont make the root group appear
+            if p.name is not None:  # dont make the root group appear
                 ppath = '{}/{}'.format(p.name, ppath)
             p = p.parentgroup
         return '{}{}'.format(ppath, self.title)
@@ -261,6 +260,18 @@ class Entry(BaseElement):
         for k in keys:
             props[k] = self._get_string_field(k)
         return props
+
+    def ref(self, attribute):
+        """Create reference to an attribute of this element."""
+        attribute_to_field = {
+            'title': 'T',
+            'username': 'U',
+            'password': 'P',
+            'url': 'A',
+            'notes': 'N',
+            'uuid': 'I',
+        }
+        return '{{REF:{}@I:{}}}'.format(attribute_to_field[attribute], self.uuid.hex.upper())
 
     def touch(self, modify=False):
         '''

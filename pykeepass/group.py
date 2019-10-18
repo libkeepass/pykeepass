@@ -1,13 +1,14 @@
 # FIXME python2
-from __future__ import unicode_literals
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 from future.utils import python_2_unicode_compatible
 
-from pykeepass.baseelement import BaseElement
+from lxml.builder import E
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
-from lxml.builder import E
+
 import pykeepass.entry
+from pykeepass.baseelement import BaseElement
+
 
 # FIXME python2
 @python_2_unicode_compatible
@@ -17,7 +18,6 @@ class Group(BaseElement):
                  kp=None, expires=None, expiry_time=None):
 
         self._kp = kp
-
 
         if element is None:
             super(Group, self).__init__(
@@ -81,7 +81,7 @@ class Group(BaseElement):
         p = self.parentgroup
         ppath = ''
         while p is not None and not p.is_root_group:
-            if p.name is not None: # dont make the root group appear
+            if p.name is not None:  # dont make the root group appear
                 ppath = '{}/{}'.format(p.name, ppath)
             p = p.parentgroup
         return '{}{}/'.format(ppath, self.name)
