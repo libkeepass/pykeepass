@@ -54,12 +54,15 @@ class PyKeePass(object):
         if not filename:
             filename = self.filename
 
-        self.kdbx = KDBX.parse_file(
-            filename,
-            password=password,
-            keyfile=keyfile,
-            transformed_key=transformed_key
-        )
+        try:
+            self.kdbx = KDBX.parse_file(
+                filename,
+                password=password,
+                keyfile=keyfile,
+                transformed_key=transformed_key
+            )
+        except ChecksumError:
+            raise CredentialsIntegrityError
 
     def save(self, filename=None, transformed_key=None):
         if not filename:
