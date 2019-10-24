@@ -12,7 +12,7 @@ import re
 import uuid
 import zlib
 
-from construct import Container
+from construct import Container, ChecksumError
 from lxml import etree
 from lxml.builder import E
 
