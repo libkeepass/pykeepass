@@ -217,13 +217,16 @@ Adding Groups
 
 Attachments
 -----------
+
+In this section, *binary* refers to the bytes of the attached data (stored at the root level of the database), while *attachment* is a reference to a binary (stored in an entry).  A binary can have none, one or many attachments.
+
 **add_binary** (data, compressed=True, protected=True)
 
 where ``data`` is bytes.  Adds a blob of data to the database. The attachment reference must still be added to an entry (see below).  ``compressed`` only applies to KDBX3 and ``protected`` only applies to KDBX4.  Returns id of attachment.
 
 **delete_binary** (id)
 
-where ``id`` is an int.  Removes attachment data from the database and deletes any references to it within entries.  Note that since attachments are ID'ed by their index, reference ids greater than ``id`` will be automatically decremented.
+where ``id`` is an int.  Removes binary data from the database and deletes any attachments that reference it.  Since attachments reference binaries by their positional index, attachments that reference binaries id > ``id`` will automatically be decremented.
 
 **find_attachments** (id=None, filename=None, element=None, recursive=True, regex=False, flags=None, history=False, first=False)
 
@@ -234,7 +237,7 @@ where ``id`` is an int, ``filename`` is a string, and element is an ``Entry`` or
 
 **binaries**
 
-list of bytes containing attachment data.  List index corresponds to attachment id.
+list of bytes containing binary data.  List index corresponds to attachment id.
 
 **attachments**
 
@@ -242,11 +245,11 @@ list containing all ``Attachment`` s in the database.
 
 **Entry.add_attachment** (id, filename)
 
-where ``id`` is an int and ``filename`` is a string.  Creates a reference using the given filename to a database attachment.  The existence of an attachment with the given id is not checked.  Returns ``Attachment``.
+where ``id`` is an int and ``filename`` is a string.  Creates a reference using the given filename to a database binary.  The existence of an binary with the given id is not checked.  Returns ``Attachment``.
 
 **Entry.delete_attachment** (attachment)
 
-where ``attachment`` is an ``Attachment``.  Deletes a reference to a database attachment.
+where ``attachment`` is an ``Attachment``.  Deletes a reference to a database binary.
 
 **Entry.attachments**
 
@@ -262,7 +265,7 @@ string representing this attachment
 
 **Attachment.data**
 
-the data that this attachment points to.  Raises ``AttachmentError`` if data does not exist.
+the data that this attachment points to.  Raises ``BinaryError`` if data does not exist.
 
 **Attachment.entry**
 
