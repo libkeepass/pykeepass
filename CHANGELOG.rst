@@ -1,9 +1,10 @@
-3.1.0
+3.1.0 - 2019-10-24
 ------------------
 - removed context manager
 - added autotype string support
 - added attachments
 - fixed find_entries(path=xxx) behavior
+- Entry.uuid, Group.uuid now return uuid.UUID object instead of string
 
 3.0.0 - 2018-09-07
 ------------------
