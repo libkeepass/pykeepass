@@ -484,13 +484,13 @@ class PyKeePass(object):
         else:
             binaries = []
             for elem in self._xpath('/KeePassFile/Meta/Binaries/Binary'):
-                if elem.attrib['Compressed'] == 'True':
+                if elem.get('Compressed') == 'True':
                     data = zlib.decompress(
                         base64.b64decode(elem.text),
                         zlib.MAX_WBITS | 32
                     )
                 else:
-                    data = base64.b64decode(elem.text).decode()
+                    data = base64.b64decode(elem.text)
                 binaries.insert(int(elem.attrib['ID']), data)
 
         return binaries
@@ -522,7 +522,7 @@ class PyKeePass(object):
             data = base64.b64encode(data).decode()
 
             # set ID for Binary Element
-            binary_id = len(self.binaries) - 1
+            binary_id = len(self.binaries)
 
             # add binary element to XML
             binaries.append(
