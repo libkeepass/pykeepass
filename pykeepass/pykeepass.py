@@ -120,6 +120,14 @@ class PyKeePass(object):
     def entries(self):
         return self.find_entries_by_title('.*', regex=True)
 
+    def xml(self):
+        return etree.tostring(
+            self.tree,
+            pretty_print=True,
+            standalone=True,
+            encoding='unicode'
+        )
+
     def dump_xml(self, outfile):
         '''
         Dump the content of the database to a file
