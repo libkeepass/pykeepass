@@ -1,3 +1,8 @@
+3.2.0 - 2019-
+------------------
+- fix for binary attachments missing Compressed attribute
+- added PyKeePass.xml()
+
 3.1.0 - 2019-10-24
 ------------------
 - removed context manager
