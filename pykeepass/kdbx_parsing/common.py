@@ -9,6 +9,7 @@ from lxml import etree
 import base64
 import unicodedata
 import zlib
+import re
 import codecs
 from io import BytesIO
 from collections import OrderedDict
@@ -185,11 +186,14 @@ class UnprotectedStream(Adapter):
         cipher = self.get_cipher(self.protected_stream_key(con))
         for elem in tree.xpath(self.protected_xpath):
             if elem.text is not None:
-                elem.text = ''.join(c for c in cipher.decrypt(
-                    base64.b64decode(
-                        elem.text
-                    )
-                ).decode('utf-8') if unicodedata.category(c)[0] != "C")
+                result = cipher.decrypt(base64.b64decode(elem.text)).decode('utf-8')
+                # strip invalid XML characters - https://stackoverflow.com/questions/8733233
+                result = re.sub(
+                    u'[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+',
+                    '',
+                    result
+                )
+                elem.text = result
             elem.attrib['Protected'] = 'False'
         return tree
 

@@ -191,15 +191,17 @@ class EntryFindTests3(KDBX3Tests):
     def test_add_delete_move_entry(self):
         unique_str = 'test_add_entry_'
         expiry_time = datetime.now()
-        entry = self.kp.add_entry(self.kp.root_group,
-                                  unique_str + 'title',
-                                  unique_str + 'user',
-                                  unique_str + 'pass',
-                                  url=unique_str + 'url',
-                                  notes=unique_str + 'notes',
-                                  tags=unique_str + 'tags',
-                                  expiry_time=expiry_time,
-                                  icon=icons.KEY)
+        entry = self.kp.add_entry(
+            self.kp.root_group,
+            unique_str + 'title',
+            unique_str + 'user',
+            unique_str + 'pass',
+            url=unique_str + 'url',
+            notes=unique_str + 'notes',
+            tags=unique_str + 'tags',
+            expiry_time=expiry_time,
+            icon=icons.KEY
+        )
         results = self.kp.find_entries_by_title(unique_str + 'title')
         self.assertEqual(len(results), 1)
         results = self.kp.find_entries_by_title(unique_str + 'title', first=True)
@@ -232,18 +234,20 @@ class EntryFindTests3(KDBX3Tests):
         self.kp.add_entry(subgroup, title='foobar_entry2', username='foobar', password='foobar')
         self.kp.add_entry(self.kp.root_group, title='foobar_entry2', username='foobar', password='foobar')
 
-    # ---------- Entries name collision exception -----------
 
     def test_raise_exception_entry(self):
+        # Entries name collision exception
         unique_str = 'test_add_entry_'
-        entry = self.kp.add_entry(self.kp.root_group,
-                                  unique_str + 'title',
-                                  unique_str + 'user',
-                                  unique_str + 'pass',
-                                  url=unique_str + 'url',
-                                  notes=unique_str + 'notes',
-                                  tags=unique_str + 'tags',
-                                  icon=icons.KEY)
+        entry = self.kp.add_entry(
+            self.kp.root_group,
+            unique_str + 'title',
+            unique_str + 'user',
+            unique_str + 'pass',
+            url=unique_str + 'url',
+            notes=unique_str + 'notes',
+            tags=unique_str + 'tags',
+            icon=icons.KEY
+        )
         self.assertRaises(Exception, entry)
 
     # ---------- Entries representation -----------
@@ -400,6 +404,7 @@ class EntryTests3(KDBX3Tests):
         entry.expiry_time = changed_time
         entry.icon = icons.GLOBE
         entry.set_custom_property('foo', 'bar')
+        entry.set_custom_property('multiline', 'hello\nworld')
 
         self.assertEqual(entry.title, changed_string + 'title')
         self.assertEqual(entry.username, changed_string + 'username')
@@ -408,6 +413,7 @@ class EntryTests3(KDBX3Tests):
         self.assertEqual(entry.notes, changed_string + 'notes')
         self.assertEqual(entry.icon, icons.GLOBE)
         self.assertEqual(entry.get_custom_property('foo'), 'bar')
+        self.assertEqual(entry.get_custom_property('multiline'), 'hello\nworld')
         self.assertIn('foo', entry.custom_properties)
         entry.delete_custom_property('foo')
         self.assertEqual(entry.get_custom_property('foo'), None)
@@ -460,16 +466,6 @@ class EntryTests3(KDBX3Tests):
         self.assertTrue(mtime < entry.mtime)
         self.assertEqual(ctime, entry.ctime)
 
-    def test_autotype_no_default_sequence(self):
-        entry = Entry(
-            'title',
-            'username',
-            'password',
-            # create an element, but one without AutoType
-            element=Element('Entry'),
-            kp=self.kp
-        )
-        self.assertIsNone(entry.autotype_sequence)
 
     def test_add_remove_attachment(self):
         entry = self.kp.add_entry(
@@ -725,6 +721,13 @@ class PyKeePassTests3(KDBX3Tests):
         os.remove(os.path.join(base_dir, 'change_creds.kdbx'))
 
 
+class BugRegressionTests3(KDBX3Tests):
+    def test_129(self):
+        # issue 129 - protected multiline string fields lose newline
+        e = self.kp.find_entries(title='foobar_entry', first=True)
+        self.assertEqual(e.get_custom_property('multiline'), 'hello\nworld')
+
+
 class EntryFindTests4(KDBX4Tests, EntryFindTests3):
     pass
 
@@ -746,6 +749,9 @@ class AttachmentTests4(KDBX4Tests, AttachmentTests3):
 
 
 class PyKeePassTests4(KDBX4Tests, PyKeePassTests3):
+    pass
+
+class BugRegressionTests4(KDBX4Tests, BugRegressionTests3):
     pass
 
 
