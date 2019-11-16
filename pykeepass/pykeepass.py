@@ -24,6 +24,7 @@ from pykeepass.kdbx_parsing.kdbx import KDBX
 from pykeepass.kdbx_parsing.kdbx4 import kdf_uuids
 from pykeepass.xpath import attachment_xp, entry_xp, group_xp, path_xp
 
+logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 # FIXME python2
