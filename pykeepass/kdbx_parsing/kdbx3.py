@@ -27,7 +27,7 @@ def compute_transformed(context):
     """Compute transformed key for opening database"""
 
     if context._._.transformed_key is not None:
-        transformed_key = context._._transformed_key
+        transformed_key = context._._.transformed_key
     else:
         key_composite = compute_key_composite(
             password=context._._.password,
