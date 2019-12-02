@@ -110,6 +110,11 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual(uu, results.uuid)
         self.assertEqual('foobar_user', results.username)
 
+    def test_find_entries_by_tags(self):
+        results = self.kp.find_entries(tags=['tag1', 'tag2'], first=True)
+        self.assertIsInstance(results, Entry)
+        self.assertEqual('foobar_entry', results.title)
+
     def test_find_entries_by_string(self):
         results = self.kp.find_entries_by_string({'custom_field': 'custom field value'})[0]
         self.assertIsInstance(results, Entry)
@@ -797,7 +802,7 @@ class KDBXTests(unittest.TestCase):
             None,
             None,
             None,
-            b'5\x99y\xb6\x1e\x9e\x16\xfe`V\xd4\xe8\x12De\xd9[\xdd\xe2\x98\x1a\xa9\xfc-\xc4>\xd2\xc0\xc6(\xec\x0c',
+            b'\xfb\xb1!\x0e0\x94\xd4\x868\xa5\x04\xe6T\x9b<\xf9+\xb8\x82EN\xbc\xbe\xbc\xc8\xd3\xbbf\xfb\xde\xff.',
             b'M\xb7\x08\xf6\xa7\xd1v\xb1{&\x06\x8f\xae\xe9\r\xeb\x9a\x1b\x02b\xce\xf2\x8aR\xaea)7\x1fs\xe9\xc0',
         ]
         keyfiles = [
@@ -850,7 +855,6 @@ class KDBXTests(unittest.TestCase):
                  databases, passwords, transformed_keys,
                  keyfiles, encryption_algorithms, kdf_algorithms, versions
         ):
-
             kp = PyKeePass(
                 os.path.join(base_dir, database),
                 password,
