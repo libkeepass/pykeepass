@@ -55,9 +55,9 @@ Example
 Finding Entries
 ----------------------
 
-**find_entries** (title=None, username=None, password=None, url=None, notes=None, path=None, uuid=None, string=none, group=None, recursive=True, regex=False, flags=None, history=False, first=False)
+**find_entries** (title=None, username=None, password=None, url=None, notes=None, path=None, uuid=None, tags=None, string=None, group=None, recursive=True, regex=False, flags=None, history=False, first=False)
 
-Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``path``, and ``autotype_sequence`` are strings, ``string`` is a dict, ``autotype_enabled`` is a boolean, ``uuid`` is a ``uuid.UUID``.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
+Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``path``, and ``autotype_sequence`` are strings, ``string`` is a dict, ``autotype_enabled`` is a boolean, ``uuid`` is a ``uuid.UUID`` and ``tags`` is a list of strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
 .. _flags: https://www.w3.org/TR/xpath-functions/#flags 
