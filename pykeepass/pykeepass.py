@@ -28,32 +28,8 @@ logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 
-BLANK_DATABASE = """
-A9mimmf7S7UAAAQAAhAAAAAxwfLmv3FDUL5YBSFq/Fr/AwQAAAABAAAABCAAAAD6juWF72uQ732m
-3G9rs86Cx+k9l2DLgAhbvtmNzgaDJgcQAAAAbnWg/q4Lza9BTNNHMZz28AuLAAAAAAFCBQAAACRV
-VUlEEAAAAO9jbd+MKURLkfeppAPjCgwFAQAAAEkIAAAADgAAAAAAAAAFAQAAAE0IAAAAAAAABAAA
-AAAEAQAAAFAEAAAAAgAAAEIBAAAAUyAAAAAy8ioM2Li5BnS47Od/HuZJteqBpKx5wNEMKD2FaJl4
-2AQBAAAAVgQAAAATAAAAAAAEAAAADQoNCo0wXDIJ4bKbtiSjga47h7NUZNyJlXW7/nVLr7NJ7EeJ
-jEmm8lW48Q0Mxm0/Qleo9seDXxWo+XFTmjs4J8qNHcZbUNBZqSUJBiTM6/5WsBEGijnLQTZi6dqy
-EhGRMCfVsdADAADaR/SCul3fVMDKSp4c5qHTq1Dgev3wT0wRVzX9Qng9HxXH8bkfZTpt8NvKPKqK
-G+wg5tHuOAvRgW6fHFVz8Cq1RxWXpJW3w7m0+bhAss2aL3G5V6VS4u6j3oM6ZsWsY3N+0IKfeBAO
-DWeuHUsafTNVnOhC+S2XS6PjuOwRxdGnWdi2mw+A8p6NRdKCXGPgtKZFU2hOiqL+0B9YcCcwwoOQ
-0Btv9WPnoUCl+f9J2K9zrA92WXzaqCw40YVthSog3iYCjAmHYb4FiNFy2yqb+tmmng/DUlpRJz49
-7RUCLoNU9g5c4imSfTdbnFBGBlDTW9HvpfJLy4RuvsoyofyeDI/iiL/bDcuDGYHmyRG1SOJEph2u
-ylCJDnvZFmdG2TtL2u25hNMRn95w9uVSBpdlqXuCV77J9f3+2oSN/Hm0ZMOPMaYhJSB2nyifZhsi
-bWRR+oQmUJpiuHgemZb3VYEeQcy1XdDwGZAGYnSH1mCBv9aXe5BMQHxqlQgkEEa9BLmCEjpCqtxv
-vb0sB40L2IVScX9Nj4O6r21w3iWK6ny86Y9B/jJVq6OVU3UEdN90yT9dZ4uUasZ+WJ4WqZrdkapA
-cU3LgoJcMZ3bZzRSNCo3VKwnWo5MOOHf5IYD2u48rdStbE1hQTWnXIj7H+ZCMA+lJldtu70dlC+5
-QGlncf9QlHxgI5mm6D+xewwcALXYPe+twvyuHErZxgK7QIGaDp5E84d/2IJp0ZnIxo2Lqyd/C+Y9
-lMe9VdgblK2CIArcdDppe85u+nKaNlN26MEIecqYJIaZWNrAO/Boi1yANKVoSFnAywCn70nAflGT
-HPCfaczcXZEu9TrxrR+N712a4gX+ya2E2T8Uzw6fguoZj7PXhQHIKtOA3LfM7MSW5decOY1QC7Y0
-CI/9monYHCg3acQRc/EKbxsk9u5tJOh8EUw3FEYJ1Uu7RhzRun0HxPCwBgUkUdhC8ctJZXpmHD98
-sDmJOukJR3p7XbKS+9M4RWzlp4qmrdGaYqHrFMKPDO+lmmDnvaDKwvWig53XntKyqBnwt9PDia/h
-Qcy69dhZm3+kcuTZOG402QvkVe9epJE24/mip/tN3m/DrROxJs3btjqO9npNu+CdE7i6PxeUS0BX
-URGjNJsIDXvNSBlOK3xwJzY10AdNpE9MrCOnFNRAAmaZQREHetsJHkV203env5oSSn6Iv8hmjsRc
-JVqJ8WLeptZLOzGPGeOIflNqwFbzErJr0h3R7x8e7a0SUgtxx1pY7A+pqOHV7rRTF1tykKRh+iIu
-J4TfwBJP1WoF9Xiurh6DSQ99t/pFE8+gHQiU8pXIl4J5mN6tU8h5aF4pckQqkK6pINUAAAAA
-"""
+BLANK_DATABASE_FILENAME = "blank_database.kdbx"
+BLANK_DATABASE_LOCATION = os.path.join(os.path.dirname(os.path.realpath(__file__)), BLANK_DATABASE_FILENAME)
 BLANK_DATABASE_PASSWORD = "password"
 
 
@@ -593,12 +569,8 @@ class PyKeePass(object):
 
 
 def create_database(filename, password=None, keyfile=None, transformed_key=None):
-    decoded_binary = base64.b64decode(BLANK_DATABASE)
-    with open(filename, 'wb') as f:
-        f.write(decoded_binary)
-
     kdbx = KDBX.parse_file(
-        filename,
+        BLANK_DATABASE_LOCATION,
         password=BLANK_DATABASE_PASSWORD,
         keyfile=None,
         transformed_key=None
