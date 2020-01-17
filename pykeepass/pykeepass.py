@@ -569,20 +569,12 @@ class PyKeePass(object):
 
 
 def create_database(filename, password=None, keyfile=None, transformed_key=None):
-    kdbx = KDBX.parse_file(
-        BLANK_DATABASE_LOCATION,
-        password=BLANK_DATABASE_PASSWORD,
-        keyfile=None,
-        transformed_key=None
-    )
+    keepass_instance = PyKeePass(BLANK_DATABASE_LOCATION, BLANK_DATABASE_PASSWORD)
 
-    with open(filename, 'wb') as f:
-        f.write(
-            KDBX.build(
-                kdbx,
-                password=password,
-                keyfile=keyfile,
-                transformed_key=transformed_key
-            )
-        )
-    return PyKeePass(filename, password, keyfile, transformed_key)
+    keepass_instance.filename = filename
+    keepass_instance.password = password
+    keepass_instance.keyfile = keyfile
+
+    keepass_instance.save(transformed_key)
+
+    return keepass_instance
