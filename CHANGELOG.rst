@@ -1,7 +1,10 @@
 3.2.0 - 2019-
 ------------------
-- fix for binary attachments missing Compressed attribute
+- fix #181 - binary attachments missing Compressed attribute unparseable
 - added PyKeePass.xml()
+- fix #129 - protected multiline fields missing newline
+- added tag searching - #182
+- fix problem where entries are protected after save
 
 3.1.0 - 2019-10-24
 ------------------

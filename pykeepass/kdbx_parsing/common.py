@@ -6,6 +6,7 @@ from construct import (
     Adapter, BitStruct, BitsSwapped, Container, Flag, Padding, ListContainer, Mapping, GreedyBytes, Int32ul, Switch
 )
 from lxml import etree
+from copy import deepcopy
 import base64
 import unicodedata
 import zlib
@@ -198,8 +199,9 @@ class UnprotectedStream(Adapter):
         return tree
 
     def _encode(self, tree, con, path):
+        tree_copy = deepcopy(tree)
         cipher = self.get_cipher(self.protected_stream_key(con))
-        for elem in tree.xpath(self.unprotected_xpath):
+        for elem in tree_copy.xpath(self.unprotected_xpath):
             if elem.text is not None:
                 elem.text = base64.b64encode(
                     cipher.encrypt(

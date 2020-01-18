@@ -11,6 +11,7 @@ import os
 import re
 import uuid
 import zlib
+from copy import deepcopy
 
 from construct import Container, ChecksumError
 from lxml import etree
@@ -69,15 +70,13 @@ class PyKeePass(object):
         if not filename:
             filename = self.filename
 
-        with open(filename, 'wb') as f:
-            f.write(
-                KDBX.build(
-                    self.kdbx,
-                    password=self.password,
-                    keyfile=self.keyfile,
-                    transformed_key=transformed_key
-                )
-            )
+        KDBX.build_file(
+            self.kdbx,
+            filename,
+            password=self.password,
+            keyfile=self.keyfile,
+            transformed_key=transformed_key
+        )
 
     @property
     def version(self):

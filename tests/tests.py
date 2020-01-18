@@ -732,26 +732,30 @@ class BugRegressionTests3(KDBX3Tests):
         e = self.kp.find_entries(title='foobar_entry', first=True)
         self.assertEqual(e.get_custom_property('multiline'), 'hello\nworld')
 
+    def test_pull102(self):
+        # PR 102 - entries are protected after save
+        # reset self.kp
+        self.setUp()
+        e = self.kp.find_entries(title='foobar_entry', first=True)
+        self.assertEqual(e.password, 'foobar')
+        self.kp.save()
+        self.assertEqual(e.password, 'foobar')
+
 
 class EntryFindTests4(KDBX4Tests, EntryFindTests3):
     pass
 
-
 class GroupFindTests4(KDBX4Tests, GroupFindTests3):
     pass
-
 
 class EntryTests4(KDBX4Tests, EntryTests3):
     pass
 
-
 class GroupTests3(KDBX4Tests, GroupTests3):
     pass
 
-
 class AttachmentTests4(KDBX4Tests, AttachmentTests3):
     pass
-
 
 class PyKeePassTests4(KDBX4Tests, PyKeePassTests3):
     pass
