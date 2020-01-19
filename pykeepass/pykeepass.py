@@ -28,6 +28,12 @@ from pykeepass.xpath import attachment_xp, entry_xp, group_xp, path_xp
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 
+
+BLANK_DATABASE_FILENAME = "blank_database.kdbx"
+BLANK_DATABASE_LOCATION = os.path.join(os.path.dirname(os.path.realpath(__file__)), BLANK_DATABASE_FILENAME)
+BLANK_DATABASE_PASSWORD = "password"
+
+
 # FIXME python2
 @python_2_unicode_compatible
 class PyKeePass(object):
@@ -559,3 +565,15 @@ class PyKeePass(object):
         )
         for reference in binaries_gt:
             reference.id = reference.id - 1
+
+
+def create_database(filename, password=None, keyfile=None, transformed_key=None):
+    keepass_instance = PyKeePass(BLANK_DATABASE_LOCATION, BLANK_DATABASE_PASSWORD)
+
+    keepass_instance.filename = filename
+    keepass_instance.password = password
+    keepass_instance.keyfile = keyfile
+
+    keepass_instance.save(transformed_key)
+
+    return keepass_instance
