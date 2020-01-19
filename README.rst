@@ -338,17 +338,9 @@ tuple containing database version.  e.g. ``(3, 1)`` is a KDBX version 3.1 databa
 
 string containing algorithm used to encrypt database.  Possible values are ``aes256``, ``chacha20``, and ``twofish``.
 
-**create_database**
+**create_database** (filename, password=None, keyfile=None, transformed_key=None)
 
-Function to create a new database.
-Sample Usage:
-```python
-from pykeepass import create_database
-
-kp = create_database("/path/to/database.kdbx", "passw0rd")
-
-# ... use kp as a normal PyKeePass object ...
-```
+create a new database at ``filename`` with supplied credentials.  Returns ``PyKeePass`` object
 
 Tests
 -------------
