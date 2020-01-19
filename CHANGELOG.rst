@@ -1,4 +1,4 @@
-3.2.0 - 2019-
+3.2.0 - 2019-01-18
 ------------------
 - added PyKeePass.xml()
 - added create_database()
