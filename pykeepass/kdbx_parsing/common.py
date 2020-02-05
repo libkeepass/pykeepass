@@ -171,6 +171,15 @@ class XML(Adapter):
         return etree.tostring(tree)
 
 
+# FIXME python2
+def valid_xml_char(ch):
+    ch_code = ord(ch)
+    return ch_code in range(0x0020, 0xd7ff) or \
+        ch_code in [0x0009, 0x000a, 0x000d] or \
+        ch_code in range(0xe000, 0xfffd) or \
+        ch_code in range(0x00010000, 0x0010ffff)
+
+
 class UnprotectedStream(Adapter):
     """lxml etree <---> unprotected lxml etree
     Iterate etree for Protected elements and decrypt using cipher
@@ -189,11 +198,9 @@ class UnprotectedStream(Adapter):
             if elem.text is not None:
                 result = cipher.decrypt(base64.b64decode(elem.text)).decode('utf-8')
                 # strip invalid XML characters - https://stackoverflow.com/questions/8733233
-                result = re.sub(
-                    u'[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+',
-                    '',
-                    result
-                )
+                # FIXME python2
+                result = filter(valid_xml_char, result)
+
                 elem.text = result
             elem.attrib['Protected'] = 'False'
         return tree
