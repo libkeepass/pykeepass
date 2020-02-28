@@ -40,9 +40,9 @@ class PyKeePass(object):
 
     def __init__(self, filename, password=None, keyfile=None,
                  transformed_key=None):
-        self.filename = filename
 
         self.read(
+            filename=filename,
             password=password,
             keyfile=keyfile,
             transformed_key=transformed_key
@@ -59,7 +59,9 @@ class PyKeePass(object):
              transformed_key=None):
         self.password = password
         self.keyfile = keyfile
-        if not filename:
+        if filename:
+            self.filename = filename
+        else:
             filename = self.filename
 
         try:
@@ -69,8 +71,21 @@ class PyKeePass(object):
                 keyfile=keyfile,
                 transformed_key=transformed_key
             )
-        except ChecksumError:
-            raise CredentialsIntegrityError
+        except ChecksumError as e:
+            if e.path in (
+                    '(parsing) -> body -> cred_check', # KDBX4
+                    '(parsing) -> cred_check' # KDBX3
+                    ):
+                raise CredentialsError
+            elif e.path == '(parsing) -> body -> sha256':
+                raise HeaderChecksumError
+            elif e.path in (
+                    '(parsing) -> body -> payload -> hmac_hash', # KDBX4
+                    '(parsing) -> xml -> block_hash' # KDBX3
+                    ):
+                raise PayloadChecksumError
+            else:
+                raise
 
     def save(self, filename=None, transformed_key=None):
         if not filename:

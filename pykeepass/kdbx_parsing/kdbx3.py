@@ -129,7 +129,7 @@ PayloadBlocks = RepeatUntil(
 UnpackedPayload = Reparsed(
     Struct(
         # validate payload decryption
-        Checksum(
+        "cred_check" / Checksum(
             Bytes(32),
             lambda this: this._._.header.value.dynamic_header.stream_start_bytes.data,
             this,
