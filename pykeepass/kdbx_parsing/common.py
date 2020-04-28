@@ -1,6 +1,6 @@
-from Crypto.Cipher import AES, ChaCha20, Salsa20
+from Cryptodome.Cipher import AES, ChaCha20, Salsa20
 from .twofish import Twofish
-from Crypto.Util import Padding as CryptoPadding
+from Cryptodome.Util import Padding as CryptoPadding
 import hashlib
 from construct import (
     Adapter, BitStruct, BitsSwapped, Container, Flag, Padding, ListContainer, Mapping, GreedyBytes, Int32ul, Switch

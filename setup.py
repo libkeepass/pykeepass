@@ -17,7 +17,7 @@ setup(
         # FIXME python2 - last version to support python2
         "construct==2.10.54",
         "argon2_cffi",
-        "pycryptodome",
+        "pycryptodomex>=3.6.2",
         "lxml",
         # FIXME python2
         "future"
