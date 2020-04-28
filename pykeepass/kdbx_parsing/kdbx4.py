@@ -1,4 +1,3 @@
-#!/bin/env python3
 # Evan Widloski - 2018-04-11
 # keepass decrypt experimentation
 
