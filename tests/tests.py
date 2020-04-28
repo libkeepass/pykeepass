@@ -45,8 +45,18 @@ class KDBX3Tests(unittest.TestCase):
 
     # get some things ready before testing
     def setUp(self):
+        shutil.copy(
+            os.path.join(base_dir, self.database),
+            os.path.join(base_dir, 'change_creds.kdbx')
+        )
         self.kp = PyKeePass(
             os.path.join(base_dir, self.database),
+            password=self.password,
+            keyfile=os.path.join(base_dir, self.keyfile)
+        )
+        # for tests which modify the database, use this
+        self.kp_tmp = PyKeePass(
+            os.path.join(base_dir, 'change_creds.kdbx'),
             password=self.password,
             keyfile=os.path.join(base_dir, self.keyfile)
         )
@@ -687,30 +697,15 @@ class AttachmentTests3(KDBX3Tests):
 
 
 class PyKeePassTests3(KDBX3Tests):
-    def setUp(self):
-        shutil.copy(
-            os.path.join(base_dir, self.database),
-            os.path.join(base_dir, 'change_creds.kdbx')
-        )
-        self.kp = PyKeePass(
-            os.path.join(base_dir, self.database),
-            password=self.password,
-            keyfile=os.path.join(base_dir, self.keyfile)
-        )
-        self.kp_tmp = PyKeePass(
-            os.path.join(base_dir, 'change_creds.kdbx'),
-            password=self.password,
-            keyfile=os.path.join(base_dir, self.keyfile)
-        )
 
     def test_set_credentials(self):
         self.kp_tmp.password = 'f00bar'
         self.kp_tmp.keyfile = os.path.join(base_dir, 'change.key')
         self.kp_tmp.save()
         self.kp_tmp = PyKeePass(
-            os.path.join(base_dir, 'change_creds.kdbx'),
-            password='f00bar',
-            keyfile=os.path.join(base_dir, 'change.key')
+            self.kp_tmp.filename,
+            'f00bar',
+            self.kp_tmp.keyfile
         )
 
         results = self.kp.find_entries_by_username('foobar_user', first=True)
@@ -727,18 +722,18 @@ class PyKeePassTests3(KDBX3Tests):
 
 
 class BugRegressionTests3(KDBX3Tests):
-    def test_129(self):
+    def test_issue129(self):
         # issue 129 - protected multiline string fields lose newline
         e = self.kp.find_entries(title='foobar_entry', first=True)
         self.assertEqual(e.get_custom_property('multiline'), 'hello\nworld')
 
     def test_pull102(self):
         # PR 102 - entries are protected after save
-        # reset self.kp
+        # reset self.kp_tmp
         self.setUp()
-        e = self.kp.find_entries(title='foobar_entry', first=True)
+        e = self.kp_tmp.find_entries(title='foobar_entry', first=True)
         self.assertEqual(e.password, 'foobar')
-        self.kp.save()
+        self.kp_tmp.save()
         self.assertEqual(e.password, 'foobar')
 
 
