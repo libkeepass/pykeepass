@@ -226,7 +226,7 @@ where ``data`` is bytes.  Adds a blob of data to the database. The attachment re
 
 **delete_binary** (id)
 
-where ``id`` is an int.  Removes binary data from the database and deletes any attachments that reference it.  Since attachments reference binaries by their positional index, attachments that reference binaries id > ``id`` will automatically be decremented.
+where ``id`` is an int.  Removes binary data from the database and deletes any attachments that reference it.  Since attachments reference binaries by their positional index, attachments that reference binaries with id > ``id`` will automatically be decremented.
 
 **find_attachments** (id=None, filename=None, element=None, recursive=True, regex=False, flags=None, history=False, first=False)
 
@@ -237,7 +237,7 @@ where ``id`` is an int, ``filename`` is a string, and element is an ``Entry`` or
 
 **binaries**
 
-list of bytes containing binary data.  List index corresponds to attachment id.
+list of bytestrings containing binary data.  List index corresponds to attachment id.
 
 **attachments**
 
@@ -245,7 +245,7 @@ list containing all ``Attachment`` s in the database.
 
 **Entry.add_attachment** (id, filename)
 
-where ``id`` is an int and ``filename`` is a string.  Creates a reference using the given filename to a database binary.  The existence of an binary with the given id is not checked.  Returns ``Attachment``.
+where ``id`` is an int and ``filename`` is a string.  Creates a reference using the given filename to a database binary.  The existence of a binary with the given id is not checked.  Returns ``Attachment``.
 
 **Entry.delete_attachment** (attachment)
 
