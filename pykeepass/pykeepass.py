@@ -36,6 +36,29 @@ BLANK_DATABASE_PASSWORD = "password"
 # FIXME python2
 @python_2_unicode_compatible
 class PyKeePass(object):
+    """Open a KeePass database
+
+    Args:
+        filename (:obj:`str`, optional): path to database.  If None, the
+            path given when the database was opened is used.
+        password (:obj:`str`, optional): database password.  If None,
+            database is assumed to have no password
+        keyfile (:obj:`str`, optional): path to keyfile.  If None,
+            database is assumed to have no keyfile
+        transformed_key (:obj:`bytes`, optional): precomputed transformed
+            key.
+
+    Raises:
+        CredentialsError: raised when password/keyfile or transformed key
+            are wrong
+        HeaderChecksumError: raised when checksum in database header is
+            is wrong.  e.g. database tampering or file corruption
+        PayloadChecksumError: raised when payload blocks checksum is wrong,
+            e.g. corruption during database saving
+
+    Todo:
+        - raise, no filename provided, database not open
+    """
 
     def __init__(self, filename, password=None, keyfile=None,
                  transformed_key=None):
@@ -56,6 +79,12 @@ class PyKeePass(object):
 
     def read(self, filename=None, password=None, keyfile=None,
              transformed_key=None):
+        """
+        See class docstring.
+
+        Todo:
+            - raise, no filename provided, database not open
+        """
         self.password = password
         self.keyfile = keyfile
         if filename:
@@ -87,6 +116,14 @@ class PyKeePass(object):
                 raise
 
     def save(self, filename=None, transformed_key=None):
+        """Save current database object to disk.
+
+        Args:
+            filename (:obj:`str`, optional): path to database.  If None, the
+                path given when the database was opened is used.
+            transformed_key (:obj:`bytes`, optional): precomputed transformed
+                key.
+        """
         if not filename:
             filename = self.filename
 
@@ -100,6 +137,8 @@ class PyKeePass(object):
 
     @property
     def version(self):
+        """tuple: Length 2 tuple of ints containing major and minor versions.
+        Generally (3, 1) or (4, 0)."""
         return (
             self.kdbx.header.value.major_version,
             self.kdbx.header.value.minor_version
@@ -107,10 +146,14 @@ class PyKeePass(object):
 
     @property
     def encryption_algorithm(self):
+        """str: encryption algorithm used by database during decryption.
+        Can be one of 'aes256', 'chacha20', or 'twofish'."""
         return self.kdbx.header.value.dynamic_header.cipher_id.data
 
     @property
     def kdf_algorithm(self):
+        """str: key derivation algorithm used by database during decryption.
+        Can be one of 'aeskdf', 'argon2', or 'aeskdf'"""
         if self.version == (3, 1):
             return 'aeskdf'
         elif self.version == (4, 0):
@@ -122,25 +165,38 @@ class PyKeePass(object):
 
     @property
     def transformed_key(self):
+        """bytes: transformed key used in database decryption.  May be cached
+        and passed to `open` for faster database opening"""
         return self.kdbx.body.transformed_key
 
     @property
     def tree(self):
+        """lxml.etree._ElementTree: database XML payload"""
         return self.kdbx.body.payload.xml
 
     @property
     def root_group(self):
+        """Group: root Group of database"""
         return self.find_groups(path='', first=True)
 
     @property
     def groups(self):
+        """:obj:`list` of :obj:`Group`: list of all Group objects in database
+        """
         return self.find_groups_by_name('.*', regex=True)
 
     @property
     def entries(self):
+        """:obj:`list` of :obj:`Entry`: list of all Entry objects in database,
+        excluding history"""
         return self.find_entries_by_title('.*', regex=True)
 
     def xml(self):
+        """Get XML part of database as string
+
+        Returns:
+            str: XML payload section of database.
+        """
         return etree.tostring(
             self.tree,
             pretty_print=True,
@@ -148,12 +204,13 @@ class PyKeePass(object):
             encoding='unicode'
         )
 
-    def dump_xml(self, outfile):
-        '''
-        Dump the content of the database to a file
-        NOTE The file is unencrypted!
-        '''
-        with open(outfile, 'wb') as f:
+    def dump_xml(self, filename):
+        """ Dump the contents of the database to file as XML
+
+        Args:
+            filename (str): path to output file
+        """
+        with open(filename, 'wb') as f:
             f.write(
                 etree.tostring(
                     self.tree,
@@ -165,6 +222,26 @@ class PyKeePass(object):
 
     def _xpath(self, xpath_str, tree=None, first=False, history=False,
                cast=False, **kwargs):
+        """Look up elements in the XML payload and return corresponding object.
+
+        Internal function which searches the payload lxml ElementTree for
+        elements via XPath.  Matched entry, group, and attachment elements are
+        automatically cast to their corresponding objects, otherwise an error
+        is raised.
+
+        Args:
+            xpath_str (str): XPath query for finding element(s)
+            tree (:obj:`_ElementTree`, :obj:`Element`, optional): use this
+                element as root node when searching
+            first (bool): If True, function returns first result or None.  If
+                False, function returns list of matches or empty list.  Default
+                is False.
+            history (bool): If True, history entries are included in results.
+                Default is False.
+            cast (bool): If True, matches are instead instantiated as
+                pykeepass Group, Entry, or Attachment objects.  An exception
+                is raised if a match cannot be cast.  Default is False.
+        """
 
         if tree is None:
             tree = self.tree
