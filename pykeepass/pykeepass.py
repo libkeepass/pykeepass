@@ -182,13 +182,13 @@ class PyKeePass(object):
     def groups(self):
         """:obj:`list` of :obj:`Group`: list of all Group objects in database
         """
-        return self.find_groups_by_name('.*', regex=True)
+        return self._xpath('//Group', cast=True)
 
     @property
     def entries(self):
         """:obj:`list` of :obj:`Entry`: list of all Entry objects in database,
         excluding history"""
-        return self.find_entries_by_title('.*', regex=True)
+        return self._xpath('//Entry', cast=True)
 
     def xml(self):
         """Get XML part of database as string

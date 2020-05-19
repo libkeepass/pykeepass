@@ -736,6 +736,21 @@ class BugRegressionTests3(KDBX3Tests):
         self.kp_tmp.save()
         self.assertEqual(e.password, 'foobar')
 
+    def test_issue193(self):
+        # issue 193 - kp.entries doesn't return entries with title=None
+        e = self.kp.add_entry(self.kp.root_group, 'test', 'user', 'pass')
+        prop = e._xpath('String/Key[text()="Title"]/..', first=True)
+        e._element.remove(prop)
+        self.assertTrue(e.title is None)
+        self.assertTrue(e in self.kp.entries)
+        # also test for kp.groups
+        g = self.kp.add_group(self.kp.root_group, 'test_g')
+        prop = g._xpath('Name', first=True)
+        g._element.remove(prop)
+        self.assertTrue(g.name is None)
+        self.assertTrue(g in self.kp.groups)
+
+
 
 class EntryFindTests4(KDBX4Tests, EntryFindTests3):
     pass
