@@ -1,4 +1,10 @@
-3.2.0 - 2019-01-18
+3.2.1 - 2020-07-19
+------------------
+- pin construct version to last supporting python2
+- hard dependency on pycryptodomex
+- fixed #193 - kp.groups, kp.entries not returning elements with name/title None
+
+3.2.0 - 2020-01-18
 ------------------
 - added PyKeePass.xml()
 - added create_database()
