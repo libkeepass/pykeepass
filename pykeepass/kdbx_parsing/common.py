@@ -165,7 +165,15 @@ class XML(Adapter):
     """Bytes <---> lxml etree"""
 
     def _decode(self, data, con, path):
-        return etree.parse(BytesIO(data))
+        # Convert data to utf-8 string
+        xml_and_maybe_more = data.decode('utf-8')
+        # Find the last > to cut any bytes after the xml
+        xml_end_pos = xml_and_maybe_more.rfind('>') + 1
+        # Cut at the xml end position
+        xml = xml_and_maybe_more[:xml_end_pos]
+        # Convert back to bytes
+        bdata = bytes(xml, encoding='utf-8')
+        return etree.parse(BytesIO(bdata))
 
     def _encode(self, tree, con, path):
         return etree.tostring(tree)
