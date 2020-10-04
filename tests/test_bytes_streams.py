@@ -3,23 +3,23 @@ import unittest
 from os.path import dirname, realpath, join
 
 BASE_DIR = dirname(realpath(__file__))
+DATABASES = {
+    "v3": {
+        "filename": join(BASE_DIR, "test3.kdbx"),
+        "password": "password",
+        "keyfile": join(BASE_DIR, "test3.key"),
+        "total_entries": 13
+    },
+    "v4": {
+        "filename": join(BASE_DIR, "test4.kdbx"),
+        "password": "password",
+        "keyfile": join(BASE_DIR, "test4.key"),
+        "total_entries": 13
+    }
+}
 
 
 class ReadTestCase(unittest.TestCase):
-    databases = {
-        "v3": {
-            "filename": join(BASE_DIR, "test3.kdbx"),
-            "password": "password",
-            "keyfile": join(BASE_DIR, "test3.key"),
-            "total_entries": 13
-        },
-        "v4": {
-            "filename": join(BASE_DIR, "test4.kdbx"),
-            "password": "password",
-            "keyfile": join(BASE_DIR, "test4.key"),
-            "total_entries": 13
-        }
-    }
 
     def test_magic_strings(self):
         """Test whether magic strings are present in global package import."""
@@ -31,7 +31,7 @@ class ReadTestCase(unittest.TestCase):
         """Test if can read all KDBX files as raw bytes."""
         from pykeepass.pykeepass import PyKeePass, RAW_BYTES
 
-        for name, kdbx in self.databases.items():
+        for name, kdbx in DATABASES.items():
             with open(kdbx["filename"], "rb") as stream:
                 raw_bytes = stream.read()
 
@@ -42,7 +42,7 @@ class ReadTestCase(unittest.TestCase):
             self.assertEqual(len(obj.entries), kdbx["total_entries"])
 
     def test_stream(self):
-        for name, kdbx in self.databases.items():
+        for name, kdbx in DATABASES.items():
             with open(kdbx["filename"], "rb") as stream:
                 from pykeepass import PyKeePass, BYTE_STREAM
 
