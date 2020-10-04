@@ -136,25 +136,45 @@ class PyKeePass(object):
             else:
                 raise
 
-    def save(self, filename=None, transformed_key=None):
+    def save(self, filename=None, transformed_key=None, stream=None):
         """Save current database object to disk.
 
         Args:
             filename (:obj:`str`, optional): path to database.  If None, the
                 path given when the database was opened is used.
+            stream (:obj:`bytes`, optional): byte stream (files, BytesIO,
+                sockets).
             transformed_key (:obj:`bytes`, optional): precomputed transformed
                 key.
         """
+        output = None
         if not filename:
             filename = self.filename
 
-        KDBX.build_file(
-            self.kdbx,
-            filename,
-            password=self.password,
-            keyfile=self.keyfile,
-            transformed_key=transformed_key
-        )
+        if filename == RAW_BYTES:
+            output = KDBX.build(
+                self.kdbx,
+                password=self.password,
+                keyfile=self.keyfile,
+                transformed_key=transformed_key
+            )
+        elif filename == BYTE_STREAM:
+            output = KDBX.build_stream(
+                self.kdbx,
+                stream,
+                password=self.password,
+                keyfile=self.keyfile,
+                transformed_key=transformed_key
+            )
+        else:
+            output = KDBX.build_file(
+                self.kdbx,
+                filename,
+                password=self.password,
+                keyfile=self.keyfile,
+                transformed_key=transformed_key
+            )
+        return output
 
     @property
     def version(self):
