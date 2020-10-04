@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 BLANK_DATABASE_FILENAME = "blank_database.kdbx"
 BLANK_DATABASE_LOCATION = os.path.join(os.path.dirname(os.path.realpath(__file__)), BLANK_DATABASE_FILENAME)
 BLANK_DATABASE_PASSWORD = "password"
+RAW_BYTES = "<raw-bytes>"
 
 
 # FIXME python2
@@ -40,6 +41,7 @@ class PyKeePass(object):
     Args:
         filename (:obj:`str`, optional): path to database.  If None, the
             path given when the database was opened is used.
+        raw_bytes (:obj:`bytes`, optional): raw bytes.
         password (:obj:`str`, optional): database password.  If None,
             database is assumed to have no password
         keyfile (:obj:`str`, optional): path to keyfile.  If None,
@@ -60,13 +62,14 @@ class PyKeePass(object):
     """
 
     def __init__(self, filename, password=None, keyfile=None,
-                 transformed_key=None):
+                 transformed_key=None, raw_bytes=None):
 
         self.read(
             filename=filename,
             password=password,
             keyfile=keyfile,
-            transformed_key=transformed_key
+            transformed_key=transformed_key,
+            raw_bytes=raw_bytes
         )
 
     def __enter__(self):
@@ -77,7 +80,7 @@ class PyKeePass(object):
         pass
 
     def read(self, filename=None, password=None, keyfile=None,
-             transformed_key=None):
+             transformed_key=None, raw_bytes=None):
         """
         See class docstring.
 
@@ -92,12 +95,21 @@ class PyKeePass(object):
             filename = self.filename
 
         try:
-            self.kdbx = KDBX.parse_file(
-                filename,
-                password=password,
-                keyfile=keyfile,
-                transformed_key=transformed_key
-            )
+            if filename == RAW_BYTES:
+                self.kdbx = KDBX.parse(
+                    raw_bytes,
+                    password=password,
+                    keyfile=keyfile,
+                    transformed_key=transformed_key
+                )
+            else:
+                self.kdbx = KDBX.parse_file(
+                    filename,
+                    password=password,
+                    keyfile=keyfile,
+                    transformed_key=transformed_key
+                )
+
         except ChecksumError as e:
             if e.path in (
                     '(parsing) -> body -> cred_check', # KDBX4
