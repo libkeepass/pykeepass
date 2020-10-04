@@ -365,7 +365,7 @@ create a new database at ``filename`` with supplied credentials.  Returns ``PyKe
 Tests
 -----
 
-To run them issue :code:`python tests/tests.py`
+To run them issue :code:`python -m unittest discover` in the repository.
 
 Indices and tables
 ==================
