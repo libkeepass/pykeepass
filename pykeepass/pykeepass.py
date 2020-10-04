@@ -699,13 +699,24 @@ class PyKeePass(object):
             reference.id = reference.id - 1
 
 
-def create_database(filename, password=None, keyfile=None, transformed_key=None):
-    keepass_instance = PyKeePass(BLANK_DATABASE_LOCATION, BLANK_DATABASE_PASSWORD)
+def create_database(
+        filename, password=None, keyfile=None, transformed_key=None,
+        stream=None
+):
+    keepass_instance = PyKeePass(
+        BLANK_DATABASE_LOCATION, BLANK_DATABASE_PASSWORD
+    )
 
     keepass_instance.filename = filename
     keepass_instance.password = password
     keepass_instance.keyfile = keyfile
+    keepass_instance.stream = stream
 
-    keepass_instance.save(transformed_key)
+    content = keepass_instance.save(
+        transformed_key=transformed_key, stream=stream
+    )
+    output = keepass_instance
+    if filename == RAW_BYTES:
+        output = (output, content)
 
-    return keepass_instance
+    return output

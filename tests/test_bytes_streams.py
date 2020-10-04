@@ -43,10 +43,10 @@ class ReadTestCase(unittest.TestCase):
             self.assertEqual(len(obj.entries), kdbx["total_entries"])
 
     def test_stream(self):
-        """Test if can read all KDBX files as streams."""
+        """Test if can read all KDBX files from stream."""
+        from pykeepass import PyKeePass, BYTE_STREAM
         for name, kdbx in DATABASES.items():
             with open(kdbx["filename"], "rb") as stream:
-                from pykeepass import PyKeePass, BYTE_STREAM
 
                 obj = PyKeePass(
                     BYTE_STREAM, password=kdbx["password"],
@@ -58,7 +58,7 @@ class ReadTestCase(unittest.TestCase):
 class WriteTestCase(unittest.TestCase):
     def test_raw_bytes(self):
         """Test if can write all KDBX files as raw bytes."""
-        from pykeepass.pykeepass import PyKeePass, RAW_BYTES, create_database
+        from pykeepass.pykeepass import PyKeePass, RAW_BYTES
 
         for name, kdbx in DATABASES.items():
             with open(kdbx["filename"], "rb") as stream:
@@ -79,10 +79,10 @@ class WriteTestCase(unittest.TestCase):
             self.assertEqual(len(obj.entries), kdbx["total_entries"])
 
     def test_stream(self):
-        """Test if can write all KDBX files as streams."""
+        """Test if can write all KDBX files to stream."""
+        from pykeepass import PyKeePass, BYTE_STREAM
         for name, kdbx in DATABASES.items():
             with open(kdbx["filename"], "rb") as stream:
-                from pykeepass import PyKeePass, BYTE_STREAM
 
                 obj = PyKeePass(
                     BYTE_STREAM, password=kdbx["password"],
@@ -100,6 +100,36 @@ class WriteTestCase(unittest.TestCase):
                     keyfile=kdbx["keyfile"], stream=temp
                 )
                 self.assertEqual(len(obj.entries), kdbx["total_entries"])
+
+
+class CreateTestCase(unittest.TestCase):
+    def db_check(self, kdbx):
+        self.assertEqual(len(kdbx.entries), 0)
+        self.assertEqual(len(kdbx.groups), 1)
+        self.assertEqual(kdbx.groups[0].name, "Root")
+
+    def test_raw_bytes(self):
+        """Test if can create a KDBX file as raw bytes."""
+        from pykeepass.pykeepass import PyKeePass, RAW_BYTES, create_database
+
+        obj, data = create_database(RAW_BYTES, password="pass")
+        self.db_check(obj)
+
+        obj = PyKeePass(RAW_BYTES, password="pass", raw_bytes=data)
+        self.db_check(obj)
+
+    def test_stream(self):
+        """Test if can create a KDBX file to stream."""
+        from pykeepass.pykeepass import PyKeePass, BYTE_STREAM, create_database
+
+        with TemporaryFile() as temp:
+            temp.seek(0)
+            obj = create_database(BYTE_STREAM, password="pass", stream=temp)
+            self.db_check(obj)
+
+            temp.seek(0)
+            obj = PyKeePass(BYTE_STREAM, password="pass", stream=temp)
+            self.db_check(obj)
 
 
 if __name__ == '__main__':
