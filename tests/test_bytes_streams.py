@@ -23,8 +23,9 @@ class ReadTestCase(unittest.TestCase):
 
     def test_magic_strings(self):
         """Test whether magic strings are present in global package import."""
-        from pykeepass import RAW_BYTES
+        from pykeepass import RAW_BYTES, BYTE_STREAM
         self.assertTrue(RAW_BYTES)
+        self.assertTrue(BYTE_STREAM)
 
     def test_raw_bytes(self):
         """Test if can read all KDBX files as raw bytes."""
@@ -39,6 +40,17 @@ class ReadTestCase(unittest.TestCase):
                 keyfile=kdbx["keyfile"], raw_bytes=raw_bytes
             )
             self.assertEqual(len(obj.entries), kdbx["total_entries"])
+
+    def test_stream(self):
+        for name, kdbx in self.databases.items():
+            with open(kdbx["filename"], "rb") as stream:
+                from pykeepass import PyKeePass, BYTE_STREAM
+
+                obj = PyKeePass(
+                    BYTE_STREAM, password=kdbx["password"],
+                    keyfile=kdbx["keyfile"], stream=stream
+                )
+                self.assertEqual(len(obj.entries), kdbx["total_entries"])
 
 
 if __name__ == '__main__':
