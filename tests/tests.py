@@ -750,6 +750,34 @@ class BugRegressionTests3(KDBX3Tests):
         self.assertTrue(g.name is None)
         self.assertTrue(g in self.kp.groups)
 
+    def test_issue123(self):
+        # issue 193 - kp.entries can't contain quotes or apostrophes
+        entries = [
+            self.kp.add_entry(
+                self.kp.root_group, 'te"st', 'user"', 'single"'
+            ),
+            self.kp.add_entry(
+                self.kp.root_group, 'te""st', 'user""', 'double"'
+            ),
+            self.kp.add_entry(
+                self.kp.root_group, "te'st", "user'", "single'"
+            ),
+            self.kp.add_entry(
+                self.kp.root_group, "te''st", "user''", "double''"
+            )
+        ]
+        for entry in entries:
+            self.assertTrue(entry.title is not None)
+            self.assertTrue(entry in self.kp.entries)
+
+        for entry in entries:
+            temp = self.kp.find_entries(title=entry.title)
+            self.assertIsInstance(temp, list)
+            self.assertEqual(len(temp), 1)
+            temp = temp[0]
+            self.assertEqual(temp.title, entry.title)
+            self.assertEqual(temp.username, entry.username)
+            self.assertEqual(temp.password, entry.password)
 
 
 class EntryFindTests4(KDBX4Tests, EntryFindTests3):

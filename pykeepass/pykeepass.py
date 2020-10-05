@@ -10,6 +10,7 @@ import os
 import re
 import uuid
 import zlib
+import elementpath
 from copy import deepcopy
 
 from construct import Container, ChecksumError
@@ -245,8 +246,8 @@ class PyKeePass(object):
         if tree is None:
             tree = self.tree
         logger.debug(xpath_str)
-        elements = tree.xpath(
-            xpath_str, namespaces={'re': 'http://exslt.org/regular-expressions'}
+        elements = elementpath.select(
+            tree, xpath_str, namespaces={'re': 'http://exslt.org/regular-expressions'}
         )
 
         res = []
@@ -269,6 +270,12 @@ class PyKeePass(object):
             res = res[0] if res else None
 
         return res
+
+    @staticmethod
+    def _escape_xpath_quotes(value):
+        if isinstance(value, str):
+            value = value.replace("'", "''").replace('"', '""')
+        return value
 
     def _find(self, prefix, keys_xp, path=None, tree=None, first=False,
               history=False, regex=False, flags=None, **kwargs):
@@ -303,7 +310,9 @@ class PyKeePass(object):
             # handle searching custom string fields
             if 'string' in kwargs.keys():
                 for key, value in kwargs['string'].items():
-                    xp += keys_xp[regex]['string'].format(key, value, flags=flags)
+                    xp += keys_xp[regex]['string'].format(
+                        key, self._escape_xpath_quotes(value), flags=flags
+                    )
 
                 kwargs.pop('string')
 
@@ -320,7 +329,9 @@ class PyKeePass(object):
                 if key not in keys_xp[regex].keys():
                     raise TypeError('Invalid keyword argument "{}"'.format(key))
 
-                xp += keys_xp[regex][key].format(value, flags=flags)
+                xp += keys_xp[regex][key].format(
+                    self._escape_xpath_quotes(value), flags=flags
+                )
 
         res = self._xpath(
             xp,
