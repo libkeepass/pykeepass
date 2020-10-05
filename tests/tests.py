@@ -788,6 +788,9 @@ class KDBXTests(unittest.TestCase):
     def test_open_save(self):
         """try to open all databases, save them, then open the result"""
 
+        with open(os.path.join(base_dir, 'test3.kdbx'), 'rb') as file:
+            stream = BytesIO(file.read())
+
         filenames_in = [
             os.path.join(base_dir, 'test3.kdbx'),           # KDBX v3 test
             os.path.join(base_dir, 'test4.kdbx'),           # KDBX v4 test
@@ -798,7 +801,7 @@ class KDBXTests(unittest.TestCase):
             os.path.join(base_dir, 'test4_hex.kdbx'),       # legacy 64 byte hexadecimal keyfile test
             os.path.join(base_dir, 'test3.kdbx'),           # KDBX v3 transformed_key open test
             os.path.join(base_dir, 'test4_hex.kdbx'),       # KDBX v4 transformed_key open test
-            'stream://' + os.path.join(base_dir, 'test3.kdbx')
+            stream
         ]
         filenames_out = [
             os.path.join(base_dir, 'test3.kdbx.out'),
@@ -890,20 +893,12 @@ class KDBXTests(unittest.TestCase):
                  filenames_in, filenames_out, passwords, transformed_keys,
                  keyfiles, encryption_algorithms, kdf_algorithms, versions
         ):
-            kwargs = dict(
-                filename=filename_in,
-                password=password,
-                keyfile=None if keyfile is None else os.path.join(
-                    base_dir, keyfile
-                ),
+            kp = PyKeePass(
+                filename_in,
+                password,
+                None if keyfile is None else os.path.join(base_dir, keyfile),
                 transformed_key=transformed_key
             )
-            if "stream://" in filename_in:
-                with open(filename_in[9:], "rb") as stream:
-                    kwargs["filename"] = stream
-                    kp = PyKeePass(**kwargs)
-            else:
-                kp = PyKeePass(**kwargs)
             self.assertEqual(kp.encryption_algorithm, encryption_algorithm)
             self.assertEqual(kp.kdf_algorithm, kdf_algorithm)
             self.assertEqual(kp.version, version)
