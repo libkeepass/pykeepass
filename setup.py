@@ -1,11 +1,12 @@
 from setuptools import find_packages, setup
+from pykeepass.version import __version__
 
 with open("README.rst") as file:
     README = file.read()
 
 setup(
     name="pykeepass",
-    version="3.2.1",
+    version=__version__,
     license="GPL3",
     description="Python library to interact with keepass databases "
                 "(supports KDBX3 and KDBX4)",
