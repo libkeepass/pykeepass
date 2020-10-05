@@ -786,16 +786,27 @@ class KDBXTests(unittest.TestCase):
     def test_open_save(self):
         """try to open all databases, save them, then open the result"""
 
-        databases = [
-            'test3.kdbx',           # KDBX v3 test
-            'test4.kdbx',           # KDBX v4 test
-            'test4_aes.kdbx',       # KDBX v4 AES test
-            'test4_aeskdf.kdbx',    # KDBX v3 AESKDF test
-            'test4_chacha20.kdbx',  # KDBX v4 ChaCha test
-            'test4_twofish.kdbx',   # KDBX v4 Twofish test
-            'test4_hex.kdbx',       # legacy 64 byte hexadecimal keyfile test
-            'test3.kdbx',           # KDBX v3 transformed_key open test
-            'test4_hex.kdbx',       # KDBX v4 transformed_key open test
+        filenames_in = [
+            os.path.join(base_dir, 'test3.kdbx'),           # KDBX v3 test
+            os.path.join(base_dir, 'test4.kdbx'),           # KDBX v4 test
+            os.path.join(base_dir, 'test4_aes.kdbx'),       # KDBX v4 AES test
+            os.path.join(base_dir, 'test4_aeskdf.kdbx'),    # KDBX v3 AESKDF test
+            os.path.join(base_dir, 'test4_chacha20.kdbx'),  # KDBX v4 ChaCha test
+            os.path.join(base_dir, 'test4_twofish.kdbx'),   # KDBX v4 Twofish test
+            os.path.join(base_dir, 'test4_hex.kdbx'),       # legacy 64 byte hexadecimal keyfile test
+            os.path.join(base_dir, 'test3.kdbx'),           # KDBX v3 transformed_key open test
+            os.path.join(base_dir, 'test4_hex.kdbx'),       # KDBX v4 transformed_key open test
+        ]
+        filenames_out = [
+            os.path.join(base_dir, 'test3.kdbx.out'),
+            os.path.join(base_dir, 'test4.kdbx.out'),
+            os.path.join(base_dir, 'test4_aes.kdbx.out'),
+            os.path.join(base_dir, 'test4_aeskdf.kdbx.out'),
+            os.path.join(base_dir, 'test4_chacha20.kdbx.out'),
+            os.path.join(base_dir, 'test4_twofish.kdbx.out'),
+            os.path.join(base_dir, 'test4_hex.kdbx.out'),
+            os.path.join(base_dir, 'test3.kdbx.out'),
+            os.path.join(base_dir, 'test4_hex.kdbx.out'),
         ]
         passwords = [
             'password',
@@ -864,13 +875,13 @@ class KDBXTests(unittest.TestCase):
             (4, 0),
         ]
 
-        for (database, password, transformed_key,
+        for (filename_in, filename_out, password, transformed_key,
              keyfile, encryption_algorithm, kdf_algorithm, version) in zip(
-                 databases, passwords, transformed_keys,
+                 filenames_in, filenames_out, passwords, transformed_keys,
                  keyfiles, encryption_algorithms, kdf_algorithms, versions
         ):
             kp = PyKeePass(
-                os.path.join(base_dir, database),
+                filename_in,
                 password,
                 None if keyfile is None else os.path.join(base_dir, keyfile),
                 transformed_key=transformed_key
@@ -879,17 +890,21 @@ class KDBXTests(unittest.TestCase):
             self.assertEqual(kp.kdf_algorithm, kdf_algorithm)
             self.assertEqual(kp.version, version)
 
-            KDBX.parse(
-                KDBX.build(
-                    kp.kdbx,
-                    password=password,
-                    keyfile=None if keyfile is None else os.path.join(base_dir, keyfile),
-                    transformed_key=transformed_key
-                ),
-                password=password,
-                keyfile=None if keyfile is None else os.path.join(base_dir, keyfile),
+            kp.save(
+                filename_out,
                 transformed_key=transformed_key
             )
+            kp = PyKeePass(
+                filename_out,
+                password,
+                None if keyfile is None else os.path.join(base_dir, keyfile),
+                transformed_key=transformed_key
+            )
+
+        for filename in os.listdir(base_dir):
+            if filename.endswith('.out'):
+                os.remove(os.path.join(base_dir, filename))
+
 
     def test_open_error(self):
         with self.assertRaises(CredentialsError):
@@ -913,4 +928,3 @@ class KDBXTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
