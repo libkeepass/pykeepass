@@ -13,6 +13,8 @@ from datetime import datetime, timedelta
 from dateutil import tz
 from lxml.etree import Element
 
+from io import BytesIO
+
 from pykeepass import PyKeePass, icons
 from pykeepass.entry import Entry
 from pykeepass.exceptions import BinaryError
@@ -786,6 +788,9 @@ class KDBXTests(unittest.TestCase):
     def test_open_save(self):
         """try to open all databases, save them, then open the result"""
 
+        with open(os.path.join(base_dir, 'test3.kdbx'), 'rb') as file:
+            stream = BytesIO(file.read())
+
         filenames_in = [
             os.path.join(base_dir, 'test3.kdbx'),           # KDBX v3 test
             os.path.join(base_dir, 'test4.kdbx'),           # KDBX v4 test
@@ -796,6 +801,7 @@ class KDBXTests(unittest.TestCase):
             os.path.join(base_dir, 'test4_hex.kdbx'),       # legacy 64 byte hexadecimal keyfile test
             os.path.join(base_dir, 'test3.kdbx'),           # KDBX v3 transformed_key open test
             os.path.join(base_dir, 'test4_hex.kdbx'),       # KDBX v4 transformed_key open test
+            stream
         ]
         filenames_out = [
             os.path.join(base_dir, 'test3.kdbx.out'),
@@ -807,6 +813,7 @@ class KDBXTests(unittest.TestCase):
             os.path.join(base_dir, 'test4_hex.kdbx.out'),
             os.path.join(base_dir, 'test3.kdbx.out'),
             os.path.join(base_dir, 'test4_hex.kdbx.out'),
+            BytesIO()
         ]
         passwords = [
             'password',
@@ -818,6 +825,7 @@ class KDBXTests(unittest.TestCase):
             'password',
             None,
             None,
+            'password'
         ]
         transformed_keys = [
             None,
@@ -829,6 +837,7 @@ class KDBXTests(unittest.TestCase):
             None,
             b'\xfb\xb1!\x0e0\x94\xd4\x868\xa5\x04\xe6T\x9b<\xf9+\xb8\x82EN\xbc\xbe\xbc\xc8\xd3\xbbf\xfb\xde\xff.',
             b'M\xb7\x08\xf6\xa7\xd1v\xb1{&\x06\x8f\xae\xe9\r\xeb\x9a\x1b\x02b\xce\xf2\x8aR\xaea)7\x1fs\xe9\xc0',
+            None
         ]
         keyfiles = [
             'test3.key',
@@ -840,6 +849,7 @@ class KDBXTests(unittest.TestCase):
             'test4_hex.key',
             None,
             None,
+            'test3.key'
         ]
         encryption_algorithms = [
             'aes256',
@@ -851,6 +861,7 @@ class KDBXTests(unittest.TestCase):
             'chacha20',
             'aes256',
             'chacha20',
+            'aes256'
         ]
         kdf_algorithms = [
             'aeskdf',
@@ -862,6 +873,7 @@ class KDBXTests(unittest.TestCase):
             'argon2',
             'aeskdf',
             'argon2',
+            'aeskdf'
         ]
         versions = [
             (3, 1),
@@ -873,6 +885,7 @@ class KDBXTests(unittest.TestCase):
             (4, 0),
             (3, 1),
             (4, 0),
+            (3, 1)
         ]
 
         for (filename_in, filename_out, password, transformed_key,
@@ -894,6 +907,11 @@ class KDBXTests(unittest.TestCase):
                 filename_out,
                 transformed_key=transformed_key
             )
+
+            if hasattr(filename_out, "seek"):
+                # rewind so PyKeePass can read from the same stream
+                filename_out.seek(0)
+
             kp = PyKeePass(
                 filename_out,
                 password,

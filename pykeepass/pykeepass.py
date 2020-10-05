@@ -38,8 +38,8 @@ class PyKeePass(object):
     """Open a KeePass database
 
     Args:
-        filename (:obj:`str`, optional): path to database.  If None, the
-            path given when the database was opened is used.
+        filename (:obj:`str`, optional): path to database or stream object.
+            If None, the path given when the database was opened is used.
         password (:obj:`str`, optional): database password.  If None,
             database is assumed to have no password
         keyfile (:obj:`str`, optional): path to keyfile.  If None,
@@ -92,12 +92,21 @@ class PyKeePass(object):
             filename = self.filename
 
         try:
-            self.kdbx = KDBX.parse_file(
-                filename,
-                password=password,
-                keyfile=keyfile,
-                transformed_key=transformed_key
-            )
+            if hasattr(filename, "read"):
+                self.kdbx = KDBX.parse_stream(
+                    filename,
+                    password=password,
+                    keyfile=keyfile,
+                    transformed_key=transformed_key
+                )
+            else:
+                self.kdbx = KDBX.parse_file(
+                    filename,
+                    password=password,
+                    keyfile=keyfile,
+                    transformed_key=transformed_key
+                )
+
         except ChecksumError as e:
             if e.path in (
                     '(parsing) -> body -> cred_check', # KDBX4
@@ -118,21 +127,32 @@ class PyKeePass(object):
         """Save current database object to disk.
 
         Args:
-            filename (:obj:`str`, optional): path to database.  If None, the
-                path given when the database was opened is used.
+            filename (:obj:`str`, optional): path to database or stream object.
+                If None, the path given when the database was opened is used.
             transformed_key (:obj:`bytes`, optional): precomputed transformed
                 key.
         """
+        output = None
         if not filename:
             filename = self.filename
 
-        KDBX.build_file(
-            self.kdbx,
-            filename,
-            password=self.password,
-            keyfile=self.keyfile,
-            transformed_key=transformed_key
-        )
+        if hasattr(filename, "write"):
+            output = KDBX.build_stream(
+                self.kdbx,
+                filename,
+                password=self.password,
+                keyfile=self.keyfile,
+                transformed_key=transformed_key
+            )
+        else:
+            output = KDBX.build_file(
+                self.kdbx,
+                filename,
+                password=self.password,
+                keyfile=self.keyfile,
+                transformed_key=transformed_key
+            )
+        return output
 
     @property
     def version(self):
@@ -657,13 +677,16 @@ class PyKeePass(object):
             reference.id = reference.id - 1
 
 
-def create_database(filename, password=None, keyfile=None, transformed_key=None):
-    keepass_instance = PyKeePass(BLANK_DATABASE_LOCATION, BLANK_DATABASE_PASSWORD)
+def create_database(
+        filename, password=None, keyfile=None, transformed_key=None
+):
+    keepass_instance = PyKeePass(
+        BLANK_DATABASE_LOCATION, BLANK_DATABASE_PASSWORD
+    )
 
     keepass_instance.filename = filename
     keepass_instance.password = password
     keepass_instance.keyfile = keyfile
 
     keepass_instance.save(transformed_key)
-
     return keepass_instance
