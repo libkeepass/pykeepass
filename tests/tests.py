@@ -13,6 +13,8 @@ from datetime import datetime, timedelta
 from dateutil import tz
 from lxml.etree import Element
 
+from io import BytesIO
+
 from pykeepass import PyKeePass, icons
 from pykeepass.entry import Entry
 from pykeepass.exceptions import BinaryError
@@ -796,6 +798,8 @@ class KDBXTests(unittest.TestCase):
             os.path.join(base_dir, 'test4_hex.kdbx'),       # legacy 64 byte hexadecimal keyfile test
             os.path.join(base_dir, 'test3.kdbx'),           # KDBX v3 transformed_key open test
             os.path.join(base_dir, 'test4_hex.kdbx'),       # KDBX v4 transformed_key open test
+            'stream://' + os.path.join(base_dir, 'test3.kdbx'),  # stream v3
+            'stream://' + os.path.join(base_dir, 'test4.kdbx')   # stream v4
         ]
         filenames_out = [
             os.path.join(base_dir, 'test3.kdbx.out'),
@@ -807,6 +811,8 @@ class KDBXTests(unittest.TestCase):
             os.path.join(base_dir, 'test4_hex.kdbx.out'),
             os.path.join(base_dir, 'test3.kdbx.out'),
             os.path.join(base_dir, 'test4_hex.kdbx.out'),
+            'stream://' + os.path.join(base_dir, 'test3.kdbx.out'),
+            'stream://' + os.path.join(base_dir, 'test4.kdbx.out')
         ]
         passwords = [
             'password',
@@ -818,6 +824,8 @@ class KDBXTests(unittest.TestCase):
             'password',
             None,
             None,
+            'password',
+            'password'
         ]
         transformed_keys = [
             None,
@@ -829,6 +837,8 @@ class KDBXTests(unittest.TestCase):
             None,
             b'\xfb\xb1!\x0e0\x94\xd4\x868\xa5\x04\xe6T\x9b<\xf9+\xb8\x82EN\xbc\xbe\xbc\xc8\xd3\xbbf\xfb\xde\xff.',
             b'M\xb7\x08\xf6\xa7\xd1v\xb1{&\x06\x8f\xae\xe9\r\xeb\x9a\x1b\x02b\xce\xf2\x8aR\xaea)7\x1fs\xe9\xc0',
+            None,
+            None
         ]
         keyfiles = [
             'test3.key',
@@ -840,6 +850,8 @@ class KDBXTests(unittest.TestCase):
             'test4_hex.key',
             None,
             None,
+            'test3.key',
+            'test4.key'
         ]
         encryption_algorithms = [
             'aes256',
@@ -851,6 +863,8 @@ class KDBXTests(unittest.TestCase):
             'chacha20',
             'aes256',
             'chacha20',
+            'aes256',
+            'chacha20'
         ]
         kdf_algorithms = [
             'aeskdf',
@@ -862,6 +876,8 @@ class KDBXTests(unittest.TestCase):
             'argon2',
             'aeskdf',
             'argon2',
+            'aeskdf',
+            'argon2'
         ]
         versions = [
             (3, 1),
@@ -873,6 +889,8 @@ class KDBXTests(unittest.TestCase):
             (4, 0),
             (3, 1),
             (4, 0),
+            (3, 1),
+            (4, 0),
         ]
 
         for (filename_in, filename_out, password, transformed_key,
@@ -880,20 +898,40 @@ class KDBXTests(unittest.TestCase):
                  filenames_in, filenames_out, passwords, transformed_keys,
                  keyfiles, encryption_algorithms, kdf_algorithms, versions
         ):
-            kp = PyKeePass(
-                filename_in,
-                password,
-                None if keyfile is None else os.path.join(base_dir, keyfile),
+            kwargs = dict(
+                filename=filename_in,
+                password=password,
+                keyfile=None if keyfile is None else os.path.join(
+                    base_dir, keyfile
+                ),
                 transformed_key=transformed_key
             )
+            if "stream://" in filename_in:
+                with open(filename_in[9:], "rb") as stream:
+                    kwargs["filename"] = stream
+                    kp = PyKeePass(**kwargs)
+            else:
+                kp = PyKeePass(**kwargs)
             self.assertEqual(kp.encryption_algorithm, encryption_algorithm)
             self.assertEqual(kp.kdf_algorithm, kdf_algorithm)
             self.assertEqual(kp.version, version)
+
+            if "stream://" in filename_out:
+                filename_out = BytesIO()
+                assert not hasattr(filename_out, "_close")
+                filename_out._close = filename_out.close
+                filename_out.close = lambda: None
 
             kp.save(
                 filename_out,
                 transformed_key=transformed_key
             )
+
+            if hasattr(filename_out, "_close"):
+                filename_out.seek(0)
+                filename_out.close = filename_out._close
+                del filename_out._close
+
             kp = PyKeePass(
                 filename_out,
                 password,

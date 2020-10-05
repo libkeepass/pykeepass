@@ -30,8 +30,6 @@ logger = logging.getLogger(__name__)
 BLANK_DATABASE_FILENAME = "blank_database.kdbx"
 BLANK_DATABASE_LOCATION = os.path.join(os.path.dirname(os.path.realpath(__file__)), BLANK_DATABASE_FILENAME)
 BLANK_DATABASE_PASSWORD = "password"
-BYTE_STREAM = "<stream-of-bytes>"
-RAW_BYTES = "<raw-bytes>"
 
 
 # FIXME python2
@@ -40,10 +38,8 @@ class PyKeePass(object):
     """Open a KeePass database
 
     Args:
-        filename (:obj:`str`, optional): path to database.  If None, the
-            path given when the database was opened is used.
-        stream (:obj:`bytes`, optional): byte stream (files, BytesIO, sockets).
-        raw_bytes (:obj:`bytes`, optional): raw bytes.
+        filename (:obj:`str`, optional): path to database or stream object.
+            If None, the path given when the database was opened is used.
         password (:obj:`str`, optional): database password.  If None,
             database is assumed to have no password
         keyfile (:obj:`str`, optional): path to keyfile.  If None,
@@ -64,15 +60,13 @@ class PyKeePass(object):
     """
 
     def __init__(self, filename, password=None, keyfile=None,
-                 transformed_key=None, stream=None, raw_bytes=None):
+                 transformed_key=None):
 
         self.read(
             filename=filename,
             password=password,
             keyfile=keyfile,
-            transformed_key=transformed_key,
-            stream=stream,
-            raw_bytes=raw_bytes
+            transformed_key=transformed_key
         )
 
     def __enter__(self):
@@ -83,7 +77,7 @@ class PyKeePass(object):
         pass
 
     def read(self, filename=None, password=None, keyfile=None,
-             transformed_key=None, stream=None, raw_bytes=None):
+             transformed_key=None):
         """
         See class docstring.
 
@@ -98,16 +92,9 @@ class PyKeePass(object):
             filename = self.filename
 
         try:
-            if filename == RAW_BYTES:
-                self.kdbx = KDBX.parse(
-                    raw_bytes,
-                    password=password,
-                    keyfile=keyfile,
-                    transformed_key=transformed_key
-                )
-            elif filename == BYTE_STREAM:
+            if hasattr(filename, "read"):
                 self.kdbx = KDBX.parse_stream(
-                    stream,
+                    filename,
                     password=password,
                     keyfile=keyfile,
                     transformed_key=transformed_key
@@ -136,14 +123,12 @@ class PyKeePass(object):
             else:
                 raise
 
-    def save(self, filename=None, transformed_key=None, stream=None):
+    def save(self, filename=None, transformed_key=None):
         """Save current database object to disk.
 
         Args:
-            filename (:obj:`str`, optional): path to database.  If None, the
-                path given when the database was opened is used.
-            stream (:obj:`bytes`, optional): byte stream (files, BytesIO,
-                sockets).
+            filename (:obj:`str`, optional): path to database or stream object.
+                If None, the path given when the database was opened is used.
             transformed_key (:obj:`bytes`, optional): precomputed transformed
                 key.
         """
@@ -151,17 +136,10 @@ class PyKeePass(object):
         if not filename:
             filename = self.filename
 
-        if filename == RAW_BYTES:
-            output = KDBX.build(
-                self.kdbx,
-                password=self.password,
-                keyfile=self.keyfile,
-                transformed_key=transformed_key
-            )
-        elif filename == BYTE_STREAM:
+        if hasattr(filename, "write"):
             output = KDBX.build_stream(
                 self.kdbx,
-                stream,
+                filename,
                 password=self.password,
                 keyfile=self.keyfile,
                 transformed_key=transformed_key
@@ -700,8 +678,7 @@ class PyKeePass(object):
 
 
 def create_database(
-        filename, password=None, keyfile=None, transformed_key=None,
-        stream=None
+        filename, password=None, keyfile=None, transformed_key=None
 ):
     keepass_instance = PyKeePass(
         BLANK_DATABASE_LOCATION, BLANK_DATABASE_PASSWORD
@@ -710,13 +687,6 @@ def create_database(
     keepass_instance.filename = filename
     keepass_instance.password = password
     keepass_instance.keyfile = keyfile
-    keepass_instance.stream = stream
 
-    content = keepass_instance.save(
-        transformed_key=transformed_key, stream=stream
-    )
-    output = keepass_instance
-    if filename == RAW_BYTES:
-        output = (output, content)
-
-    return output
+    keepass_instance.save(transformed_key)
+    return keepass_instance
