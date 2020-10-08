@@ -1,5 +1,5 @@
 from setuptools import find_packages, setup
-from pykeepass.version import __version__
+from pykeepass import __version__
 
 with open("README.rst") as file:
     README = file.read()
