@@ -246,9 +246,7 @@ class PyKeePass(object):
         if tree is None:
             tree = self.tree
         logger.debug(xpath_str)
-        elements = elementpath.select(
-            tree, xpath_str, namespaces={'re': 'http://exslt.org/regular-expressions'}
-        )
+        elements = elementpath.select(tree, xpath_str)
 
         res = []
         for e in elements:
@@ -283,6 +281,12 @@ class PyKeePass(object):
               history=False, regex=False, flags=None, **kwargs):
 
         xp = ''
+
+        if flags is None:
+            # check for None only, don't care about "" or other falsy values
+            # don't supply None, it'll treat it as N,o,n,e due to string
+            # formatting i.e. as separate XPath fn:matches() flags.
+            flags = ""
 
         if path is not None:
 
@@ -579,7 +583,6 @@ class PyKeePass(object):
     # ---------- Attachments ----------
 
     def find_attachments(self, recursive=True, path=None, element=None, **kwargs):
-
         prefix = '//Binary' if recursive else '/Binary'
         res = self._find(prefix, attachment_xp, path=path, tree=element, **kwargs)
 
