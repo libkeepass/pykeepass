@@ -246,7 +246,13 @@ class PyKeePass(object):
         if tree is None:
             tree = self.tree
         logger.debug(xpath_str)
-        elements = elementpath.select(tree, xpath_str)
+
+        # dirty hack
+        if xpath_str == "(ancestor::Group)[last()]":
+            # elementpath.select() returns an empty list for this XPath
+            elements = tree.xpath(xpath_str)
+        else:
+            elements = elementpath.select(tree, xpath_str)
 
         res = []
         for e in elements:
