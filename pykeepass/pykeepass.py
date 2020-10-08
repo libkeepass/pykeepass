@@ -274,7 +274,9 @@ class PyKeePass(object):
     @staticmethod
     def _escape_xpath_quotes(value):
         if isinstance(value, str):
-            value = value.replace("'", "''").replace('"', '""')
+            # single quotes work fine, double quotes mess with syntax
+            # in e.g.: [text()="some""thing"]
+            value = value.replace('"', '""')
         return value
 
     def _find(self, prefix, keys_xp, path=None, tree=None, first=False,
