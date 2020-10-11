@@ -18,6 +18,10 @@ PyKeePass
 .. image:: https://travis-ci.org/libkeepass/pykeepass.svg?branch=master
    :target: https://travis-ci.org/libkeepass/pykeepass
 
+.. image:: https://readthedocs.org/projects/pykeepass/badge/?version=latest
+   :target: https://pykeepass.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 .. image:: https://img.shields.io/matrix/pykeepass:matrix.org.svg
    :target: https://matrix.to/#/#pykeepass:matrix.org
 
