@@ -14,6 +14,7 @@ PyKeePass
    exceptions
    baseelement
    kdbx_parsing/*
+   __main__
 
 .. image:: https://travis-ci.org/libkeepass/pykeepass.svg?branch=master
    :target: https://travis-ci.org/libkeepass/pykeepass
@@ -367,6 +368,36 @@ string containing algorithm used to encrypt database.  Possible values are ``aes
 **create_database** (filename, password=None, keyfile=None, transformed_key=None)
 
 create a new database at ``filename`` with supplied credentials.  Returns ``PyKeePass`` object
+
+Console usage (CLI)
+-------------------
+
+PyKeePass allows you to manipulate KeePass database straight from the console
+via simple set of commands:
+
+.. code:: shell
+
+   # display help
+   $ pykeepass --help
+
+   # show all items as a tree in CLI
+   $ pykeepass -p password -f ~/Desktop/mydatabase.kdbx tree
+   [Root]
+   |-- [foobar_group]
+   |   |-- [subgroup/name]
+   |   |   |-- subentry
+   |   |   |-- subentry2
+   |   |   `-- foobar_entry
+   |   |
+   |   |-- group_entry
+   |   `-- foobar_entry
+   |
+   |-- [foobar_group2]
+   |-- [Работа]
+   |   `-- Тест
+   |
+   |-- root_entry
+   `-- test/name
 
 Tests
 -----
