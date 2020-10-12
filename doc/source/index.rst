@@ -18,9 +18,15 @@ PyKeePass
 .. image:: https://travis-ci.org/libkeepass/pykeepass.svg?branch=master
    :target: https://travis-ci.org/libkeepass/pykeepass
 
+.. image:: https://readthedocs.org/projects/pykeepass/badge/?version=latest
+   :target: https://pykeepass.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 .. image:: https://img.shields.io/matrix/pykeepass:matrix.org.svg
    :target: https://matrix.to/#/#pykeepass:matrix.org
 
+.. image:: https://img.shields.io/badge/irc-%23pykeepass-brightgreen
+   :target: https://webchat.freenode.net/?channels=pykeepass
 
 This library allows you to write entries to a KeePass database.
 
