@@ -4,8 +4,9 @@ from pykeepass import __version__
 with open("README.rst") as file:
     README = file.read()
 
+NAME = "pykeepass"
 setup(
-    name="pykeepass",
+    name=NAME,
     version=__version__,
     license="GPL3",
     description="Python library to interact with keepass databases "
@@ -13,7 +14,7 @@ setup(
     long_description=README,
     author="Philipp Schmitt",
     author_email="philipp@schmitt.co",
-    url="https://github.com/pschmitt/pykeepass",
+    url=f"https://github.com/libkeepass/{NAME}",
     packages=find_packages(),
     install_requires=[
         "python-dateutil",
@@ -25,5 +26,6 @@ setup(
         # FIXME python2
         "future"
     ],
-    include_package_data=True
+    include_package_data=True,
+    entry_points={'console_scripts': [f'{NAME} = {NAME}.__main__:main']}
 )
