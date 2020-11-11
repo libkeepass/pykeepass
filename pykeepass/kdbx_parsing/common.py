@@ -8,12 +8,16 @@ from construct import (
 from lxml import etree
 from copy import deepcopy
 import base64
+from binascii import Error as BinasciiError
 import unicodedata
 import zlib
 import re
 import codecs
 from io import BytesIO
 from collections import OrderedDict
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class HeaderChecksumError(Exception):
@@ -177,7 +181,6 @@ class UnprotectedStream(Adapter):
     provided by get_cipher"""
 
     protected_xpath = '//Value[@Protected=\'True\']'
-    unprotected_xpath = '//Value[@Protected=\'False\']'
 
     def __init__(self, protected_stream_key, subcon):
         super(UnprotectedStream, self).__init__(subcon)
@@ -187,28 +190,32 @@ class UnprotectedStream(Adapter):
         cipher = self.get_cipher(self.protected_stream_key(con))
         for elem in tree.xpath(self.protected_xpath):
             if elem.text is not None:
-                result = cipher.decrypt(base64.b64decode(elem.text)).decode('utf-8')
-                # strip invalid XML characters - https://stackoverflow.com/questions/8733233
-                result = re.sub(
-                    u'[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+',
-                    '',
-                    result
-                )
-                elem.text = result
-            elem.attrib['Protected'] = 'False'
+                try:
+                    result = cipher.decrypt(base64.b64decode(elem.text)).decode('utf-8')
+                    # strip invalid XML characters - https://stackoverflow.com/questions/8733233
+                    result = re.sub(
+                        u'[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+',
+                        '',
+                        result
+                    )
+                    elem.text = result
+                except (UnicodeDecodeError, BinasciiError, ValueError):
+                    # FIXME: this should be a warning eventually, need to fix all databases in tests/ first
+                    logger.debug(
+                        "Element at {} marked as protected, but could not unprotect".format(tree.getpath(elem))
+                    )
         return tree
 
     def _encode(self, tree, con, path):
         tree_copy = deepcopy(tree)
         cipher = self.get_cipher(self.protected_stream_key(con))
-        for elem in tree_copy.xpath(self.unprotected_xpath):
+        for elem in tree_copy.xpath(self.protected_xpath):
             if elem.text is not None:
                 elem.text = base64.b64encode(
                     cipher.encrypt(
                         elem.text.encode('utf-8')
                     )
                 )
-            elem.attrib['Protected'] = 'True'
         return tree
 
 

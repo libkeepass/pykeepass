@@ -49,7 +49,7 @@ class Entry(BaseElement):
             self._element.append(E.String(E.Key('Title'), E.Value(title)))
             self._element.append(E.String(E.Key('UserName'), E.Value(username)))
             self._element.append(
-                E.String(E.Key('Password'), E.Value(password, protected="False"))
+                E.String(E.Key('Password'), E.Value(password, protected="True"))
             )
             if url:
                 self._element.append(E.String(E.Key('URL'), E.Value(url)))
