@@ -13,7 +13,7 @@ setup(
     long_description=README,
     author="Philipp Schmitt",
     author_email="philipp@schmitt.co",
-    url="https://github.com/pschmitt/pykeepass",
+    url="https://github.com/libkeepass/pykeepass",
     packages=find_packages(),
     install_requires=[
         "python-dateutil",
