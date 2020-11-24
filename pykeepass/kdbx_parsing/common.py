@@ -165,7 +165,8 @@ class XML(Adapter):
     """Bytes <---> lxml etree"""
 
     def _decode(self, data, con, path):
-        return etree.parse(BytesIO(data))
+        parser = etree.XMLParser(remove_blank_text=True)
+        return etree.parse(BytesIO(data), parser)
 
     def _encode(self, tree, con, path):
         return etree.tostring(tree)
