@@ -201,7 +201,7 @@ class UnprotectedStream(Adapter):
                     elem.text = result
                 except (UnicodeDecodeError, BinasciiError, ValueError):
                     # FIXME: this should be a warning eventually, need to fix all databases in tests/ first
-                    logger.debug(
+                    logger.error(
                         "Element at {} marked as protected, but could not unprotect".format(tree.getpath(elem))
                     )
         return tree
@@ -216,7 +216,7 @@ class UnprotectedStream(Adapter):
                         elem.text.encode('utf-8')
                     )
                 )
-        return tree
+        return tree_copy
 
 
 class ARCFourVariantStream(UnprotectedStream):
