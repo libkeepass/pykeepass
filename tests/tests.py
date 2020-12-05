@@ -801,7 +801,8 @@ class KDBXTests(unittest.TestCase):
             os.path.join(base_dir, 'test4_hex.kdbx'),       # legacy 64 byte hexadecimal keyfile test
             os.path.join(base_dir, 'test3.kdbx'),           # KDBX v3 transformed_key open test
             os.path.join(base_dir, 'test4_hex.kdbx'),       # KDBX v4 transformed_key open test
-            stream
+            stream,
+            os.path.join(base_dir, 'extra_content.kdbx')    # has trailing bytes after the xml
         ]
         filenames_out = [
             os.path.join(base_dir, 'test3.kdbx.out'),
@@ -813,7 +814,8 @@ class KDBXTests(unittest.TestCase):
             os.path.join(base_dir, 'test4_hex.kdbx.out'),
             os.path.join(base_dir, 'test3.kdbx.out'),
             os.path.join(base_dir, 'test4_hex.kdbx.out'),
-            BytesIO()
+            BytesIO(),
+            os.path.join(base_dir, 'extra_content.kdbx.out')
         ]
         passwords = [
             'password',
@@ -825,6 +827,7 @@ class KDBXTests(unittest.TestCase):
             'password',
             None,
             None,
+            'password',
             'password'
         ]
         transformed_keys = [
@@ -837,6 +840,7 @@ class KDBXTests(unittest.TestCase):
             None,
             b'\xfb\xb1!\x0e0\x94\xd4\x868\xa5\x04\xe6T\x9b<\xf9+\xb8\x82EN\xbc\xbe\xbc\xc8\xd3\xbbf\xfb\xde\xff.',
             b'M\xb7\x08\xf6\xa7\xd1v\xb1{&\x06\x8f\xae\xe9\r\xeb\x9a\x1b\x02b\xce\xf2\x8aR\xaea)7\x1fs\xe9\xc0',
+            None,
             None
         ]
         keyfiles = [
@@ -849,7 +853,8 @@ class KDBXTests(unittest.TestCase):
             'test4_hex.key',
             None,
             None,
-            'test3.key'
+            'test3.key',
+            None,
         ]
         encryption_algorithms = [
             'aes256',
@@ -861,6 +866,7 @@ class KDBXTests(unittest.TestCase):
             'chacha20',
             'aes256',
             'chacha20',
+            'aes256',
             'aes256'
         ]
         kdf_algorithms = [
@@ -873,7 +879,8 @@ class KDBXTests(unittest.TestCase):
             'argon2',
             'aeskdf',
             'argon2',
-            'aeskdf'
+            'aeskdf',
+            'argon2'
         ]
         versions = [
             (3, 1),
@@ -885,7 +892,8 @@ class KDBXTests(unittest.TestCase):
             (4, 0),
             (3, 1),
             (4, 0),
-            (3, 1)
+            (3, 1),
+            (4, 0)
         ]
 
         for (filename_in, filename_out, password, transformed_key,

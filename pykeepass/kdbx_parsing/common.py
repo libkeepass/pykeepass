@@ -166,6 +166,8 @@ class XML(Adapter):
 
     def _decode(self, data, con, path):
         parser = etree.XMLParser(remove_blank_text=True)
+        # Remove extra content at the end
+        data = data[:data.rfind(b'>') + 1]
         return etree.parse(BytesIO(data), parser)
 
     def _encode(self, tree, con, path):
