@@ -166,8 +166,6 @@ class XML(Adapter):
 
     def _decode(self, data, con, path):
         parser = etree.XMLParser(remove_blank_text=True)
-        # Remove extra content at the end
-        data = data[:data.rfind(b'>') + 1]
         return etree.parse(BytesIO(data), parser)
 
     def _encode(self, tree, con, path):
@@ -284,11 +282,12 @@ class DecryptedPayload(Adapter):
             con._.header.value.dynamic_header.encryption_iv.data
         )
         payload_data = cipher.decrypt(payload_data)
+        payload_data = self.unpad(payload_data)
 
         return payload_data
 
     def _encode(self, payload_data, con, path):
-        payload_data = CryptoPadding.pad(payload_data, 16)
+        payload_data = self.pad(payload_data)
         cipher = self.get_cipher(
             con.master_key,
             con._.header.value.dynamic_header.encryption_iv.data
@@ -301,16 +300,28 @@ class DecryptedPayload(Adapter):
 class AES256Payload(DecryptedPayload):
     def get_cipher(self, master_key, encryption_iv):
         return AES.new(master_key, AES.MODE_CBC, encryption_iv)
+    def pad(self, data):
+        return CryptoPadding.pad(data, 16)
+    def unpad(self, data):
+        return CryptoPadding.unpad(data, 16)
 
 
 class ChaCha20Payload(DecryptedPayload):
     def get_cipher(self, master_key, encryption_iv):
         return ChaCha20.new(key=master_key, nonce=encryption_iv)
+    def pad(self, data):
+        return data
+    def unpad(self, data):
+        return data
 
 
 class TwoFishPayload(DecryptedPayload):
     def get_cipher(self, master_key, encryption_iv):
         return Twofish.new(master_key, mode=Twofish.MODE_CBC, IV=encryption_iv)
+    def pad(self, data):
+        return CryptoPadding.pad(data, 16)
+    def unpad(self, data):
+        return CryptoPadding.unpad(data, 16)
 
 
 class Decompressed(Adapter):
