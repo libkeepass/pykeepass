@@ -9,7 +9,7 @@ setup(
     version=__version__,
     license="GPL3",
     description="Python library to interact with keepass databases "
-                "(supports KDBX3 and KDBX4)",
+    "(supports KDBX3 and KDBX4)",
     long_description=README,
     author="Philipp Schmitt",
     author_email="philipp@schmitt.co",
@@ -23,7 +23,7 @@ setup(
         "pycryptodomex>=3.6.2",
         "lxml",
         # FIXME python2
-        "future"
+        "future",
     ],
-    include_package_data=True
+    include_package_data=True,
 )
