@@ -49,13 +49,9 @@ class BlockCipher:
     MODE_XTS = MODE_XTS
     MODE_CMAC = MODE_CMAC
 
-    key_error_message = (
-        "Wrong key size"  # should be overwritten in child classes
-    )
+    key_error_message = "Wrong key size"  # should be overwritten in child classes
 
-    def __init__(
-        self, key, mode, IV, counter, cipher_module, segment_size, args={}
-    ):
+    def __init__(self, key, mode, IV, counter, cipher_module, segment_size, args={}):
         # Cipher classes inheriting from this one take care of:
         #   self.blocksize
         #   self.cipher
@@ -81,15 +77,11 @@ class BlockCipher:
             self.chain = ECB(self.cipher, self.blocksize)
         elif mode == MODE_CBC:
             if len(self.IV) != self.blocksize:
-                raise Exception(
-                    "the IV length should be %i bytes" % self.blocksize
-                )
+                raise Exception("the IV length should be %i bytes" % self.blocksize)
             self.chain = CBC(self.cipher, self.blocksize, self.IV)
         elif mode == MODE_CFB:
             if len(self.IV) != self.blocksize:
-                raise Exception(
-                    "the IV length should be %i bytes" % self.blocksize
-                )
+                raise Exception("the IV length should be %i bytes" % self.blocksize)
             if segment_size == None:
                 raise ValueError(
                     "segment size must be defined explicitely for CFB mode"
@@ -103,15 +95,11 @@ class BlockCipher:
             self.chain = CFB(self.cipher, self.blocksize, self.IV, segment_size)
         elif mode == MODE_OFB:
             if len(self.IV) != self.blocksize:
-                raise ValueError(
-                    "the IV length should be %i bytes" % self.blocksize
-                )
+                raise ValueError("the IV length should be %i bytes" % self.blocksize)
             self.chain = OFB(self.cipher, self.blocksize, self.IV)
         elif mode == MODE_CTR:
             if (counter == None) or not callable(counter):
-                raise Exception(
-                    "Supply a valid counter object for the CTR mode"
-                )
+                raise Exception("Supply a valid counter object for the CTR mode")
             self.chain = CTR(self.cipher, self.blocksize, counter)
         elif mode == MODE_XTS:
             if self.blocksize != 16:
@@ -123,9 +111,7 @@ class BlockCipher:
             if "keylen_valid" in dir(
                 self
             ):  # wrappers for pycrypto functions don't have this function
-                if not self.keylen_valid(key[0]) or not self.keylen_valid(
-                    key[1]
-                ):
+                if not self.keylen_valid(key[0]) or not self.keylen_valid(key[1]):
                     raise ValueError(self.key_error_message)
             self.cipher = cipher_module(self.key[0], **args)
             self.cipher2 = cipher_module(self.key[1], **args)
@@ -301,9 +287,7 @@ class CBC:
             self.cache += data
             if len(self.cache) < self.blocksize:
                 return b""
-            for i in range(
-                0, len(self.cache) - self.blocksize + 1, self.blocksize
-            ):
+            for i in range(0, len(self.cache) - self.blocksize + 1, self.blocksize):
                 self.IV = self.codebook.encrypt(
                     strxor(self.cache[i : i + self.blocksize], self.IV)
                 )
@@ -315,9 +299,7 @@ class CBC:
             self.cache += data
             if len(self.cache) < self.blocksize:
                 return b""
-            for i in range(
-                0, len(self.cache) - self.blocksize + 1, self.blocksize
-            ):
+            for i in range(0, len(self.cache) - self.blocksize + 1, self.blocksize):
                 plaintext = strxor(
                     self.IV,
                     self.codebook.decrypt(self.cache[i : i + self.blocksize]),
@@ -334,9 +316,7 @@ class python_Twofish(BlockCipher):
             raise ValueError("Key should be 128, 192 or 256 bits")
         cipher_module = pytwofish.Twofish
         self.blocksize = 16
-        BlockCipher.__init__(
-            self, key, mode, IV, counter, cipher_module, segment_size
-        )
+        BlockCipher.__init__(self, key, mode, IV, counter, cipher_module, segment_size)
 
     @classmethod
     def new(cls, key, mode=MODE_ECB, IV=None, counter=None, segment_size=None):

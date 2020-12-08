@@ -64,9 +64,7 @@ def compute_transformed(context):
     key_composite = compute_key_composite(
         password=context._._.password, keyfile=context._._.keyfile
     )
-    kdf_parameters = (
-        context._.header.value.dynamic_header.kdf_parameters.data.dict
-    )
+    kdf_parameters = context._.header.value.dynamic_header.kdf_parameters.data.dict
 
     if context._._.transformed_key is not None:
         transformed_key = context._._.transformed_key
@@ -141,9 +139,7 @@ VariantDictionary = Struct(
     "dict"
     / DynamicDict(
         "key",
-        RepeatUntil(
-            lambda item, a, b: item.next_byte == 0x00, VariantDictionaryItem
-        ),
+        RepeatUntil(lambda item, a, b: item.next_byte == 0x00, VariantDictionaryItem),
     ),
     Padding(1) * "null padding",
 )
@@ -229,9 +225,7 @@ EncryptedPayloadBlock = Struct(
 )
 
 EncryptedPayload = Concatenated(
-    RepeatUntil(
-        lambda item, a, b: len(item.block_data) == 0, EncryptedPayloadBlock
-    )
+    RepeatUntil(lambda item, a, b: len(item.block_data) == 0, EncryptedPayloadBlock)
 )
 
 DecryptedPayload = Switch(

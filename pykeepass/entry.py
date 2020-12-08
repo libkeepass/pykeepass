@@ -60,9 +60,7 @@ class Entry(BaseElement):
             self._element.append(E.String(E.Key("Title"), E.Value(title)))
             self._element.append(E.String(E.Key("UserName"), E.Value(username)))
             self._element.append(
-                E.String(
-                    E.Key("Password"), E.Value(password, protected="False")
-                )
+                E.String(E.Key("Password"), E.Value(password, protected="False"))
             )
             if url:
                 self._element.append(E.String(E.Key("URL"), E.Value(url)))
@@ -88,23 +86,20 @@ class Entry(BaseElement):
             ], "The provided element is not an LXML Element, but a {}".format(
                 type(element)
             )
-            assert element.tag == "Entry", (
-                "The provided element is not an Entry "
-                "element, but a {}".format(element.tag)
+            assert (
+                element.tag == "Entry"
+            ), "The provided element is not an Entry " "element, but a {}".format(
+                element.tag
             )
             self._element = element
 
     def _get_string_field(self, key):
-        field = self._xpath(
-            'String/Key[text()="{}"]/../Value'.format(key), first=True
-        )
+        field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), first=True)
         if field is not None:
             return field.text
 
     def _set_string_field(self, key, value):
-        field = self._xpath(
-            'String/Key[text()="{}"]/..'.format(key), first=True
-        )
+        field = self._xpath('String/Key[text()="{}"]/..'.format(key), first=True)
         if field is not None:
             self._element.remove(field)
         self._element.append(E.String(E.Key(key), E.Value(value)))
