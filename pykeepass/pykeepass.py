@@ -106,7 +106,7 @@ class PyKeePass(object):
                     transformed_key=transformed_key,
                 )
 
-        except pkpexc.ChecksumError as e:
+        except ChecksumError as e:
             if e.path in (
                 "(parsing) -> body -> cred_check",  # KDBX4
                 "(parsing) -> cred_check",  # KDBX3
