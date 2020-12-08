@@ -28,7 +28,27 @@ jobs:
         run: |
           poetry run flake8 . --count --max-complexity=10 --max-line-length=88 --statistics
 
-  formatting:
+  black:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install
+
+      - name: Black
+        run: |
+          poetry run black --check --diff --verbose .
+
+  isort:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -47,10 +67,6 @@ jobs:
       - name: isort
         run: |
           poetry run isort --check --diff --verbose .
-
-      - name: Black
-        run: |
-          poetry run black --check --diff --verbose .
 
   tests:
     runs-on: ubuntu-latest
