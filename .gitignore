@@ -6,3 +6,4 @@ build/
 *.xml
 Pipfile.lock
 *.kdbx
+tests/*.out
