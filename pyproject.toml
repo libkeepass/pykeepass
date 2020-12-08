@@ -5,7 +5,7 @@ description = "Python library to interact with keepass databases (supports KDBX3
 authors = ["libkeepass authors"]
 license = "GPL-3"
 readme = "README.rst"
-url = "https://github.com/libkeepass/pykeepass"
+homepage = "https://github.com/libkeepass/pykeepass"
 include = ["pykeepass/blank_database.kdbx"]
 
 [tool.poetry.dependencies]
