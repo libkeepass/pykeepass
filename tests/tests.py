@@ -633,7 +633,8 @@ class EntryHistoryTests3(KDBX3Tests):
         res = self.kp.find_entries(title=prefix + "title", history=True)
         self.assertEqual(len(res), 3)
 
-        # dito username, assuming if this works, it will also work for all other find_by cases
+        # dito username, assuming if this works, it will also work for all other find_by
+        # cases
         res = self.kp.find_entries(username=prefix + "user")
         self.assertEqual(len(res), 0)
         res = self.kp.find_entries(username=prefix + "user", history=True)
@@ -651,7 +652,8 @@ class EntryHistoryTests3(KDBX3Tests):
                 self.assertEqual(item.ctime, backup[entry.uuid]["ctime"])
 
         # create a second history item
-        # back in time I had the problem that the first call to save_history() worked but not the second
+        # back in time I had the problem that the first call to save_history() worked
+        # but not the second
         for entry in res:
             entry.save_history()
 
@@ -899,8 +901,8 @@ class KDBXTests(unittest.TestCase):
             None,
             None,
             None,
-            b"\xfb\xb1!\x0e0\x94\xd4\x868\xa5\x04\xe6T\x9b<\xf9+\xb8\x82EN\xbc\xbe\xbc\xc8\xd3\xbbf\xfb\xde\xff.",
-            b"M\xb7\x08\xf6\xa7\xd1v\xb1{&\x06\x8f\xae\xe9\r\xeb\x9a\x1b\x02b\xce\xf2\x8aR\xaea)7\x1fs\xe9\xc0",
+            b"\xfb\xb1!\x0e0\x94\xd4\x868\xa5\x04\xe6T\x9b<\xf9+\xb8\x82EN\xbc\xbe\xbc\xc8\xd3\xbbf\xfb\xde\xff.",  # noqa: E501
+            b"M\xb7\x08\xf6\xa7\xd1v\xb1{&\x06\x8f\xae\xe9\r\xeb\x9a\x1b\x02b\xce\xf2\x8aR\xaea)7\x1fs\xe9\xc0",  # noqa: E501
             None,
             None,
             None,

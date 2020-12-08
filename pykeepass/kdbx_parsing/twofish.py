@@ -87,7 +87,8 @@ class BlockCipher:
                     "segment size must be defined explicitely for CFB mode"
                 )
             if segment_size > self.blocksize * 8 or segment_size % 8 != 0:
-                # current CFB implementation doesn't support bit level acces => segment_size should be multiple of bytes
+                # current CFB implementation doesn't support bit level
+                # acces => segment_size should be multiple of bytes
                 raise ValueError(
                     "segment size should be a multiple of 8 bits between 8 and %i"
                     % (self.blocksize * 8)
@@ -119,7 +120,8 @@ class BlockCipher:
         elif mode == MODE_CMAC:
             if self.blocksize not in (8, 16):
                 raise Exception(
-                    "CMAC only works with blockcipher that have a 64 or 128-bit blocksize"
+                    "CMAC only works with blockcipher that have a 64 or 128-bit "
+                    "blocksize"
                 )
             self.chain = CMAC(self.cipher, self.blocksize, self.IV)
         else:
@@ -234,14 +236,16 @@ class BlockCipher:
           anything. You have to manually unpad if necessary.
 
         After finalization, the chain can still be used but the IV, counter etc
-          aren't reset but just continue as they were after the last step (finalization step).
+          aren't reset but just continue as they were after the last step (finalization
+          step).
         """
         assert self.mode not in (
             MODE_XTS,
             MODE_CMAC,
         )  # finalizing (=padding) doesn't make sense when in XTS or CMAC mode
         if self.ed == b"e":
-            # when the chain is in encryption mode, finalizing will pad the cache and encrypt this last block
+            # when the chain is in encryption mode, finalizing will pad the cache and
+            # encrypt this last block
             if self.mode in (MODE_OFB, MODE_CFB, MODE_CTR):
                 dummy = b"0" * (
                     self.chain.totalbytes % self.blocksize
@@ -249,12 +253,15 @@ class BlockCipher:
             else:  # ECB, CBC
                 dummy = self.chain.cache
             pdata = pad(dummy, self.blocksize, style=style)[len(dummy) :]
-            # ~ pad = padfct(dummy,padding.PAD,self.blocksize)[len(dummy):] # construct the padding necessary
-            return self.chain.update(
-                pdata, b"e"
-            )  # supply the padding to the update function => chain cache will be "cache+padding"
+            # construct the padding necessary
+            # ~ pad = padfct(dummy,padding.PAD,self.blocksize)[len(dummy):]
+            # supply the padding to the update function => chain cache will
+            # be "cache+padding"
+            return self.chain.update(pdata, b"e")
+
         else:
-            # final function doesn't make sense when decrypting => padding should be removed manually
+            # final function doesn't make sense when decrypting
+            # => padding should be removed manually
             pass
 
 

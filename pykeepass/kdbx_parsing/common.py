@@ -198,9 +198,10 @@ class UnprotectedStream(Adapter):
         for elem in tree.xpath(self.protected_xpath):
             if elem.text is not None:
                 result = cipher.decrypt(base64.b64decode(elem.text)).decode("utf-8")
-                # strip invalid XML characters - https://stackoverflow.com/questions/8733233
+                # strip invalid XML characters -
+                # https://stackoverflow.com/questions/8733233
                 result = re.sub(
-                    u"[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+",
+                    u"[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+",  # noqa: E501
                     "",
                     result,
                 )
