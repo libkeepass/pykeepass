@@ -20,6 +20,14 @@ black = "^20.8b1"
 Sphinx = "^3.3.1"
 construct = "^2.10.56"
 
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = "True"
+force_grid_wrap = 0
+use_parentheses = "True"
+ensure_newline_before_comments = "True"
+line_length = 88
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
