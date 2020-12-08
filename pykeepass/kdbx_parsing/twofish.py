@@ -66,7 +66,7 @@ class BlockCipher:
             if not self.keylen_valid(key) and type(key) is not tuple:
                 raise ValueError(self.key_error_message)
 
-        if IV == None:
+        if IV is None:
             self.IV = b"\x00" * self.blocksize
         else:
             self.IV = IV
@@ -82,7 +82,7 @@ class BlockCipher:
         elif mode == MODE_CFB:
             if len(self.IV) != self.blocksize:
                 raise Exception("the IV length should be %i bytes" % self.blocksize)
-            if segment_size == None:
+            if segment_size is None:
                 raise ValueError(
                     "segment size must be defined explicitely for CFB mode"
                 )
@@ -99,7 +99,7 @@ class BlockCipher:
                 raise ValueError("the IV length should be %i bytes" % self.blocksize)
             self.chain = OFB(self.cipher, self.blocksize, self.IV)
         elif mode == MODE_CTR:
-            if (counter == None) or not callable(counter):
+            if (counter is None) or not callable(counter):
                 raise Exception("Supply a valid counter object for the CTR mode")
             self.chain = CTR(self.cipher, self.blocksize, counter)
         elif mode == MODE_XTS:
