@@ -4,6 +4,9 @@ version = "3.2.1"
 description = "Python library to interact with keepass databases (supports KDBX3 and KDBX4)"
 authors = ["libkeepass authors"]
 license = "GPL-3"
+readme = "README.rst"
+url = "https://github.com/libkeepass/pykeepass"
+include = ["pykeepass/blank_database.kdbx"]
 
 [tool.poetry.dependencies]
 python = ">=3.6.0,<4.0"
