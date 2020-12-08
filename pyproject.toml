@@ -20,6 +20,9 @@ black = "^20.8b1"
 Sphinx = "^3.3.1"
 construct = "^2.10.56"
 
+[tool.black]                                                                                                    │ip-install' from 'fork'.
+line-length = 88
+
 [tool.isort]
 multi_line_output = 3
 include_trailing_comma = "True"
