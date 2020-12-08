@@ -9,7 +9,6 @@ import os
 import re
 import uuid
 import zlib
-from copy import deepcopy
 
 from construct import ChecksumError, Container
 from future.utils import python_2_unicode_compatible

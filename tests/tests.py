@@ -12,13 +12,11 @@ from datetime import datetime, timedelta
 from io import BytesIO
 
 from dateutil import tz
-from lxml.etree import Element
 
 from pykeepass import PyKeePass, icons
 from pykeepass.entry import Entry
 from pykeepass.exceptions import BinaryError, CredentialsError
 from pykeepass.group import Group
-from pykeepass.kdbx_parsing import KDBX
 
 """
 Missing Tests:

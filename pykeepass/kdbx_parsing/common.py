@@ -2,7 +2,6 @@ import base64
 import codecs
 import hashlib
 import re
-import unicodedata
 import zlib
 from collections import OrderedDict
 from copy import deepcopy

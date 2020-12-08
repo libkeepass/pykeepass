@@ -27,6 +27,7 @@ reserved_keys = [
     "Notes",
 ]
 
+
 # FIXME python2
 @python_2_unicode_compatible
 class Entry(BaseElement):
