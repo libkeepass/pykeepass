@@ -1,6 +1,0 @@
-include LICENSE README.rst requirements.txt
-include pykeepass/blank_database.kdbx
-recursive-exclude * __pycache__
-recursive-exclude * *.pyc
-recursive-exclude * *.pyo
-prune tests*
