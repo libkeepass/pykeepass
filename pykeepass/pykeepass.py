@@ -15,9 +15,9 @@ from future.utils import python_2_unicode_compatible
 from lxml import etree
 from lxml.builder import E
 
+import pykeepass.exceptions as pexc
 from pykeepass.attachment import Attachment
 from pykeepass.entry import Entry
-from pykeepass.exceptions import *
 from pykeepass.group import Group
 from pykeepass.kdbx_parsing.kdbx import KDBX
 from pykeepass.kdbx_parsing.kdbx4 import kdf_uuids
@@ -115,14 +115,14 @@ class PyKeePass(object):
                 "(parsing) -> body -> cred_check",  # KDBX4
                 "(parsing) -> cred_check",  # KDBX3
             ):
-                raise CredentialsError
+                raise pexc.CredentialsError
             elif e.path == "(parsing) -> body -> sha256":
-                raise HeaderChecksumError
+                raise pexc.HeaderChecksumError
             elif e.path in (
                 "(parsing) -> body -> payload -> hmac_hash",  # KDBX4
                 "(parsing) -> xml -> block_hash",  # KDBX3
             ):
-                raise PayloadChecksumError
+                raise pexc.PayloadChecksumError
             else:
                 raise
 
@@ -773,7 +773,7 @@ class PyKeePass(object):
                 binaries = self._xpath("/KeePassFile/Meta/Binaries", first=True)
                 binaries.remove(binaries.getchildren()[id])
         except IndexError:
-            raise BinaryError("No such binary with id {}".format(id))
+            raise pexc.BinaryError("No such binary with id {}".format(id))
 
         # remove all entry references to this attachment
         for reference in self.find_attachments(id=id):
