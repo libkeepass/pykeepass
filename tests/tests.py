@@ -251,7 +251,7 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual(results.url, unique_str + "url")
         self.assertEqual(results.notes, unique_str + "notes")
         self.assertEqual(results.tags, [unique_str + "tags"])
-        self.assertTrue(results.uuid is None)
+        self.assertIsNotNone(results.uuid)
         # convert naive datetime to utc
         expiry_time_utc = expiry_time.replace(tzinfo=tz.gettz()).astimezone(
             tz.gettz("UTC")
@@ -379,7 +379,7 @@ class GroupFindTests3(KDBX3Tests):
         results = self.kp.find_groups(path="base_group/sub_group/", first=True)
         self.assertIsInstance(results, Group)
         self.assertEqual(results.name, sub_group.name)
-        self.assertTrue(results.uuid is None)
+        self.assertIsNotNone(results.uuid)
 
         self.kp.move_group(sub_group2, sub_group)
         results = self.kp.find_groups(
@@ -814,13 +814,13 @@ class BugRegressionTests3(KDBX3Tests):
         e = self.kp.add_entry(self.kp.root_group, "test", "user", "pass")
         prop = e._xpath('String/Key[text()="Title"]/..', first=True)
         e._element.remove(prop)
-        self.assertTrue(e.title is None)
+        self.assertIsNone(e.title)
         self.assertTrue(e in self.kp.entries)
         # also test for kp.groups
         g = self.kp.add_group(self.kp.root_group, "test_g")
         prop = g._xpath("Name", first=True)
         g._element.remove(prop)
-        self.assertTrue(g.name is None)
+        self.assertIsNone(g.name)
         self.assertTrue(g in self.kp.groups)
 
 
