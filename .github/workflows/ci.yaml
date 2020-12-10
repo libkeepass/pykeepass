@@ -21,6 +21,7 @@ jobs:
 
       - name: Black
         run: |
+          black --version
           black --check --diff --verbose .
 
   isort:
