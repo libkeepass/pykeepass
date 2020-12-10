@@ -2,6 +2,7 @@ import base64
 import codecs
 import hashlib
 import re
+import unicodedata
 import zlib
 from collections import OrderedDict
 from copy import deepcopy
@@ -93,7 +94,9 @@ def Reparsed(subcon_out):
 
 
 # is the payload compressed?
-CompressionFlags = BitsSwapped(BitStruct("compression" / Flag, Padding(8 * 4 - 1)))
+CompressionFlags = BitsSwapped(
+    BitStruct("compression" / Flag, Padding(8 * 4 - 1))
+)
 
 
 # -------------------- Key Computation --------------------
@@ -146,7 +149,7 @@ def compute_key_composite(password=None, keyfile=None):
                     # anything else may be a file to hash for the key
                     else:
                         keyfile_composite = hashlib.sha256(key).digest()
-            except Exception:
+            except:
                 raise IOError("Could not read keyfile")
 
     else:
@@ -162,7 +165,8 @@ def compute_master(context):
 
     # combine the transformed key with the header master seed to find the master_key
     master_key = hashlib.sha256(
-        context._.header.value.dynamic_header.master_seed.data + context.transformed_key
+        context._.header.value.dynamic_header.master_seed.data
+        + context.transformed_key
     ).digest()
     return master_key
 
@@ -197,11 +201,12 @@ class UnprotectedStream(Adapter):
         cipher = self.get_cipher(self.protected_stream_key(con))
         for elem in tree.xpath(self.protected_xpath):
             if elem.text is not None:
-                result = cipher.decrypt(base64.b64decode(elem.text)).decode("utf-8")
-                # strip invalid XML characters -
-                # https://stackoverflow.com/questions/8733233
+                result = cipher.decrypt(base64.b64decode(elem.text)).decode(
+                    "utf-8"
+                )
+                # strip invalid XML characters - https://stackoverflow.com/questions/8733233
                 result = re.sub(
-                    u"[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+",  # noqa: E501
+                    u"[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+",
                     "",
                     result,
                 )
@@ -214,7 +219,9 @@ class UnprotectedStream(Adapter):
         cipher = self.get_cipher(self.protected_stream_key(con))
         for elem in tree_copy.xpath(self.unprotected_xpath):
             if elem.text is not None:
-                elem.text = base64.b64encode(cipher.encrypt(elem.text.encode("utf-8")))
+                elem.text = base64.b64encode(
+                    cipher.encrypt(elem.text.encode("utf-8"))
+                )
             elem.attrib["Protected"] = "True"
         return tree
 
@@ -246,7 +253,9 @@ def Unprotect(protected_stream_id, protected_stream_key, subcon):
     return Switch(
         protected_stream_id,
         {
-            "arcfourvariant": ARCFourVariantStream(protected_stream_key, subcon),
+            "arcfourvariant": ARCFourVariantStream(
+                protected_stream_key, subcon
+            ),
             "salsa20": Salsa20Stream(protected_stream_key, subcon),
             "chacha20": ChaCha20Stream(protected_stream_key, subcon),
         },
@@ -337,7 +346,9 @@ class Decompressed(Adapter):
         return zlib.decompress(data, 16 + 15)
 
     def _encode(self, data, con, path):
-        compressobj = zlib.compressobj(6, zlib.DEFLATED, 16 + 15, zlib.DEF_MEM_LEVEL, 0)
+        compressobj = zlib.compressobj(
+            6, zlib.DEFLATED, 16 + 15, zlib.DEF_MEM_LEVEL, 0
+        )
         data = compressobj.compress(data)
         data += compressobj.flush()
         return data

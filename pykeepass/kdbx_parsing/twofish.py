@@ -49,9 +49,13 @@ class BlockCipher:
     MODE_XTS = MODE_XTS
     MODE_CMAC = MODE_CMAC
 
-    key_error_message = "Wrong key size"  # should be overwritten in child classes
+    key_error_message = (
+        "Wrong key size"  # should be overwritten in child classes
+    )
 
-    def __init__(self, key, mode, IV, counter, cipher_module, segment_size, args={}):
+    def __init__(
+        self, key, mode, IV, counter, cipher_module, segment_size, args={}
+    ):
         # Cipher classes inheriting from this one take care of:
         #   self.blocksize
         #   self.cipher
@@ -66,7 +70,7 @@ class BlockCipher:
             if not self.keylen_valid(key) and type(key) is not tuple:
                 raise ValueError(self.key_error_message)
 
-        if IV is None:
+        if IV == None:
             self.IV = b"\x00" * self.blocksize
         else:
             self.IV = IV
@@ -77,18 +81,21 @@ class BlockCipher:
             self.chain = ECB(self.cipher, self.blocksize)
         elif mode == MODE_CBC:
             if len(self.IV) != self.blocksize:
-                raise Exception("the IV length should be %i bytes" % self.blocksize)
+                raise Exception(
+                    "the IV length should be %i bytes" % self.blocksize
+                )
             self.chain = CBC(self.cipher, self.blocksize, self.IV)
         elif mode == MODE_CFB:
             if len(self.IV) != self.blocksize:
-                raise Exception("the IV length should be %i bytes" % self.blocksize)
-            if segment_size is None:
+                raise Exception(
+                    "the IV length should be %i bytes" % self.blocksize
+                )
+            if segment_size == None:
                 raise ValueError(
                     "segment size must be defined explicitely for CFB mode"
                 )
             if segment_size > self.blocksize * 8 or segment_size % 8 != 0:
-                # current CFB implementation doesn't support bit level acces
-                # => segment_size should be multiple of bytes
+                # current CFB implementation doesn't support bit level acces => segment_size should be multiple of bytes
                 raise ValueError(
                     "segment size should be a multiple of 8 bits between 8 and %i"
                     % (self.blocksize * 8)
@@ -96,11 +103,15 @@ class BlockCipher:
             self.chain = CFB(self.cipher, self.blocksize, self.IV, segment_size)
         elif mode == MODE_OFB:
             if len(self.IV) != self.blocksize:
-                raise ValueError("the IV length should be %i bytes" % self.blocksize)
+                raise ValueError(
+                    "the IV length should be %i bytes" % self.blocksize
+                )
             self.chain = OFB(self.cipher, self.blocksize, self.IV)
         elif mode == MODE_CTR:
-            if (counter is None) or not callable(counter):
-                raise Exception("Supply a valid counter object for the CTR mode")
+            if (counter == None) or not callable(counter):
+                raise Exception(
+                    "Supply a valid counter object for the CTR mode"
+                )
             self.chain = CTR(self.cipher, self.blocksize, counter)
         elif mode == MODE_XTS:
             if self.blocksize != 16:
@@ -112,7 +123,9 @@ class BlockCipher:
             if "keylen_valid" in dir(
                 self
             ):  # wrappers for pycrypto functions don't have this function
-                if not self.keylen_valid(key[0]) or not self.keylen_valid(key[1]):
+                if not self.keylen_valid(key[0]) or not self.keylen_valid(
+                    key[1]
+                ):
                     raise ValueError(self.key_error_message)
             self.cipher = cipher_module(self.key[0], **args)
             self.cipher2 = cipher_module(self.key[1], **args)
@@ -120,8 +133,7 @@ class BlockCipher:
         elif mode == MODE_CMAC:
             if self.blocksize not in (8, 16):
                 raise Exception(
-                    "CMAC only works with blockcipher that have a 64 or "
-                    "128-bit blocksize"
+                    "CMAC only works with blockcipher that have a 64 or 128-bit blocksize"
                 )
             self.chain = CMAC(self.cipher, self.blocksize, self.IV)
         else:
@@ -236,16 +248,14 @@ class BlockCipher:
           anything. You have to manually unpad if necessary.
 
         After finalization, the chain can still be used but the IV, counter etc
-          aren't reset but just continue as they were after the last step
-          (finalization step).
+          aren't reset but just continue as they were after the last step (finalization step).
         """
         assert self.mode not in (
             MODE_XTS,
             MODE_CMAC,
         )  # finalizing (=padding) doesn't make sense when in XTS or CMAC mode
         if self.ed == b"e":
-            # when the chain is in encryption mode, finalizing will pad the
-            # cache and encrypt this last block
+            # when the chain is in encryption mode, finalizing will pad the cache and encrypt this last block
             if self.mode in (MODE_OFB, MODE_CFB, MODE_CTR):
                 dummy = b"0" * (
                     self.chain.totalbytes % self.blocksize
@@ -253,14 +263,12 @@ class BlockCipher:
             else:  # ECB, CBC
                 dummy = self.chain.cache
             pdata = pad(dummy, self.blocksize, style=style)[len(dummy) :]
-            # construct the padding necessary
-            # ~ pad = padfct(dummy,padding.PAD,self.blocksize)[len(dummy):]
-            # supply the padding to the update function
-            # => chain cache will be "cache+padding"
-            return self.chain.update(pdata, b"e")
+            # ~ pad = padfct(dummy,padding.PAD,self.blocksize)[len(dummy):] # construct the padding necessary
+            return self.chain.update(
+                pdata, b"e"
+            )  # supply the padding to the update function => chain cache will be "cache+padding"
         else:
-            # final function doesn't make sense when decrypting
-            # => padding should be removed manually
+            # final function doesn't make sense when decrypting => padding should be removed manually
             pass
 
 
@@ -293,7 +301,9 @@ class CBC:
             self.cache += data
             if len(self.cache) < self.blocksize:
                 return b""
-            for i in range(0, len(self.cache) - self.blocksize + 1, self.blocksize):
+            for i in range(
+                0, len(self.cache) - self.blocksize + 1, self.blocksize
+            ):
                 self.IV = self.codebook.encrypt(
                     strxor(self.cache[i : i + self.blocksize], self.IV)
                 )
@@ -305,7 +315,9 @@ class CBC:
             self.cache += data
             if len(self.cache) < self.blocksize:
                 return b""
-            for i in range(0, len(self.cache) - self.blocksize + 1, self.blocksize):
+            for i in range(
+                0, len(self.cache) - self.blocksize + 1, self.blocksize
+            ):
                 plaintext = strxor(
                     self.IV,
                     self.codebook.decrypt(self.cache[i : i + self.blocksize]),
@@ -322,7 +334,9 @@ class python_Twofish(BlockCipher):
             raise ValueError("Key should be 128, 192 or 256 bits")
         cipher_module = pytwofish.Twofish
         self.blocksize = 16
-        BlockCipher.__init__(self, key, mode, IV, counter, cipher_module, segment_size)
+        BlockCipher.__init__(
+            self, key, mode, IV, counter, cipher_module, segment_size
+        )
 
     @classmethod
     def new(cls, key, mode=MODE_ECB, IV=None, counter=None, segment_size=None):

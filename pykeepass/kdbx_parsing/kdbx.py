@@ -14,7 +14,9 @@ KDBX = Struct(
             "minor_version" / Int16ul,
             "major_version" / Int16ul,
             "dynamic_header"
-            / Switch(this.major_version, {3: DynamicHeader3, 4: DynamicHeader4}),
+            / Switch(
+                this.major_version, {3: DynamicHeader3, 4: DynamicHeader4}
+            ),
         )
     ),
     "body" / Switch(this.header.value.major_version, {3: Body3, 4: Body4}),
