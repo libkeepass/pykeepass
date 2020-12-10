@@ -1,0 +1,9 @@
+lxml==4.3.5
+pycryptodomex==3.9.4
+construct==2.10.54
+argon2-cffi==19.2.0
+python-dateutil==2.8.0
+future==0.17.1
+isort==5.6.4
+black==20.8b1
+flake8==3.8.4
