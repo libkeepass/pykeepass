@@ -3,6 +3,71 @@ name: CI
 on: [push, pull_request]
 
 jobs:
+  flake8:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y libxml2-dev libxmlsec1-dev
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Lint with flake8
+        run: |
+          flake8 --count --statistics --verbose .
+
+  black:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y libxml2-dev libxmlsec1-dev
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Black
+        run: |
+          black --check --diff --verbose .
+
+  isort:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y libxml2-dev libxmlsec1-dev
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: isort
+        run: |
+          isort --check --diff --verbose .
+
   tests:
     runs-on: ubuntu-latest
     strategy:
@@ -21,7 +86,7 @@ jobs:
         run: |
           sudo apt-get install -y libxml2-dev libxmlsec1-dev
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
 
       - name: Run tests
         run: |
