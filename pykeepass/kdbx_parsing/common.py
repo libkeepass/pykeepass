@@ -148,7 +148,7 @@ def compute_key_composite(password=None, keyfile=None):
                     # anything else may be a file to hash for the key
                     else:
                         keyfile_composite = hashlib.sha256(key).digest()
-            except:
+            except Exception:
                 raise IOError("Could not read keyfile")
 
     else:
