@@ -1,12 +1,11 @@
 # FIXME python2
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
+
 from future.utils import python_2_unicode_compatible
 
 import pykeepass.entry
-
 from pykeepass.exceptions import BinaryError
+
 
 # FIXME python2
 @python_2_unicode_compatible
@@ -20,19 +19,19 @@ class Attachment(object):
 
     @property
     def id(self):
-        return int(self._element.find('Value').attrib['Ref'])
+        return int(self._element.find("Value").attrib["Ref"])
 
     @id.setter
     def id(self, id):
-        self._element.find('Value').attrib['Ref'] = str(id)
+        self._element.find("Value").attrib["Ref"] = str(id)
 
     @property
     def filename(self):
-        return self._element.find('Key').text
+        return self._element.find("Key").text
 
     @filename.setter
     def filename(self, filename):
-        self._element.find('Key').text = filename
+        self._element.find("Key").text = filename
 
     @property
     def entry(self):
@@ -44,7 +43,7 @@ class Attachment(object):
         try:
             return self._kp.binaries[self.id]
         except IndexError:
-            raise BinaryError('No such binary with id {}'.format(self.id))
+            raise BinaryError("No such binary with id {}".format(self.id))
 
     data = binary
 
