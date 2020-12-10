@@ -251,7 +251,7 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual(results.url, unique_str + "url")
         self.assertEqual(results.notes, unique_str + "notes")
         self.assertEqual(results.tags, [unique_str + "tags"])
-        self.assertTrue(results.uuid != None)
+        self.assertTrue(results.uuid is None)
         # convert naive datetime to utc
         expiry_time_utc = expiry_time.replace(tzinfo=tz.gettz()).astimezone(
             tz.gettz("UTC")
@@ -379,7 +379,7 @@ class GroupFindTests3(KDBX3Tests):
         results = self.kp.find_groups(path="base_group/sub_group/", first=True)
         self.assertIsInstance(results, Group)
         self.assertEqual(results.name, sub_group.name)
-        self.assertTrue(results.uuid != None)
+        self.assertTrue(results.uuid is None)
 
         self.kp.move_group(sub_group2, sub_group)
         results = self.kp.find_groups(
