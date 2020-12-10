@@ -1,8 +1,8 @@
 pykeepass
 ============
 
-.. image:: https://travis-ci.org/libkeepass/pykeepass.svg?branch=master
-   :target: https://travis-ci.org/libkeepass/pykeepass
+.. image:: https://github.com/libkeepass/pykeepass/workflows/CI/badge.svg
+   :target: https://github.com/libkeepass/pykeepass/actions?query=workflow%3ACI
 
 .. image:: https://readthedocs.org/projects/pykeepass/badge/?version=latest
    :target: https://pykeepass.readthedocs.io/en/latest/?badge=latest
