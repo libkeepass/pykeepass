@@ -237,49 +237,41 @@ def gen_mk_tab(pkey, key):
         for i in range(256):
             by = i % 0x100
             pkey.mk_tab[0][i] = pkey.m_tab[0][
-                pkey.q_tab[0][pkey.q_tab[0][by] ^ byte(key[1], 0)]
-                ^ byte(key[0], 0)
+                pkey.q_tab[0][pkey.q_tab[0][by] ^ byte(key[1], 0)] ^ byte(key[0], 0)
             ]
             pkey.mk_tab[1][i] = pkey.m_tab[1][
-                pkey.q_tab[0][pkey.q_tab[1][by] ^ byte(key[1], 1)]
-                ^ byte(key[0], 1)
+                pkey.q_tab[0][pkey.q_tab[1][by] ^ byte(key[1], 1)] ^ byte(key[0], 1)
             ]
             pkey.mk_tab[2][i] = pkey.m_tab[2][
-                pkey.q_tab[1][pkey.q_tab[0][by] ^ byte(key[1], 2)]
-                ^ byte(key[0], 2)
+                pkey.q_tab[1][pkey.q_tab[0][by] ^ byte(key[1], 2)] ^ byte(key[0], 2)
             ]
             pkey.mk_tab[3][i] = pkey.m_tab[3][
-                pkey.q_tab[1][pkey.q_tab[1][by] ^ byte(key[1], 3)]
-                ^ byte(key[0], 3)
+                pkey.q_tab[1][pkey.q_tab[1][by] ^ byte(key[1], 3)] ^ byte(key[0], 3)
             ]
     if pkey.k_len == 3:
         for i in range(256):
             by = i % 0x100
             pkey.mk_tab[0][i] = pkey.m_tab[0][
                 pkey.q_tab[0][
-                    pkey.q_tab[0][pkey.q_tab[1][by] ^ byte(key[2], 0)]
-                    ^ byte(key[1], 0)
+                    pkey.q_tab[0][pkey.q_tab[1][by] ^ byte(key[2], 0)] ^ byte(key[1], 0)
                 ]
                 ^ byte(key[0], 0)
             ]
             pkey.mk_tab[1][i] = pkey.m_tab[1][
                 pkey.q_tab[0][
-                    pkey.q_tab[1][pkey.q_tab[1][by] ^ byte(key[2], 1)]
-                    ^ byte(key[1], 1)
+                    pkey.q_tab[1][pkey.q_tab[1][by] ^ byte(key[2], 1)] ^ byte(key[1], 1)
                 ]
                 ^ byte(key[0], 1)
             ]
             pkey.mk_tab[2][i] = pkey.m_tab[2][
                 pkey.q_tab[1][
-                    pkey.q_tab[0][pkey.q_tab[0][by] ^ byte(key[2], 2)]
-                    ^ byte(key[1], 2)
+                    pkey.q_tab[0][pkey.q_tab[0][by] ^ byte(key[2], 2)] ^ byte(key[1], 2)
                 ]
                 ^ byte(key[0], 2)
             ]
             pkey.mk_tab[3][i] = pkey.m_tab[3][
                 pkey.q_tab[1][
-                    pkey.q_tab[1][pkey.q_tab[0][by] ^ byte(key[2], 3)]
-                    ^ byte(key[1], 3)
+                    pkey.q_tab[1][pkey.q_tab[0][by] ^ byte(key[2], 3)] ^ byte(key[1], 3)
                 ]
                 ^ byte(key[0], 3)
             ]
@@ -344,24 +336,11 @@ def h_fun(pkey, x, key):
         b2 = pkey.q_tab[0][b2] ^ byte(key[2], 2)
         b3 = pkey.q_tab[0][b3] ^ byte(key[2], 3)
     if pkey.k_len >= 2:
-        b0 = pkey.q_tab[0][pkey.q_tab[0][b0] ^ byte(key[1], 0)] ^ byte(
-            key[0], 0
-        )
-        b1 = pkey.q_tab[0][pkey.q_tab[1][b1] ^ byte(key[1], 1)] ^ byte(
-            key[0], 1
-        )
-        b2 = pkey.q_tab[1][pkey.q_tab[0][b2] ^ byte(key[1], 2)] ^ byte(
-            key[0], 2
-        )
-        b3 = pkey.q_tab[1][pkey.q_tab[1][b3] ^ byte(key[1], 3)] ^ byte(
-            key[0], 3
-        )
-    return (
-        pkey.m_tab[0][b0]
-        ^ pkey.m_tab[1][b1]
-        ^ pkey.m_tab[2][b2]
-        ^ pkey.m_tab[3][b3]
-    )
+        b0 = pkey.q_tab[0][pkey.q_tab[0][b0] ^ byte(key[1], 0)] ^ byte(key[0], 0)
+        b1 = pkey.q_tab[0][pkey.q_tab[1][b1] ^ byte(key[1], 1)] ^ byte(key[0], 1)
+        b2 = pkey.q_tab[1][pkey.q_tab[0][b2] ^ byte(key[1], 2)] ^ byte(key[0], 2)
+        b3 = pkey.q_tab[1][pkey.q_tab[1][b3] ^ byte(key[1], 3)] ^ byte(key[0], 3)
+    return pkey.m_tab[0][b0] ^ pkey.m_tab[1][b1] ^ pkey.m_tab[2][b2] ^ pkey.m_tab[3][b3]
 
 
 def mds_rem(p0, p1):
@@ -445,9 +424,7 @@ def encrypt(pkey, in_blk):
             ^ pkey.mk_tab[3][byte(blk[0], 3)]
         )
 
-        blk[2] = rotr32(
-            blk[2] ^ ((t0 + t1 + pkey.l_key[4 * (i) + 8]) % 0x100000000), 1
-        )
+        blk[2] = rotr32(blk[2] ^ ((t0 + t1 + pkey.l_key[4 * (i) + 8]) % 0x100000000), 1)
         blk[3] = rotl32(blk[3], 1) ^ (
             (t0 + 2 * t1 + pkey.l_key[4 * (i) + 9]) % 0x100000000
         )
@@ -534,9 +511,7 @@ def decrypt(pkey, in_blk):
             ^ pkey.mk_tab[3][byte(blk[2], 3)]
         )
 
-        blk[0] = rotl32(blk[0], 1) ^ (
-            (t0 + t1 + pkey.l_key[4 * (i) + 8]) % 0x100000000
-        )
+        blk[0] = rotl32(blk[0], 1) ^ ((t0 + t1 + pkey.l_key[4 * (i) + 8]) % 0x100000000)
         blk[1] = rotr32(
             blk[1] ^ ((t0 + 2 * t1 + pkey.l_key[4 * (i) + 9]) % 0x100000000), 1
         )

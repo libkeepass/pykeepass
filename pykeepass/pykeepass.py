@@ -60,9 +60,7 @@ class PyKeePass(object):
         - raise, no filename provided, database not open
     """
 
-    def __init__(
-        self, filename, password=None, keyfile=None, transformed_key=None
-    ):
+    def __init__(self, filename, password=None, keyfile=None, transformed_key=None):
 
         self.read(
             filename=filename,
@@ -78,9 +76,7 @@ class PyKeePass(object):
         # see issue 137
         pass
 
-    def read(
-        self, filename=None, password=None, keyfile=None, transformed_key=None
-    ):
+    def read(self, filename=None, password=None, keyfile=None, transformed_key=None):
         """
         See class docstring.
 
@@ -241,13 +237,7 @@ class PyKeePass(object):
             )
 
     def _xpath(
-        self,
-        xpath_str,
-        tree=None,
-        first=False,
-        history=False,
-        cast=False,
-        **kwargs
+        self, xpath_str, tree=None, first=False, history=False, cast=False, **kwargs
     ):
         """Look up elements in the XML payload and return corresponding object.
 
@@ -341,17 +331,13 @@ class PyKeePass(object):
             # handle searching custom string fields
             if "string" in kwargs.keys():
                 for key, value in kwargs["string"].items():
-                    xp += keys_xp[regex]["string"].format(
-                        key, value, flags=flags
-                    )
+                    xp += keys_xp[regex]["string"].format(key, value, flags=flags)
 
                 kwargs.pop("string")
 
             # convert uuid to base64 form before building xpath
             if "uuid" in kwargs.keys():
-                kwargs["uuid"] = base64.b64encode(kwargs["uuid"].bytes).decode(
-                    "utf-8"
-                )
+                kwargs["uuid"] = base64.b64encode(kwargs["uuid"].bytes).decode("utf-8")
 
             # convert tags to semicolon separated string before building xpath
             if "tags" in kwargs.keys():
@@ -460,9 +446,7 @@ class PyKeePass(object):
     def deref(self, value):
         if not value:
             return value
-        references = set(
-            re.findall(r"({REF:([TUPANI])@([TUPANI]):([^}]+)})", value)
-        )
+        references = set(re.findall(r"({REF:([TUPANI])@([TUPANI]):([^}]+)})", value))
         if not references:
             return value
         field_to_attribute = {
@@ -478,9 +462,7 @@ class PyKeePass(object):
             search_in = field_to_attribute[search_in]
             if search_in == "uuid":
                 search_value = uuid.UUID(search_value)
-            ref_entry = self.find_entries(
-                first=True, **{search_in: search_value}
-            )
+            ref_entry = self.find_entries(first=True, **{search_in: search_value})
             value = value.replace(ref, getattr(ref_entry, wanted_field))
         return self.deref(value)
 
@@ -664,9 +646,7 @@ class PyKeePass(object):
 
         if entries and not force_creation:
             raise Exception(
-                'An entry "{}" already exists in "{}"'.format(
-                    title, destination_group
-                )
+                'An entry "{}" already exists in "{}"'.format(title, destination_group)
             )
         else:
             logger.debug("Creating a new entry")
@@ -694,14 +674,10 @@ class PyKeePass(object):
 
     # ---------- Attachments ----------
 
-    def find_attachments(
-        self, recursive=True, path=None, element=None, **kwargs
-    ):
+    def find_attachments(self, recursive=True, path=None, element=None, **kwargs):
 
         prefix = "//Binary" if recursive else "/Binary"
-        res = self._find(
-            prefix, attachment_xp, path=path, tree=element, **kwargs
-        )
+        res = self._find(prefix, attachment_xp, path=path, tree=element, **kwargs)
 
         return res
 
@@ -713,9 +689,7 @@ class PyKeePass(object):
     def binaries(self):
         if self.version >= (4, 0):
             # first byte is a prepended flag
-            binaries = [
-                a.data[1:] for a in self.kdbx.body.payload.inner_header.binary
-            ]
+            binaries = [a.data[1:] for a in self.kdbx.body.payload.inner_header.binary]
         else:
             binaries = []
             for elem in self._xpath("/KeePassFile/Meta/Binaries/Binary"):
@@ -787,12 +761,8 @@ class PyKeePass(object):
             reference.id = reference.id - 1
 
 
-def create_database(
-    filename, password=None, keyfile=None, transformed_key=None
-):
-    keepass_instance = PyKeePass(
-        BLANK_DATABASE_LOCATION, BLANK_DATABASE_PASSWORD
-    )
+def create_database(filename, password=None, keyfile=None, transformed_key=None):
+    keepass_instance = PyKeePass(BLANK_DATABASE_LOCATION, BLANK_DATABASE_PASSWORD)
 
     keepass_instance.filename = filename
     keepass_instance.password = password

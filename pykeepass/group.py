@@ -46,9 +46,10 @@ class Group(BaseElement):
             ], "The provided element is not an LXML Element, but {}".format(
                 type(element)
             )
-            assert element.tag == "Group", (
-                "The provided element is not a Group "
-                "element, but a {}".format(element.tag)
+            assert (
+                element.tag == "Group"
+            ), "The provided element is not a Group " "element, but a {}".format(
+                element.tag
             )
             self._element = element
 
@@ -82,10 +83,7 @@ class Group(BaseElement):
 
     @property
     def subgroups(self):
-        return [
-            Group(element=x, kp=self._kp)
-            for x in self._element.findall("Group")
-        ]
+        return [Group(element=x, kp=self._kp) for x in self._element.findall("Group")]
 
     @property
     def is_root_group(self):

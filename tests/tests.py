@@ -164,9 +164,7 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual("root_entry", results.title)
         results = self.kp.find_entries(url="http://example.com")
         self.assertEqual(len(results), 2)
-        results = self.kp.find_entries(
-            notes="entry notes", url="http://example.com"
-        )
+        results = self.kp.find_entries(notes="entry notes", url="http://example.com")
         self.assertEqual(len(results), 1)
         self.assertTrue(
             self.kp.find_entries(title="group_entry", first=True) in results
@@ -209,9 +207,7 @@ class EntryFindTests3(KDBX3Tests):
             hist = entry.history
             self.assertTrue(len(hist) > 0)
             for item in hist:
-                self.assertEqual(
-                    item.path, "[History of: {}]".format(entry.title)
-                )
+                self.assertEqual(item.path, "[History of: {}]".format(entry.title))
 
     def test_history_group(self):
         for title in ["root_entry", "subentry"]:
@@ -241,9 +237,7 @@ class EntryFindTests3(KDBX3Tests):
         )
         results = self.kp.find_entries_by_title(unique_str + "title")
         self.assertEqual(len(results), 1)
-        results = self.kp.find_entries_by_title(
-            unique_str + "title", first=True
-        )
+        results = self.kp.find_entries_by_title(unique_str + "title", first=True)
 
         self.assertEqual(results.title, unique_str + "title")
         self.assertEqual(results.username, unique_str + "user")
@@ -266,9 +260,7 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual(results.title, entry.title)
 
         self.kp.delete_entry(entry)
-        results = self.kp.find_entries_by_title(
-            unique_str + "title", first=True
-        )
+        results = self.kp.find_entries_by_title(unique_str + "title", first=True)
         self.assertIsNone(results)
 
         # test adding entry which exists in another group
@@ -337,9 +329,7 @@ class GroupFindTests3(KDBX3Tests):
     def test_find_groups_by_path(self):
         results = self.kp.find_groups_by_path("/foobar_group/subgroup/")
         self.assertIsInstance(results, Group)
-        results = self.kp.find_groups(
-            path="/foobar_group/subgroup/", first=True
-        )
+        results = self.kp.find_groups(path="/foobar_group/subgroup/", first=True)
         self.assertEqual(results.name, "subgroup")
         results = self.kp.find_groups(path="foobar_group/group_entry")
         self.assertEqual(results, None)
@@ -431,24 +421,18 @@ class EntryTests3(KDBX3Tests):
             "foobar_group/subgroup/subentry",
         )
         self.assertEqual(
-            self.kp.find_entries(title="root_entry", first=True)
-            .history[0]
-            .group,
+            self.kp.find_entries(title="root_entry", first=True).history[0].group,
             self.kp.root_group,
         )
 
     def test_references(self):
         original_entry = self.kp.find_entries(title="foobar_entry", first=True)
         clone1 = self.kp.find_entries(title="foobar_entry - Clone", first=True)
-        clone2 = self.kp.find_entries(
-            title="foobar_entry - Clone of clone", first=True
-        )
+        clone2 = self.kp.find_entries(title="foobar_entry - Clone of clone", first=True)
         prefixed = self.kp.find_entries(
             title="foobar_entry - Clone with prefix and suffix", first=True
         )
-        self.assertEqual(
-            self.kp.deref(clone2.username), original_entry.username
-        )
+        self.assertEqual(self.kp.deref(clone2.username), original_entry.username)
         self.assertEqual(clone2.deref("username"), original_entry.username)
         self.assertEqual(clone2.deref("password"), original_entry.password)
         self.assertEqual(original_entry.ref("username"), clone1.username)
@@ -586,13 +570,9 @@ class EntryHistoryTests3(KDBX3Tests):
             prefix + "pass",
         )
         g1 = self.kp.add_group(self.kp.root_group, prefix + "group")
-        e2 = self.kp.add_entry(
-            g1, prefix + "title", prefix + "user", prefix + "pass"
-        )
+        e2 = self.kp.add_entry(g1, prefix + "title", prefix + "user", prefix + "pass")
         g2 = self.kp.add_group(g1, prefix + "sub_group")
-        e2 = self.kp.add_entry(
-            g2, prefix + "title", prefix + "user", prefix + "pass"
-        )
+        e2 = self.kp.add_entry(g2, prefix + "title", prefix + "user", prefix + "pass")
 
         # no history tests
         res1 = self.kp.find_entries(title=prefix + "title")
@@ -621,9 +601,7 @@ class EntryHistoryTests3(KDBX3Tests):
             for item in hist:
                 self.assertTrue(item.is_a_history_entry)
                 self.assertEqual(item.group, entry.group)
-                self.assertEqual(
-                    item.path, "[History of: {}]".format(entry.title)
-                )
+                self.assertEqual(item.path, "[History of: {}]".format(entry.title))
 
         # here history items are expected
         res2 = self.kp.find_entries(title=prefix + "title", history=True)
@@ -689,9 +667,7 @@ class EntryHistoryTests3(KDBX3Tests):
             for item in hist:
                 self.assertTrue(item.is_a_history_entry)
                 self.assertEqual(item.group, entry.group)
-                self.assertEqual(
-                    item.path, "[History of: {}]".format(entry.title)
-                )
+                self.assertEqual(item.path, "[History of: {}]".format(entry.title))
 
         res2 = self.kp.find_entries(title=changed + "title", history=True)
         self.assertEqual(len(res2), 6)
@@ -774,9 +750,7 @@ class PyKeePassTests3(KDBX3Tests):
         self.kp_tmp.password = "f00bar"
         self.kp_tmp.keyfile = os.path.join(base_dir, "change.key")
         self.kp_tmp.save()
-        self.kp_tmp = PyKeePass(
-            self.kp_tmp.filename, "f00bar", self.kp_tmp.keyfile
-        )
+        self.kp_tmp = PyKeePass(self.kp_tmp.filename, "f00bar", self.kp_tmp.keyfile)
 
         results = self.kp.find_entries_by_username("foobar_user", first=True)
         self.assertEqual("foobar_user", results.username)
@@ -875,18 +849,12 @@ class KDBXTests(unittest.TestCase):
             os.path.join(base_dir, "test4.kdbx"),  # KDBX v4 test
             os.path.join(base_dir, "test4_aes.kdbx"),  # KDBX v4 AES test
             os.path.join(base_dir, "test4_aeskdf.kdbx"),  # KDBX v3 AESKDF test
-            os.path.join(
-                base_dir, "test4_chacha20.kdbx"
-            ),  # KDBX v4 ChaCha test
-            os.path.join(
-                base_dir, "test4_twofish.kdbx"
-            ),  # KDBX v4 Twofish test
+            os.path.join(base_dir, "test4_chacha20.kdbx"),  # KDBX v4 ChaCha test
+            os.path.join(base_dir, "test4_twofish.kdbx"),  # KDBX v4 Twofish test
             os.path.join(
                 base_dir, "test4_hex.kdbx"
             ),  # legacy 64 byte hexadecimal keyfile test
-            os.path.join(
-                base_dir, "test3.kdbx"
-            ),  # KDBX v3 transformed_key open test
+            os.path.join(base_dir, "test3.kdbx"),  # KDBX v3 transformed_key open test
             os.path.join(
                 base_dir, "test4_hex.kdbx"
             ),  # KDBX v4 transformed_key open test
