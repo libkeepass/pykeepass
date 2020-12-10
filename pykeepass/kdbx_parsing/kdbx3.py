@@ -162,7 +162,7 @@ UnpackedPayload = Reparsed(
             this._._.header.value.dynamic_header.protected_stream_key.data,
             XML(
                 IfThenElse(
-                    this._._.header.value.dynamic_header.compression_flags.data.compression,
+                    this._._.header.value.dynamic_header.compression_flags.data.compression,  # noqa: E501
                     Decompressed(Concatenated(PayloadBlocks)),
                     Concatenated(PayloadBlocks),
                 )
