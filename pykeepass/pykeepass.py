@@ -359,7 +359,7 @@ class PyKeePass(object):
         )
 
         return res
-
+              
     # ---------- Groups ----------
 
     def find_groups(self, recursive=True, path=None, group=None, **kwargs):
@@ -451,6 +451,16 @@ class PyKeePass(object):
     def move_group(self, group, destination_group):
         destination_group.append(group)
 
+    def _create_or_get_recyclebin_group(self, **kwargs):
+        existing_group = self.recyclebin_group
+        if existing_group is not None: 
+            return existing_group
+        kwargs.setdefault('group_name', 'Recycle Bin')
+        group = self.add_group( self.root_group, **kwargs)
+        elem = self._xpath('/KeePassFile/Meta/RecycleBinUUID', first=True)   
+        elem.text = base64.b64encode(group.uuid.bytes).decode('utf-8')
+        return group
+        
     # ---------- Entries ----------
 
     def find_entries(self, recursive=True, path=None, group=None, **kwargs):
