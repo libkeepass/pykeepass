@@ -360,6 +360,17 @@ class PyKeePass(object):
 
         return res
               
+    def _can_be_moved_to_recyclebin(self, entry_or_group):
+        if entry_or_group == self.root_group:
+            return False
+        recyclebin_group = self.recyclebin_group
+        if recyclebin_group is None:
+            return True
+        uuid_str = base64.b64encode( entry_or_group.uuid.bytes).decode('utf-8')
+        elem = self._xpath('./UUID[text()="{}"]/..'.format(uuid_str), tree=recyclebin_group._element, first=True, history=False, cast=False)
+        return elem is None
+        
+        
     # ---------- Groups ----------
 
     def find_groups(self, recursive=True, path=None, group=None, **kwargs):
@@ -461,6 +472,12 @@ class PyKeePass(object):
         elem.text = base64.b64encode(group.uuid.bytes).decode('utf-8')
         return group
         
+    def trash_group(self, group):
+        if not self._can_be_moved_to_recyclebin(group):
+            raise UnableToSendToRecycleBin
+        recyclebin_group = self._create_or_get_recyclebin_group()
+        self.move_group( group, recyclebin_group)
+            
     # ---------- Entries ----------
 
     def find_entries(self, recursive=True, path=None, group=None, **kwargs):
@@ -600,6 +617,12 @@ class PyKeePass(object):
     def move_entry(self, entry, destination_group):
         destination_group.append(entry)
 
+    def trash_entry(self, entry):
+        if not self._can_be_moved_to_recyclebin(entry):
+            raise UnableToSendToRecycleBin
+        recyclebin_group = self._create_or_get_recyclebin_group()
+        self.move_entry( entry, recyclebin_group)
+        
     # ---------- Attachments ----------
 
     def find_attachments(self, recursive=True, path=None, element=None, **kwargs):
