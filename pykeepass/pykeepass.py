@@ -477,6 +477,18 @@ class PyKeePass(object):
             raise UnableToSendToRecycleBin
         recyclebin_group = self._create_or_get_recyclebin_group()
         self.move_group( group, recyclebin_group)
+        
+    def empty_group(self, group):
+        while len(group.subgroups):
+            self.delete_group(group.subgroups[0])            
+        while len(group.entries):
+            self.delete_entry(group.entries[0])
+            
+    def empty_recyclebin(self):
+        recyclebin_group = self.recyclebin_group
+        if recyclebin_group is not None: 
+            self.empty_group(recyclebin_group)
+        
             
     # ---------- Entries ----------
 
