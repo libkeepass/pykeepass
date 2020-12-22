@@ -203,7 +203,7 @@ class PyKeePass(object):
         """Group: RecycleBin Group of database"""
         elem = self._xpath('/KeePassFile/Meta/RecycleBinUUID', first=True)   
         recyclebin_uuid = uuid.UUID( bytes = base64.b64decode(elem.text) )
-        return self.find_groups_by_uuid(recyclebin_uuid, first=True)
+        return self.find_groups(uuid=recyclebin_uuid, first=True)
 
     @property
     def groups(self):
