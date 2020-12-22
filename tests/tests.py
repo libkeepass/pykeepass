@@ -349,6 +349,62 @@ class GroupFindTests3(KDBX3Tests):
     def test_print_groups(self):
         self.assertIsInstance(self.kp.groups.__repr__(), str)
 
+class RecycleBinTests3(KDBX3Tests):
+
+    def test_recyclebincreation(self):
+        self.assertIsNone(self.kp.recyclebin_group)
+        
+        entry = self.kp.add_entry( self.kp.root_group, "RecycleBinTest1", "login", "password")
+        self.kp.trash_entry(entry)
+        
+        self.assertIsNotNone(self.kp.recyclebin_group)
+        self.assertEqual( len(self.kp.recyclebin_group.entries), 1)
+    
+    def test_entry(self):
+        entry = self.kp.add_entry( self.kp.root_group, "RecycleBinTest2", "login", "password")
+        entry_uuid = entry.uuid
+        self.kp.trash_entry(entry)
+        
+        entries_in_root = self.kp.find_entries(uuid=entry_uuid, group=self.kp.root_group, recursive=False )        
+        self.assertEqual( len(entries_in_root), 0)
+        
+        entries_in_recyclebin = self.kp.find_entries(uuid=entry_uuid, group=self.kp.recyclebin_group, recursive=False )        
+        self.assertEqual( len(entries_in_recyclebin), 1)
+    
+    def test_group(self):
+        group = self.kp.add_group( self.kp.root_group, "RecycleBinTest3 Group")
+        group_uuid = group.uuid
+        entry = self.kp.add_entry( group, "RecycleBinTest3 Entry", "login", "password")
+        entry_uuid = entry.uuid
+        
+        self.kp.trash_group(group)
+        
+        groups_in_root = self.kp.find_groups(uuid=group_uuid, group=self.kp.root_group, recursive=False )        
+        self.assertEqual( len(groups_in_root), 0)
+        
+        groups_in_recyclebin = self.kp.find_groups(uuid=group_uuid, group=self.kp.recyclebin_group, recursive=False )        
+        self.assertEqual( len(groups_in_recyclebin), 1)
+        
+        group_in_recyclebin = groups_in_recyclebin[0]    
+        self.assertEqual( len(group_in_recyclebin.entries), 1)
+        self.assertEqual( group_in_recyclebin.entries[0].uuid, entry_uuid)
+        
+
+    def test_recyclebinemptying(self):
+        entry = self.kp.add_entry( self.kp.root_group, "RecycleBinTest4 Entry", "login", "password")
+        self.kp.trash_entry(entry)
+        
+        group = self.kp.add_group( self.kp.root_group, "RecycleBinTest4 Group")
+        self.kp.trash_group(group)
+        
+        self.assertEqual( len(self.kp.recyclebin_group.subgroups), 1)   
+        self.assertEqual( len(self.kp.recyclebin_group.entries), 1)
+        
+        self.kp.empty_recyclebin()     
+        
+        self.assertEqual( len(self.kp.recyclebin_group.subgroups), 0)
+        self.assertEqual( len(self.kp.recyclebin_group.entries), 0)
+    
 
 class EntryTests3(KDBX3Tests):
 
@@ -758,6 +814,9 @@ class EntryFindTests4(KDBX4Tests, EntryFindTests3):
     pass
 
 class GroupFindTests4(KDBX4Tests, GroupFindTests3):
+    pass
+
+class RecycleBinTests4(KDBX4Tests, RecycleBinTests3):
     pass
 
 class EntryTests4(KDBX4Tests, EntryTests3):
