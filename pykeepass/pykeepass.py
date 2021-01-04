@@ -197,11 +197,11 @@ class PyKeePass(object):
     def root_group(self):
         """Group: root Group of database"""
         return self.find_groups(path='', first=True)
-        
+
     @property
     def recyclebin_group(self):
         """Group: RecycleBin Group of database"""
-        elem = self._xpath('/KeePassFile/Meta/RecycleBinUUID', first=True)   
+        elem = self._xpath('/KeePassFile/Meta/RecycleBinUUID', first=True)
         recyclebin_uuid = uuid.UUID( bytes = base64.b64decode(elem.text) )
         return self.find_groups(uuid=recyclebin_uuid, first=True)
 
@@ -359,7 +359,7 @@ class PyKeePass(object):
         )
 
         return res
-              
+
     def _can_be_moved_to_recyclebin(self, entry_or_group):
         if entry_or_group == self.root_group:
             return False
@@ -369,8 +369,8 @@ class PyKeePass(object):
         uuid_str = base64.b64encode( entry_or_group.uuid.bytes).decode('utf-8')
         elem = self._xpath('./UUID[text()="{}"]/..'.format(uuid_str), tree=recyclebin_group._element, first=True, history=False, cast=False)
         return elem is None
-        
-        
+
+
     # ---------- Groups ----------
 
     def find_groups(self, recursive=True, path=None, group=None, **kwargs):
@@ -464,17 +464,17 @@ class PyKeePass(object):
 
     def _create_or_get_recyclebin_group(self, **kwargs):
         existing_group = self.recyclebin_group
-        if existing_group is not None: 
+        if existing_group is not None:
             return existing_group
         kwargs.setdefault('group_name', 'Recycle Bin')
         group = self.add_group( self.root_group, **kwargs)
-        elem = self._xpath('/KeePassFile/Meta/RecycleBinUUID', first=True)   
+        elem = self._xpath('/KeePassFile/Meta/RecycleBinUUID', first=True)
         elem.text = base64.b64encode(group.uuid.bytes).decode('utf-8')
         return group
-        
+
     def trash_group(self, group):
         """Move a group to the RecycleBin
-        
+
         Args:
             group (:obj:`Group`): Group to send to the RecycleBin
         """
@@ -482,27 +482,27 @@ class PyKeePass(object):
             raise UnableToSendToRecycleBin
         recyclebin_group = self._create_or_get_recyclebin_group()
         self.move_group( group, recyclebin_group)
-        
+
     def empty_group(self, group):
         """Delete the content of a group.
-        
+
         This does not delete the group itself
-        
+
         Args:
             group (:obj:`Group`): Group to empty
         """
         while len(group.subgroups):
-            self.delete_group(group.subgroups[0])            
+            self.delete_group(group.subgroups[0])
         while len(group.entries):
             self.delete_entry(group.entries[0])
-            
+
     def empty_recyclebin(self):
         """Clears the contents of the RecycleBin"""
         recyclebin_group = self.recyclebin_group
-        if recyclebin_group is not None: 
+        if recyclebin_group is not None:
             self.empty_group(recyclebin_group)
-        
-            
+
+
     # ---------- Entries ----------
 
     def find_entries(self, recursive=True, path=None, group=None, **kwargs):
@@ -644,7 +644,7 @@ class PyKeePass(object):
 
     def trash_entry(self, entry):
         """Move an entry to the RecycleBin
-        
+
         Args:
             entry (:obj:`Entry`): Entry to send to the RecycleBin
         """
@@ -652,7 +652,7 @@ class PyKeePass(object):
             raise UnableToSendToRecycleBin
         recyclebin_group = self._create_or_get_recyclebin_group()
         self.move_entry( entry, recyclebin_group)
-        
+
     # ---------- Attachments ----------
 
     def find_attachments(self, recursive=True, path=None, element=None, **kwargs):
