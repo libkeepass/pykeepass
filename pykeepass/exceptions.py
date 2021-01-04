@@ -23,3 +23,8 @@ class BinaryError(Exception):
 # ----- Entry exceptions -----
 
 # ----- Group exceptions -----
+
+# ----- RecycleBin exceptions -----
+
+class UnableToSendToRecycleBin(Exception):
+    pass
