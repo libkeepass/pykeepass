@@ -350,6 +350,14 @@ string containing algorithm used to encrypt database.  Possible values are ``aes
 
 create a new database at ``filename`` with supplied credentials.  Returns ``PyKeePass`` object
 
+**trash_group** (group)
+
+move a group to the recycle bin.  The recycle bin is created if it does not exit.  ``group`` must be an empty Group.
+
+**empty_group** (group)
+
+delete all entries and subgroups of a group.  ``group`` is an instance of ``Group``.
+
 Tests
 -------------
 
