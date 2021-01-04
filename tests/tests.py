@@ -389,7 +389,6 @@ class RecycleBinTests3(KDBX3Tests):
         self.assertEqual( len(group_in_recyclebin.entries), 1)
         self.assertEqual( group_in_recyclebin.entries[0].uuid, entry_uuid)
 
-
     def test_recyclebinemptying(self):
         entry = self.kp.add_entry( self.kp.root_group, "RecycleBinTest4 Entry", "login", "password")
         self.kp.trash_entry(entry)
@@ -400,7 +399,7 @@ class RecycleBinTests3(KDBX3Tests):
         self.assertEqual( len(self.kp.recyclebin_group.subgroups), 1)
         self.assertEqual( len(self.kp.recyclebin_group.entries), 1)
 
-        self.kp.empty_recyclebin()
+        self.kp.empty_group(self.kp.recyclebin_group)
 
         self.assertEqual( len(self.kp.recyclebin_group.subgroups), 0)
         self.assertEqual( len(self.kp.recyclebin_group.entries), 0)
@@ -691,6 +690,17 @@ class GroupTests3(KDBX3Tests):
 
     def test_fields(self):
         self.assertEqual(self.kp.find_groups(name='subgroup2', first=True).path, 'foobar_group/subgroup/subgroup2/')
+
+    def test_empty_group(self):
+        # test that groups are properly emptied
+        emptytest = self.kp.add_group(self.kp.root_group, 'emptytest_group')
+        self.kp.add_entry(emptytest, 'emptytest_entry', 'user', 'pass')
+        self.kp.add_group(emptytest, 'emptytest_subgroup')
+        self.assertEqual(len(emptytest.entries), 1)
+        self.assertEqual(len(emptytest.subgroups), 1)
+        self.kp.empty_group(emptytest)
+        self.assertEqual(len(emptytest.entries), 0)
+        self.assertEqual(len(emptytest.subgroups), 0)
 
 
 class AttachmentTests3(KDBX3Tests):

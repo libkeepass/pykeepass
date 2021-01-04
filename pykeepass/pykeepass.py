@@ -496,13 +496,6 @@ class PyKeePass(object):
         while len(group.entries):
             self.delete_entry(group.entries[0])
 
-    def empty_recyclebin(self):
-        """Clears the contents of the RecycleBin"""
-        recyclebin_group = self.recyclebin_group
-        if recyclebin_group is not None:
-            self.empty_group(recyclebin_group)
-
-
     # ---------- Entries ----------
 
     def find_entries(self, recursive=True, path=None, group=None, **kwargs):
