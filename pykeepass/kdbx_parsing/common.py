@@ -14,6 +14,8 @@ import re
 import codecs
 from io import BytesIO
 from collections import OrderedDict
+# FIXME python2
+import sys
 
 
 class HeaderChecksumError(Exception):
@@ -174,10 +176,12 @@ class XML(Adapter):
 # FIXME python2
 def valid_xml_char(ch):
     ch_code = ord(ch)
-    return ch_code in range(0x0020, 0xd7ff) or \
-        ch_code in [0x0009, 0x000a, 0x000d] or \
-        ch_code in range(0xe000, 0xfffd) or \
+    return (
+        ch_code in range(0x0020, 0xd7ff) or
+        ch_code in [0x0009, 0x000a, 0x000d] or
+        ch_code in range(0xe000, 0xfffd) or
         ch_code in range(0x00010000, 0x0010ffff)
+    )
 
 
 class UnprotectedStream(Adapter):
@@ -199,7 +203,14 @@ class UnprotectedStream(Adapter):
                 result = cipher.decrypt(base64.b64decode(elem.text)).decode('utf-8')
                 # strip invalid XML characters - https://stackoverflow.com/questions/8733233
                 # FIXME python2
-                result = filter(valid_xml_char, result)
+                if sys.maxunicode == 1114111:
+                    result = re.sub(
+                        u'[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+',
+                        '',
+                        result
+                    )
+                else:
+                    result = filter(valid_xml_char, result)
 
                 elem.text = result
             elem.attrib['Protected'] = 'False'
