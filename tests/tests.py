@@ -648,7 +648,7 @@ class GroupTests3(KDBX3Tests):
 class AttachmentTests3(KDBX3Tests):
     # get some things ready before testing
     def setUp(self):
-        super().setUp()
+        super(AttachmentTests3, self).setUp()
         shutil.copy(
             os.path.join(base_dir, self.database),
             os.path.join(base_dir, 'test_attachment.kdbx')
@@ -704,7 +704,7 @@ class AttachmentTests3(KDBX3Tests):
         self.assertEqual(a.filename, 'test.txt')
 
     def tearDown(self):
-        super().tearDown()
+        super(AttachmentTests3, self).tearDown()
         os.remove(os.path.join(base_dir, 'test_attachment.kdbx'))
 
 
@@ -765,7 +765,7 @@ class BugRegressionTests3(KDBX3Tests):
 
         # change keyfile so database save fails
         self.kp_tmp.keyfile = 'foo'
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(Exception):
             self.kp_tmp.save()
 
         # try to open database
