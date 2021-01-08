@@ -5,6 +5,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from future.utils import python_2_unicode_compatible
 
 import base64
+from io import BytesIO
 import logging
 import os
 import re
@@ -132,12 +133,11 @@ class PyKeePass(object):
             transformed_key (:obj:`bytes`, optional): precomputed transformed
                 key.
         """
-        output = None
         if not filename:
             filename = self.filename
 
         if hasattr(filename, "write"):
-            output = KDBX.build_stream(
+            KDBX.build_stream(
                 self.kdbx,
                 filename,
                 password=self.password,
@@ -145,14 +145,18 @@ class PyKeePass(object):
                 transformed_key=transformed_key
             )
         else:
-            output = KDBX.build_file(
+            # write to BytesIO object to prevent database clobbering
+            stream = BytesIO()
+            KDBX.build_stream(
                 self.kdbx,
-                filename,
+                stream,
                 password=self.password,
                 keyfile=self.keyfile,
                 transformed_key=transformed_key
             )
-        return output
+            with open(filename, 'wb') as f:
+                stream.seek(0)
+                f.write(stream.read())
 
     @property
     def version(self):
