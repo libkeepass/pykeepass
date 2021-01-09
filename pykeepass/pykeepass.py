@@ -129,6 +129,7 @@ class PyKeePass(object):
         Args:
             filename (:obj:`str`, optional): path to database or stream object.
                 If None, the path given when the database was opened is used.
+                PyKeePass.filename is unchanged.
             transformed_key (:obj:`bytes`, optional): precomputed transformed
                 key.
         """
