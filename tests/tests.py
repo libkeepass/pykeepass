@@ -648,7 +648,7 @@ class GroupTests3(KDBX3Tests):
 class AttachmentTests3(KDBX3Tests):
     # get some things ready before testing
     def setUp(self):
-        super(AttachmentTests3, self).tearDown()
+        super(AttachmentTests3, self).setUp()
         shutil.copy(
             os.path.join(base_dir, self.database),
             os.path.join(base_dir, 'test_attachment.kdbx')
