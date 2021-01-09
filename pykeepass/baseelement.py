@@ -56,6 +56,10 @@ class BaseElement(object):
         self._element.append(getattr(E, tag)(value))
 
     @property
+    def kp(self):
+        return self._kp
+
+    @property
     def group(self):
         return self._xpath(
             '(ancestor::Group)[last()]',
