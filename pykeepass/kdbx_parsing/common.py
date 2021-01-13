@@ -1,6 +1,11 @@
-from Cryptodome.Cipher import AES, ChaCha20, Salsa20
+# support both pycryptodomex (Cryptodome) and pycryptodome (Crypto)
+try:
+    from Cryptodome.Cipher import AES, ChaCha20, Salsa20
+    from Cryptodome.Util import Padding as CryptoPadding
+except ImportError:
+    from Crypto.Cipher import AES, ChaCha20, Salsa20
+    from Crypto.Util import Padding as CryptoPadding
 from .twofish import Twofish
-from Cryptodome.Util import Padding as CryptoPadding
 import hashlib
 from construct import (
     Adapter, BitStruct, BitsSwapped, Container, Flag, Padding, ListContainer, Mapping, GreedyBytes, Int32ul, Switch

@@ -25,8 +25,13 @@
 __all__ = ['Twofish']
 
 from . import pytwofish
-from Cryptodome.Util.strxor import strxor
-from Cryptodome.Util.Padding import pad
+# support both pycryptodomex (Cryptodome) and pycryptodome (Crypto)
+try:
+    from Cryptodome.Util.strxor import strxor
+    from Cryptodome.Util.Padding import pad
+except ImportError:
+    from Crypto.Util.Padding import pad
+    from Crypto.Util.strxor import strxor
 
 MODE_ECB = 1
 MODE_CBC = 2
@@ -149,7 +154,7 @@ class BlockCipher():
         """
         #self.ed = 'e' if chain is encrypting, 'd' if decrypting,
         # None if nothing happened with the chain yet
-        #assert self.ed in ('e',None) 
+        #assert self.ed in ('e',None)
         # makes sure you don't encrypt with a cipher that has started decrypting
         self.ed = 'e'
         if self.mode == MODE_XTS:
@@ -291,7 +296,7 @@ class python_Twofish(BlockCipher):
         cipher_module = pytwofish.Twofish
         self.blocksize = 16
         BlockCipher.__init__(self,key,mode,IV,counter,cipher_module,segment_size)
-    
+
     @classmethod
     def new(cls, key,mode=MODE_ECB,IV=None,counter=None,segment_size=None):
         return cls(key,mode,IV,counter,segment_size)
