@@ -63,12 +63,12 @@ Finding Entries
 
 **find_entries** (title=None, username=None, password=None, url=None, notes=None, path=None, uuid=None, tags=None, string=None, group=None, recursive=True, regex=False, flags=None, history=False, first=False)
 
-Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``path``, and ``autotype_sequence`` are strings, ``string`` is a dict, ``autotype_enabled`` is a boolean, ``uuid`` is a ``uuid.UUID`` and ``tags`` is a list of strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
+Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, and ``autotype_sequence`` are strings, ``path`` is a list, ``string`` is a dict, ``autotype_enabled`` is a boolean, ``uuid`` is a ``uuid.UUID`` and ``tags`` is a list of strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
 .. _flags: https://www.w3.org/TR/xpath-functions/#flags 
 
-The ``path`` string is a full path to an entry (ex. ``'foobar_group/foobar_entry'``).  This implies ``first=True``.  All other arguments are ignored when this is given.  This is useful for handling user input.
+The ``path`` list is a full path to an entry (ex. ``['foobar_group', 'foobar_entry']``).  This implies ``first=True``.  All other arguments are ignored when this is given.  This is useful for handling user input.
 
 The ``string`` dict allows for searching custom string fields.  ex. ``{'custom_field1': 'custom value', 'custom_field2': 'custom value'}``
 
@@ -112,12 +112,12 @@ Finding Groups
 
 **find_groups** (name=None, path=None, uuid=None, notes=None, group=None, recursive=True, regex=False, flags=None, first=False)
 
-where ``name``, ``path``, and ``notes`` are strings, ``uuid`` is a ``uuid.UUID``. This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
+where ``name`` and ``notes`` are strings, ``path`` is a list, ``uuid`` is a ``uuid.UUID``. This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
 .. _flags: https://www.w3.org/TR/xpath-functions/#flags 
 
-The ``path`` string is a full path to a group (ex. ``'foobar_group/sub_group'``).  This implies ``first=True``.  All other arguments are ignored when this is given.  This is useful for handling user input.
+The ``path`` list is a full path to a group (ex. ``['foobar_group', 'sub_group']``).  This implies ``first=True``.  All other arguments are ignored when this is given.  This is useful for handling user input.
 
 The ``group`` argument determines what ``Group`` to search under, and the ``recursive`` boolean controls whether to search recursively.
 
@@ -145,7 +145,7 @@ a flattened list of all groups in the database
    >>> kp.find_groups(name='foo.*', regex=True)
    [Group: "foo", Group "foobar"]
 
-   >>> kp.find_groups(path='social/', regex=True)
+   >>> kp.find_groups(path=['social'], regex=True)
    [Group: "social", Group: "social/foo_subgroup"]
 
    >>> kp.find_groups(name='social', first=True).subgroups
