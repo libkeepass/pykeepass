@@ -308,14 +308,12 @@ class PyKeePass(object):
             first = True
 
             xp += '/KeePassFile/Root/Group'
-            path = path.strip('/')
             # split provided path into group and element
-            group_path = os.path.dirname(path)
-            element = os.path.basename(path)
+            group_path = path[:-1]
+            element = path[-1] if len(path) > 0 else ''
             # build xpath from group_path and element
-            if group_path:
-                for group in group_path.split('/'):
-                    xp += path_xp[regex]['group'].format(group, flags=flags)
+            for group in group_path:
+                xp += path_xp[regex]['group'].format(group, flags=flags)
             if 'Entry' in prefix:
                 xp += path_xp[regex]['entry'].format(element, flags=flags)
             elif element and 'Group' in prefix:

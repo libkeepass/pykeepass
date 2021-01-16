@@ -77,14 +77,14 @@ class Group(BaseElement):
     def path(self):
         # The root group is an orphan
         if self.is_root_group or self.parentgroup is None:
-            return '/'
+            return []
         p = self.parentgroup
-        ppath = ''
+        path = [self.name]
         while p is not None and not p.is_root_group:
             if p.name is not None:  # dont make the root group appear
-                ppath = '{}/{}'.format(p.name, ppath)
+                path.insert(0, p.name)
             p = p.parentgroup
-        return '{}{}/'.format(ppath, self.name)
+        return path
 
     def append(self, entries):
         if type(entries) is list:
@@ -94,4 +94,5 @@ class Group(BaseElement):
             self._element.append(entries._element)
 
     def __str__(self):
-        return 'Group: "{}"'.format(self.path)
+        pathstr = '/'.join(self.path)
+        return 'Group: "{}"'.format(pathstr)
