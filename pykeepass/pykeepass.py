@@ -10,6 +10,7 @@ import os
 import re
 import uuid
 import zlib
+import elementpath
 from copy import deepcopy
 
 from construct import Container, ChecksumError
@@ -273,9 +274,13 @@ class PyKeePass(object):
         if tree is None:
             tree = self.tree
         logger.debug(xpath_str)
-        elements = tree.xpath(
-            xpath_str, namespaces={'re': 'http://exslt.org/regular-expressions'}
-        )
+
+        # dirty hack
+        if xpath_str == "(ancestor::Group)[last()]":
+            # elementpath.select() returns an empty list for this XPath
+            elements = tree.xpath(xpath_str)
+        else:
+            elements = elementpath.select(tree, xpath_str)
 
         res = []
         for e in elements:
@@ -298,10 +303,24 @@ class PyKeePass(object):
 
         return res
 
+    @staticmethod
+    def _escape_xpath_quotes(value):
+        if isinstance(value, str):
+            # single quotes work fine, double quotes mess with syntax
+            # in e.g.: [text()="some""thing"]
+            value = value.replace('"', '""')
+        return value
+
     def _find(self, prefix, keys_xp, path=None, tree=None, first=False,
               history=False, regex=False, flags=None, **kwargs):
 
         xp = ''
+
+        if flags is None:
+            # check for None only, don't care about "" or other falsy values
+            # don't supply None, it'll treat it as N,o,n,e due to string
+            # formatting i.e. as separate XPath fn:matches() flags.
+            flags = ""
 
         if path is not None:
 
@@ -329,7 +348,9 @@ class PyKeePass(object):
             # handle searching custom string fields
             if 'string' in kwargs.keys():
                 for key, value in kwargs['string'].items():
-                    xp += keys_xp[regex]['string'].format(key, value, flags=flags)
+                    xp += keys_xp[regex]['string'].format(
+                        key, self._escape_xpath_quotes(value), flags=flags
+                    )
 
                 kwargs.pop('string')
 
@@ -346,7 +367,9 @@ class PyKeePass(object):
                 if key not in keys_xp[regex].keys():
                     raise TypeError('Invalid keyword argument "{}"'.format(key))
 
-                xp += keys_xp[regex][key].format(value, flags=flags)
+                xp += keys_xp[regex][key].format(
+                    self._escape_xpath_quotes(value), flags=flags
+                )
 
         res = self._xpath(
             xp,
@@ -648,7 +671,6 @@ class PyKeePass(object):
     # ---------- Attachments ----------
 
     def find_attachments(self, recursive=True, path=None, element=None, **kwargs):
-
         prefix = '//Binary' if recursive else '/Binary'
         res = self._find(prefix, attachment_xp, path=path, tree=element, **kwargs)
 

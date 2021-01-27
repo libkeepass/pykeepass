@@ -4,3 +4,4 @@ construct==2.10.54
 argon2-cffi==19.2.0
 python-dateutil==2.8.1
 future==0.17.1
+elementpath==2.0.3

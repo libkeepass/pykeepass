@@ -135,7 +135,7 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual(uu, results.uuid)
 
     def test_find_entries_by_autotype_sequence(self):
-        results = self.kp.find_entries(autotype_sequence='{TAB}', regex=True)
+        results = self.kp.find_entries(autotype_sequence='\{TAB\}', regex=True)
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].autotype_sequence, '{USERNAME}{TAB}{PASSWORD}{ENTER}')
 
@@ -824,6 +824,34 @@ class BugRegressionTests3(KDBX3Tests):
         self.assertTrue(g.name is None)
         self.assertTrue(g in self.kp.groups)
 
+    def test_issue123(self):
+        # issue 193 - kp.entries can't contain quotes or apostrophes
+        entries = [
+            self.kp.add_entry(
+                self.kp.root_group, 'te"st', 'user"', 'single"'
+            ),
+            self.kp.add_entry(
+                self.kp.root_group, 'te""st', 'user""', 'double"'
+            ),
+            self.kp.add_entry(
+                self.kp.root_group, "te'st", "user'", "single'"
+            ),
+            self.kp.add_entry(
+                self.kp.root_group, "te''st", "user''", "double''"
+            )
+        ]
+        for entry in entries:
+            self.assertTrue(entry.title is not None)
+            self.assertTrue(entry in self.kp.entries)
+
+        for entry in entries:
+            temp = self.kp.find_entries(title=entry.title)
+            self.assertIsInstance(temp, list)
+            self.assertEqual(len(temp), 1)
+            temp = temp[0]
+            self.assertEqual(temp.title, entry.title)
+            self.assertEqual(temp.username, entry.username)
+            self.assertEqual(temp.password, entry.password)
 
 
 class EntryFindTests4(KDBX4Tests, EntryFindTests3):

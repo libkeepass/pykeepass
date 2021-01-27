@@ -7,8 +7,8 @@ attachment_xp = {
         'filename': '/Key[text()="{}"]/..'
     },
     True: {
-        'id': '/Value[re:test(@Ref, "{}", "{flags}")]/..',
-        'filename': '/Key[re:test(text(), "{}", "{flags}")]/..'
+        'id': '/Value[matches(@Ref, "{}", "{flags}")]/..',
+        'filename': '/Key[matches(text(), "{}", "{flags}")]/..'
     }
 }
 
@@ -18,8 +18,8 @@ path_xp = {
         'entry': '/Entry/String/Key[text()="Title"]/../Value[text()="{}"]/../..',
     },
     True: {
-        'group': '/Group/Name[re:test(text(), "{}", "{flags}")]/..',
-        'entry': '/Entry/String/Key[text()="Title"]/../Value[re:test(text(), "{}", "{flags}")]/../..',
+        'group': '/Group/Name[matches(text(), "{}", "{flags}")]/..',
+        'entry': '/Entry/String/Key[text()="Title"]/../Value[matches(text(), "{}", "{flags}")]/../..',
     }
 }
 
@@ -37,16 +37,16 @@ entry_xp = {
         'autotype_enabled': '/AutoType/Enabled[text()="{}"]/../..',
     },
     True: {
-        'title': '/String/Key[text()="Title"]/../Value[re:test(text(), "{}", "{flags}")]/../..',
-        'username': '/String/Key[text()="UserName"]/../Value[re:test(text(), "{}", "{flags}")]/../..',
-        'password': '/String/Key[text()="Password"]/../Value[re:test(text(), "{}", "{flags}")]/../..',
-        'url': '/String/Key[text()="URL"]/../Value[re:test(text(), "{}", "{flags}")]/../..',
-        'notes': '/String/Key[text()="Notes"]/../Value[re:test(text(), "{}", "{flags}")]/../..',
-        'uuid': '/UUID[re:test(text(), "{}", "{flags}")]/..',
-        'tags': '/Tags[re:test(text(), "{}", "{flags}")]/..',
-        'string': '/String/Key[text()="{}"]/../Value[re:test(text(), "{}", "{flags}")]/../..',
-        'autotype_sequence': '/AutoType/DefaultSequence[re:test(text(), "{}", "{flags}")]/../..',
-        'autotype_enabled': '/AutoType/Enabled[re:test(text(), "{}", "{flags}")]/../..',
+        'title': '/String/Key[text()="Title"]/../Value[matches(text(), "{}", "{flags}")]/../..',
+        'username': '/String/Key[text()="UserName"]/../Value[matches(text(), "{}", "{flags}")]/../..',
+        'password': '/String/Key[text()="Password"]/../Value[matches(text(), "{}", "{flags}")]/../..',
+        'url': '/String/Key[text()="URL"]/../Value[matches(text(), "{}", "{flags}")]/../..',
+        'notes': '/String/Key[text()="Notes"]/../Value[matches(text(), "{}", "{flags}")]/../..',
+        'uuid': '/UUID[matches(text(), "{}", "{flags}")]/..',
+        'tags': '/Tags[matches(text(), "{}", "{flags}")]/..',
+        'string': '/String/Key[text()="{}"]/../Value[matches(text(), "{}", "{flags}")]/../..',
+        'autotype_sequence': '/AutoType/DefaultSequence[matches(text(), "{}", "{flags}")]/../..',
+        'autotype_enabled': '/AutoType/Enabled[matches(text(), "{}", "{flags}")]/../..',
     }
 }
 
@@ -57,8 +57,8 @@ group_xp = {
         'notes': '/Notes[text()="{}"]/..',
     },
     True: {
-        'name': '/Name[re:test(text(), "{}", "{flags}")]/..',
-        'uuid': '/UUID[re:test(text(), "{}", "{flags}")]/..',
-        'notes': '/Notes[re:test(text(), "{}", "{flags}")]/..',
+        'name': '/Name[matches(text(), "{}", "{flags}")]/..',
+        'uuid': '/UUID[matches(text(), "{}", "{flags}")]/..',
+        'notes': '/Notes[matches(text(), "{}", "{flags}")]/..',
     }
 }
