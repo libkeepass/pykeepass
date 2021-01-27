@@ -240,20 +240,15 @@ class Entry(BaseElement):
     @property
     def path(self):
         # The root group is an orphan
-        if self.is_a_history_entry:
-            pentry = Entry(
-                element=self._element.getparent().getparent(), kp=self._kp
-            ).title
-            return "[History of: {}]".format(pentry)
         if self.parentgroup is None:
             return None
         p = self.parentgroup
-        ppath = ""
+        path = [self.title]
         while p is not None and not p.is_root_group:
             if p.name is not None:  # dont make the root group appear
-                ppath = "{}/{}".format(p.name, ppath)
+                path.insert(0, p.name)
             p = p.parentgroup
-        return "{}{}".format(ppath, self.title)
+        return path
 
     def set_custom_property(self, key, value):
         assert key not in reserved_keys, "{} is a reserved key".format(key)

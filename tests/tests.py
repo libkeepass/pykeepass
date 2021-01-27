@@ -113,13 +113,11 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual("root entry notes", results.notes)
 
     def test_find_entries_by_path(self):
-        results = self.kp.find_entries(path="foobar_group/group_entry")
+        results = self.kp.find_entries(path=['foobar_group', 'group_entry'])
         self.assertIsInstance(results, Entry)
-        results = self.kp.find_entries(path="foobar_group/")
+        results = self.kp.find_entries(path=['foobar_group'])
         self.assertEqual(results, None)
-        results = self.kp.find_entries(
-            path="foobar_group/Group_entry", regex=True, flags="i", first=True
-        )
+        results = self.kp.find_entries(path=['foobar_group', 'Group_entry'], regex=True, flags='i', first=True)
         self.assertIsInstance(results, Entry)
         self.assertEqual("group_entry", results.title)
 
@@ -211,9 +209,7 @@ class EntryFindTests3(KDBX3Tests):
             hist = entry.history
             self.assertTrue(len(hist) > 0)
             for item in hist:
-                self.assertEqual(
-                    item.path, "[History of: {}]".format(entry.title)
-                )
+                self.assertEqual(item.path, entry.path)
 
     def test_history_group(self):
         for title in ["root_entry", "subentry"]:
@@ -262,9 +258,7 @@ class EntryFindTests3(KDBX3Tests):
 
         sub_group = self.kp.add_group(self.kp.root_group, "sub_group")
         self.kp.move_entry(entry, sub_group)
-        results = self.kp.find_entries(
-            path="sub_group/test_add_entry_title", first=True
-        )
+        results = self.kp.find_entries(path=['sub_group', 'test_add_entry_title'], first=True)
         self.assertEqual(results.title, entry.title)
 
         self.kp.delete_entry(entry)
@@ -337,13 +331,11 @@ class GroupFindTests3(KDBX3Tests):
         self.assertEqual(len(results), 1)
 
     def test_find_groups_by_path(self):
-        results = self.kp.find_groups_by_path("/foobar_group/subgroup/")
+        results = self.kp.find_groups_by_path(['foobar_group', 'subgroup'])
         self.assertIsInstance(results, Group)
-        results = self.kp.find_groups(
-            path="/foobar_group/subgroup/", first=True
-        )
-        self.assertEqual(results.name, "subgroup")
-        results = self.kp.find_groups(path="foobar_group/group_entry")
+        results = self.kp.find_groups(path=['foobar_group', 'subgroup'], first=True)
+        self.assertEqual(results.name, 'subgroup')
+        results = self.kp.find_groups(path=['foobar_group', 'group_entry'])
         self.assertEqual(results, None)
 
     def test_find_groups_by_uuid(self):
@@ -378,19 +370,17 @@ class GroupFindTests3(KDBX3Tests):
         base_group.notes = ""
         self.assertEqual(base_group.notes, "")
 
-        results = self.kp.find_groups(path="base_group/sub_group/", first=True)
+        results = self.kp.find_groups(path=['base_group', 'sub_group'], first=True)
         self.assertIsInstance(results, Group)
         self.assertEqual(results.name, sub_group.name)
         self.assertTrue(results.uuid != None)
 
         self.kp.move_group(sub_group2, sub_group)
-        results = self.kp.find_groups(
-            path="base_group/sub_group/sub_group2/", first=True
-        )
+        results = self.kp.find_groups(path=['base_group', 'sub_group', 'sub_group2'], first=True)
         self.assertEqual(results.name, sub_group2.name)
 
         self.kp.delete_group(sub_group)
-        results = self.kp.find_groups(path="base_group/sub_group/", first=True)
+        results = self.kp.find_groups(path=['base_group', 'sub_group'], first=True)
         self.assertIsNone(results)
 
         # ---------- Groups representation -----------
@@ -399,6 +389,60 @@ class GroupFindTests3(KDBX3Tests):
         self.assertIsInstance(self.kp.groups.__repr__(), str)
 
 class RecycleBinTests3(KDBX3Tests):
+
+    def test_recyclebincreation(self):
+        self.assertIsNone(self.kp.recyclebin_group)
+
+        entry = self.kp.add_entry( self.kp.root_group, "RecycleBinTest1", "login", "password")
+        self.kp.trash_entry(entry)
+
+        self.assertIsNotNone(self.kp.recyclebin_group)
+        self.assertEqual( len(self.kp.recyclebin_group.entries), 1)
+
+    def test_entry(self):
+        entry = self.kp.add_entry( self.kp.root_group, "RecycleBinTest2", "login", "password")
+        entry_uuid = entry.uuid
+        self.kp.trash_entry(entry)
+
+        entries_in_root = self.kp.find_entries(uuid=entry_uuid, group=self.kp.root_group, recursive=False )
+        self.assertEqual( len(entries_in_root), 0)
+
+        entries_in_recyclebin = self.kp.find_entries(uuid=entry_uuid, group=self.kp.recyclebin_group, recursive=False )
+        self.assertEqual( len(entries_in_recyclebin), 1)
+
+    def test_group(self):
+        group = self.kp.add_group( self.kp.root_group, "RecycleBinTest3 Group")
+        group_uuid = group.uuid
+        entry = self.kp.add_entry( group, "RecycleBinTest3 Entry", "login", "password")
+        entry_uuid = entry.uuid
+
+        self.kp.trash_group(group)
+
+        groups_in_root = self.kp.find_groups(uuid=group_uuid, group=self.kp.root_group, recursive=False )
+        self.assertEqual( len(groups_in_root), 0)
+
+        groups_in_recyclebin = self.kp.find_groups(uuid=group_uuid, group=self.kp.recyclebin_group, recursive=False )
+        self.assertEqual( len(groups_in_recyclebin), 1)
+
+        group_in_recyclebin = groups_in_recyclebin[0]
+        self.assertEqual( len(group_in_recyclebin.entries), 1)
+        self.assertEqual( group_in_recyclebin.entries[0].uuid, entry_uuid)
+
+    def test_recyclebinemptying(self):
+        entry = self.kp.add_entry( self.kp.root_group, "RecycleBinTest4 Entry", "login", "password")
+        self.kp.trash_entry(entry)
+
+        group = self.kp.add_group( self.kp.root_group, "RecycleBinTest4 Group")
+        self.kp.trash_group(group)
+
+        self.assertEqual( len(self.kp.recyclebin_group.subgroups), 1)
+        self.assertEqual( len(self.kp.recyclebin_group.entries), 1)
+
+        self.kp.empty_group(self.kp.recyclebin_group)
+
+        self.assertEqual( len(self.kp.recyclebin_group.subgroups), 0)
+        self.assertEqual( len(self.kp.recyclebin_group.entries), 0)
+
 
     def test_recyclebincreation(self):
         self.assertIsNone(self.kp.recyclebin_group)
@@ -483,6 +527,10 @@ class EntryTests3(KDBX3Tests):
         )
         self.assertEqual(entry.icon, icons.KEY)
         self.assertEqual(entry.is_a_history_entry, False)
+        self.assertEqual(
+            self.kp.find_entries(title='subentry', first=True).path,
+            ['foobar_group', 'subgroup', 'subentry']
+        )
         self.assertEqual(
             self.kp.find_entries(title="subentry", first=True).path,
             "foobar_group/subgroup/subentry",
@@ -678,9 +726,7 @@ class EntryHistoryTests3(KDBX3Tests):
             for item in hist:
                 self.assertTrue(item.is_a_history_entry)
                 self.assertEqual(item.group, entry.group)
-                self.assertEqual(
-                    item.path, "[History of: {}]".format(entry.title)
-                )
+                self.assertTrue(str(item).startswith('[History of:'))
 
         # here history items are expected
         res2 = self.kp.find_entries(title=prefix + "title", history=True)
@@ -744,9 +790,7 @@ class EntryHistoryTests3(KDBX3Tests):
             for item in hist:
                 self.assertTrue(item.is_a_history_entry)
                 self.assertEqual(item.group, entry.group)
-                self.assertEqual(
-                    item.path, "[History of: {}]".format(entry.title)
-                )
+                self.assertTrue(str(item).startswith('[History of:'))
 
         res2 = self.kp.find_entries(title=changed + "title", history=True)
         self.assertEqual(len(res2), 6)
@@ -758,9 +802,20 @@ class EntryHistoryTests3(KDBX3Tests):
 class GroupTests3(KDBX3Tests):
     def test_fields(self):
         self.assertEqual(
-            self.kp.find_groups(name="subgroup2", first=True).path,
-            "foobar_group/subgroup/subgroup2/",
+            self.kp.find_groups(name='subgroup2', first=True).path,
+            ['foobar_group', 'subgroup', 'subgroup2']
         )
+
+    def test_empty_group(self):
+        # test that groups are properly emptied
+        emptytest = self.kp.add_group(self.kp.root_group, 'emptytest_group')
+        self.kp.add_entry(emptytest, 'emptytest_entry', 'user', 'pass')
+        self.kp.add_group(emptytest, 'emptytest_subgroup')
+        self.assertEqual(len(emptytest.entries), 1)
+        self.assertEqual(len(emptytest.subgroups), 1)
+        self.kp.empty_group(emptytest)
+        self.assertEqual(len(emptytest.entries), 0)
+        self.assertEqual(len(emptytest.subgroups), 0)
 
 
 class AttachmentTests3(KDBX3Tests):
@@ -886,6 +941,8 @@ class EntryFindTests4(KDBX4Tests, EntryFindTests3):
 class GroupFindTests4(KDBX4Tests, GroupFindTests3):
     pass
 
+class RecycleBinTests4(KDBX4Tests, RecycleBinTests3):
+    pass
 
 class EntryTests4(KDBX4Tests, EntryTests3):
     pass

@@ -4,24 +4,9 @@
 import hashlib
 
 from construct import (
-    Byte,
-    Bytes,
-    Checksum,
-    Computed,
-    GreedyBytes,
-    IfThenElse,
-    Int16ul,
-    Int32ul,
-    Mapping,
-    Padding,
-    Pointer,
-    Prefixed,
-    RepeatUntil,
-    Struct,
-    Switch,
-    Tell,
-    len_,
-    this,
+    Byte, Bytes, Int16ul, Int32ul, Int64ul, RepeatUntil, GreedyBytes, Struct,
+    this, Mapping, Switch, Prefixed, Padding, Checksum, Computed, IfThenElse,
+    Pointer, Tell, len_
 )
 
 from .common import (
@@ -94,14 +79,13 @@ DynamicHeaderItem = Struct(
         Int16ul,
         Switch(
             this.id,
-            {
-                "compression_flags": CompressionFlags,
-                "cipher_id": CipherId,
-                "transform_rounds": Int32ul,
-                "protected_stream_id": ProtectedStreamId,
-            },
-            default=GreedyBytes,
-        ),
+            {'compression_flags': CompressionFlags,
+             'cipher_id': CipherId,
+             'transform_rounds': Int64ul,
+             'protected_stream_id': ProtectedStreamId
+             },
+            default=GreedyBytes
+        )
     ),
 )
 

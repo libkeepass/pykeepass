@@ -213,6 +213,13 @@ class PyKeePass(object):
         return self.find_groups(uuid=recyclebin_uuid, first=True)
 
     @property
+    def recyclebin_group(self):
+        """Group: RecycleBin Group of database"""
+        elem = self._xpath('/KeePassFile/Meta/RecycleBinUUID', first=True)
+        recyclebin_uuid = uuid.UUID( bytes = base64.b64decode(elem.text) )
+        return self.find_groups(uuid=recyclebin_uuid, first=True)
+
+    @property
     def groups(self):
         """:obj:`list` of :obj:`Group`: list of all Group objects in database"""
         return self._xpath("//Group", cast=True)
@@ -326,19 +333,17 @@ class PyKeePass(object):
 
             first = True
 
-            xp += "/KeePassFile/Root/Group"
-            path = path.strip("/")
+            xp += '/KeePassFile/Root/Group'
             # split provided path into group and element
             group_path = path[:-1]
             element = path[-1] if len(path) > 0 else ''
             # build xpath from group_path and element
-            if group_path:
-                for group in group_path.split("/"):
-                    xp += path_xp[regex]["group"].format(group, flags=flags)
-            if "Entry" in prefix:
-                xp += path_xp[regex]["entry"].format(element, flags=flags)
-            elif element and "Group" in prefix:
-                xp += path_xp[regex]["group"].format(element, flags=flags)
+            for group in group_path:
+                xp += path_xp[regex]['group'].format(group, flags=flags)
+            if 'Entry' in prefix:
+                xp += path_xp[regex]['entry'].format(element, flags=flags)
+            elif element and 'Group' in prefix:
+                xp += path_xp[regex]['group'].format(element, flags=flags)
 
         else:
             if tree is not None:
