@@ -1,5 +1,5 @@
 lxml==4.3.5
-pycryptodomex==3.9.4
+pycryptodomex==3.9.9
 construct==2.10.54
 argon2-cffi==19.2.0
 python-dateutil==2.8.1
