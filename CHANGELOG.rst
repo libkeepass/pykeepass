@@ -1,3 +1,15 @@
+4.0.0 - 2021-01-15
+------------------
+- paths changed from strings to lists
+- added PyKeePass.recyclebin_group
+- added PyKeePass.trash_group()
+- added PyKeePass.trash_entry()
+- added PyKeePass.empty_group()
+- support reading/saving from streams
+- fixed PyKeePass.dump_xml() pretty printing
+- fixed #212 - properly pad encrypted payload
+- fixed #222 - corrected transform_rounds field length
+
 3.2.1 - 2020-07-19
 ------------------
 - pin construct version to last supporting python2
