@@ -1021,25 +1021,33 @@ class KDBXTests(unittest.TestCase):
                 os.remove(os.path.join(base_dir, filename))
 
 
-    def test_open_error(self):
-        with self.assertRaises(CredentialsError):
-            database = 'test4.kdbx'
-            invalid_password = 'foobar'
-            keyfile = os.path.join(base_dir, 'test4.key')
-            PyKeePass(
-                os.path.join(base_dir, database),
-                password=invalid_password,
-                keyfile=keyfile
-            )
-        with self.assertRaises(CredentialsError):
-            database = 'test4.kdbx'
-            password = 'password'
-            invalid_keyfile = os.path.join(base_dir, 'test3.key')
-            PyKeePass(
-                os.path.join(base_dir, database),
-                password=password,
-                keyfile=invalid_keyfile
-            )
+    def test_credentials_error(self):
+
+        databases = [
+            'test3.kdbx',
+            'test3.kdbx',
+            'test4.kdbx',
+            'test4.kdbx'
+        ]
+        passwords = [
+            'invalid',
+            'password',
+            'invalid',
+            'password',
+        ]
+        keyfiles = [
+            'test3.key',
+            'test4.key',
+            'test4.key',
+            'test3.key',
+        ]
+        for database, password, keyfile in zip(databases, passwords, keyfiles):
+            with self.assertRaises(CredentialsError):
+                PyKeePass(
+                    os.path.join(base_dir, database),
+                    password,
+                    os.path.join(base_dir, keyfile)
+                )
 
 if __name__ == '__main__':
     unittest.main()

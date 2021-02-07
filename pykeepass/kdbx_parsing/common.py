@@ -14,6 +14,9 @@ import re
 import codecs
 from io import BytesIO
 from collections import OrderedDict
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class HeaderChecksumError(Exception):
@@ -282,7 +285,16 @@ class DecryptedPayload(Adapter):
             con._.header.value.dynamic_header.encryption_iv.data
         )
         payload_data = cipher.decrypt(payload_data)
-        payload_data = self.unpad(payload_data)
+        # FIXME: Construct ugliness.  Fixes #244.  First 32 bytes of decrypted kdbx3 payload
+        # should be checked against stream_start_bytes for a CredentialsError.  Due to construct
+        # limitations, we have to decrypt the whole payload in order to check the first 32 bytes.
+        # However, when the credentials are wrong the invalid decrypted payload cannot
+        # be unpadded correctly.  Instead, catch the unpad ValueError exception raised by unpad()
+        # and allow kdbx3.py to raise a ChecksumError
+        try:
+            payload_data = self.unpad(payload_data)
+        except ValueError:
+            log.debug("Decryption unpadding failed")
 
         return payload_data
 
