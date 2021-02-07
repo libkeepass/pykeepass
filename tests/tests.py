@@ -541,6 +541,15 @@ class EntryTests3(KDBX3Tests):
         self.assertTrue(mtime < entry.mtime)
         self.assertEqual(ctime, entry.ctime)
 
+        group = self.kp.find_groups(name='foobar_group', first=True)
+        atime = group.atime
+        mtime = group.mtime
+        ctime = group.ctime
+        group.touch(modify=True)
+        self.assertTrue(atime < group.atime)
+        self.assertTrue(mtime < group.mtime)
+        self.assertEqual(ctime, group.ctime)
+
 
     def test_add_remove_attachment(self):
         entry = self.kp.add_entry(
