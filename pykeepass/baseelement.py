@@ -14,7 +14,7 @@ from lxml.builder import E
 class BaseElement(object):
     """Entry and Group inherit from this class"""
 
-    def __init__(self, element=None, kp=None, icon=None, expires=False,
+    def __init__(self, element, kp=None, icon=None, expires=False,
                  expiry_time=None):
 
         self._element = element
