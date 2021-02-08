@@ -267,15 +267,6 @@ class Entry(BaseElement):
         }
         return '{{REF:{}@I:{}}}'.format(attribute_to_field[attribute], self.uuid.hex.upper())
 
-    def touch(self, modify=False):
-        '''
-        Update last access time of an entry
-        '''
-        now = datetime.now()
-        self.atime = now
-        if modify:
-            self.mtime = now
-
     def save_history(self):
         '''
         Save the entry in its history
