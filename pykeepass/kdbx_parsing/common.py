@@ -119,7 +119,17 @@ def compute_key_composite(password=None, keyfile=None):
         try:
             with open(keyfile, 'r') as f:
                 tree = etree.parse(f).getroot()
-                keyfile_composite = base64.b64decode(tree.find('Key/Data').text)
+                version = tree.find('Meta/Version').text
+                data_element = tree.find('Key/Data')
+                if version.startswith('1.0'):
+                    keyfile_composite = base64.b64decode(data_element.text)
+                elif version.startswith('2.0'):
+                    # read keyfile data and convert to bytes
+                    keyfile_composite = bytes.fromhex(data_element.text.strip())
+                    # validate bytes against hash
+                    hash = bytes.fromhex(data_element.attrib['Hash'])
+                    hash_computed = hashlib.sha256(keyfile_composite).digest()[:4]
+                    assert hash == hash_computed, "Keyfile has invalid hash"
         # otherwise, try to read plain keyfile
         except (etree.XMLSyntaxError, UnicodeDecodeError):
             try:
