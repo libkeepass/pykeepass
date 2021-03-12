@@ -13,7 +13,6 @@ PyKeePass
    icons
    exceptions
    baseelement
-   kdbx_parsing/*
 
 .. image:: https://travis-ci.org/libkeepass/pykeepass.svg?branch=master
    :target: https://travis-ci.org/libkeepass/pykeepass
