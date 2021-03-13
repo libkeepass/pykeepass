@@ -94,5 +94,6 @@ class Group(BaseElement):
             self._element.append(entries._element)
 
     def __str__(self):
-        pathstr = '/'.join(self.path)
+        # filter out NoneTypes and join into string
+        pathstr = '/'.join('' if p==None else p for p in self.path)
         return 'Group: "{}"'.format(pathstr)

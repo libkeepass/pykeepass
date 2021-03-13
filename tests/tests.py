@@ -277,6 +277,11 @@ class EntryFindTests3(KDBX3Tests):
         self.assertIsInstance(e.__repr__(), str)
         self.assertIsInstance(e.history.__repr__(), str)
 
+        # issue 250
+        e = self.kp.find_entries(username='blank_title', first=True)
+        self.assertIsNot(e, None)
+        self.assertIsInstance(e.__repr__(), str)
+
 
 class GroupFindTests3(KDBX3Tests):
 
@@ -317,7 +322,7 @@ class GroupFindTests3(KDBX3Tests):
     def test_groups(self):
         results = self.kp.groups
 
-        self.assertEqual(len(results), 6)
+        self.assertEqual(len(results), 7)
 
     # ---------- Adding/Deleting Groups -----------
 
@@ -348,6 +353,10 @@ class GroupFindTests3(KDBX3Tests):
 
     def test_print_groups(self):
         self.assertIsInstance(self.kp.groups.__repr__(), str)
+
+        g = self.kp.find_groups(notes='blank_name')
+        self.assertIsNot(g, None)
+        self.assertIsInstance(g.__repr__(), str)
 
 class RecycleBinTests3(KDBX3Tests):
 

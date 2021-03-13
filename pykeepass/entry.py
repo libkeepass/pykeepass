@@ -220,6 +220,9 @@ class Entry(BaseElement):
 
     @property
     def path(self):
+        """Path to element as list.  List contains all parent group names
+        ending with entry title.  List may contain strings or NoneTypes."""
+
         # The root group is an orphan
         if self.parentgroup is None:
             return None
@@ -282,7 +285,8 @@ class Entry(BaseElement):
             self._element.append(history)
 
     def __str__(self):
-        pathstr = '/'.join(self.path)
+        # filter out NoneTypes and join into string
+        pathstr = '/'.join('' if p==None else p for p in self.path)
         if self.is_a_history_entry:
             return '[History of: {}]'.format(pathstr)
         return 'Entry: "{} ({})"'.format(pathstr, self.username)
