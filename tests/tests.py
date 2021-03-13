@@ -876,17 +876,17 @@ class KDBXTests(unittest.TestCase):
             stream = BytesIO(file.read())
 
         filenames_in = [
-            os.path.join(base_dir, 'test3.kdbx'),           # KDBX v3 test
-            os.path.join(base_dir, 'test4.kdbx'),           # KDBX v4 test
-            os.path.join(base_dir, 'test4_aes.kdbx'),       # KDBX v4 AES test
-            os.path.join(base_dir, 'test4_aeskdf.kdbx'),    # KDBX v3 AESKDF test
-            os.path.join(base_dir, 'test4_chacha20.kdbx'),  # KDBX v4 ChaCha test
-            os.path.join(base_dir, 'test4_twofish.kdbx'),   # KDBX v4 Twofish test
-            os.path.join(base_dir, 'test4_hex.kdbx'),       # legacy 64 byte hexadecimal keyfile test
-            os.path.join(base_dir, 'test3.kdbx'),           # KDBX v3 transformed_key open test
-            os.path.join(base_dir, 'test4_hex.kdbx'),       # KDBX v4 transformed_key open test
+            os.path.join(base_dir, 'test3.kdbx'),                 # KDBX v3
+            os.path.join(base_dir, 'test4.kdbx'),                 # KDBX v4
+            os.path.join(base_dir, 'test4_aes.kdbx'),             # KDBX v4 AES
+            os.path.join(base_dir, 'test4_aeskdf.kdbx'),          # KDBX v3 AESKDF
+            os.path.join(base_dir, 'test4_chacha20.kdbx'),        # KDBX v4 ChaCha
+            os.path.join(base_dir, 'test4_twofish.kdbx'),         # KDBX v4 Twofish
+            os.path.join(base_dir, 'test4_hex.kdbx'),             # legacy 64 byte hexadecimal keyfile
+            os.path.join(base_dir, 'test3_transformed.kdbx'),     # KDBX v3 transformed_key open
+            os.path.join(base_dir, 'test4_transformed.kdbx'),     # KDBX v4 transformed_key open
             stream,
-            os.path.join(base_dir, 'test4_aes_uncompressed.kdbx')    # KDBX v4 AES uncompressed test
+            os.path.join(base_dir, 'test4_aes_uncompressed.kdbx') # KDBX v4 AES uncompressed
         ]
         filenames_out = [
             os.path.join(base_dir, 'test3.kdbx.out'),
@@ -896,8 +896,8 @@ class KDBXTests(unittest.TestCase):
             os.path.join(base_dir, 'test4_chacha20.kdbx.out'),
             os.path.join(base_dir, 'test4_twofish.kdbx.out'),
             os.path.join(base_dir, 'test4_hex.kdbx.out'),
-            os.path.join(base_dir, 'test3.kdbx.out'),
-            os.path.join(base_dir, 'test4_hex.kdbx.out'),
+            os.path.join(base_dir, 'test3_transformed.kdbx.out'),
+            os.path.join(base_dir, 'test4_transformed.kdbx.out'),
             BytesIO(),
             os.path.join(base_dir, 'test4_aes_uncompressed.kdbx.out'),
             os.path.join(base_dir, 'test4_twofish_uncompressed.kdbx.out'),
@@ -927,7 +927,7 @@ class KDBXTests(unittest.TestCase):
             None,
             None,
             b'\xfb\xb1!\x0e0\x94\xd4\x868\xa5\x04\xe6T\x9b<\xf9+\xb8\x82EN\xbc\xbe\xbc\xc8\xd3\xbbf\xfb\xde\xff.',
-            b'M\xb7\x08\xf6\xa7\xd1v\xb1{&\x06\x8f\xae\xe9\r\xeb\x9a\x1b\x02b\xce\xf2\x8aR\xaea)7\x1fs\xe9\xc0',
+            b'\x95\x0be\x9ca\x9e<\xe0\x07\x02\x7f\xc3\xd8\xa1\xa6&\x985\x8f!\xa6\x18k\x13\xa2\xd2\r=\xf3\xebd\xc5',
             None,
             None,
             None,
