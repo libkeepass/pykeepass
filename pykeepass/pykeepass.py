@@ -123,6 +123,11 @@ class PyKeePass(object):
             else:
                 raise
 
+    def reload(self):
+        """Reload current database using previous credentials """
+
+        self.read(self.filename, self.password, self.keyfile)
+
     def save(self, filename=None, transformed_key=None):
         """Save current database object to disk.
 

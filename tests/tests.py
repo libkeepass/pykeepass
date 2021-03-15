@@ -842,6 +842,15 @@ class BugRegressionTests3(KDBX3Tests):
         self.assertTrue(g.name is None)
         self.assertTrue(g in self.kp.groups)
 
+    def test_issue194(self):
+        # entries with Protected=True aren't being protected properly
+
+        self.kp_tmp.add_entry(self.kp_tmp.root_group, 'protect_test', 'user', 'pass')
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+        e = self.kp_tmp.find_entries(title='protect_test', first=True)
+        self.assertEqual(e.password, 'pass')
+
 
 
 class EntryFindTests4(KDBX4Tests, EntryFindTests3):
