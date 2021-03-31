@@ -1,4 +1,4 @@
-lxml==4.6.2
+lxml==4.6.3
 pycryptodomex==3.10.1
 construct==2.10.54
 argon2-cffi==20.1.0
