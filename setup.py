@@ -21,7 +21,7 @@ setup(
     install_requires=[
         "python-dateutil",
         # FIXME python2 - last version to support python2
-        "construct==2.10.54",
+        "construct==2.10.64",
         "argon2_cffi",
         "pycryptodomex>=3.6.2",
         "lxml",
