@@ -2,7 +2,10 @@
 from __future__ import absolute_import, unicode_literals
 from future.utils import python_2_unicode_compatible
 
+import base64
+import uuid
 import logging
+
 from copy import deepcopy
 from datetime import datetime
 
@@ -176,6 +179,26 @@ class Entry(BaseElement):
         # Accept both str or list
         v = ';'.join(value if type(value) is list else [value])
         return self._set_subelement_text('Tags', v)
+
+    @property
+    def custom_icon_uuid(self):
+        if self._element.find('CustomIconUUID') is not None:
+            elem = self._element.find("CustomIconUUID")
+            icon_uuid = uuid.UUID(bytes = base64.b64decode(elem.text))
+            return icon_uuid
+        else:
+            return
+
+    @custom_icon_uuid.setter
+    def custom_icon_uuid(self, value):
+        if not isinstance(value, uuid.UUID):
+            raise TypeError("uuid.UUID is expected")
+        encoded_str = base64.b64encode(value.bytes)
+        elem = self._element.find("CustomIconUUID")
+        if elem is not None:
+            elem.text = encoded_str
+        else:
+            self._element.append(E.String(E.Key('CustomIconUUID'), E.Value(encoded_str)))
 
     @property
     def history(self):
