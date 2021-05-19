@@ -16,6 +16,7 @@ from construct import Container, ChecksumError
 from lxml import etree
 from lxml.builder import E
 
+from pykeepass.custom_icon import CustomIcon
 from pykeepass.attachment import Attachment
 from pykeepass.entry import Entry
 from pykeepass.exceptions import *
@@ -649,6 +650,16 @@ class PyKeePass(object):
             raise UnableToSendToRecycleBin
         recyclebin_group = self._create_or_get_recyclebin_group()
         self.move_entry( entry, recyclebin_group)
+
+    # ---------- Custom Icons ----------
+
+    def find_custom_icon(self, uuid):
+        uuid_str = base64.b64encode(uuid.bytes).decode('utf-8')
+        xpath = '/KeePassFile/Meta/CustomIcons/Icon/UUID[text()="{}"]/..'.format(uuid_str)
+        custom_icon_element = self._xpath(xpath, first=True)
+        if custom_icon_element is not None:
+            return CustomIcon(element=custom_icon_element, kp=self)
+        return
 
     # ---------- Attachments ----------
 
