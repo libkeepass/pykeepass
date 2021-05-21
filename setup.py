@@ -17,7 +17,7 @@ setup(
     author="Philipp Schmitt",
     author_email="philipp@schmitt.co",
     url="https://github.com/libkeepass/pykeepass",
-    packages=find_packages(),
+    packages=find_packages(include=['pykeepass', 'pykeepass.*']),
     install_requires=[
         "python-dateutil",
         # FIXME python2 - last version to support python2
