@@ -277,7 +277,7 @@ class PyKeePass(object):
 
         if tree is None:
             tree = self.tree
-        logger.debug(xpath_str)
+        logger.debug('xpath query: ' + xpath_str)
         elements = tree.xpath(
             xpath_str, namespaces={'re': 'http://exslt.org/regular-expressions'}
         )
