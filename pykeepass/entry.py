@@ -180,7 +180,7 @@ class Entry(BaseElement):
     @property
     def history(self):
         if self._element.find('History') is not None:
-            return [Entry(element=x, kp=self._kp) for x in self._element.find('History').findall('Entry')]
+            return [HistoryEntry(element=x, kp=self._kp) for x in self._element.find('History').findall('Entry')]
         else:
             return []
 
@@ -284,9 +284,32 @@ class Entry(BaseElement):
             history.append(archive)
             self._element.append(history)
 
+    def delete_history(self, history_entry=None, all=False):
+        """
+        Delete entries from history
+
+        Args:
+            history_entry (Entry): history item to delete
+            all (bool): delete all entries from history.  Default is False
+        """
+
+        if all:
+            self._element.remove(self._element.find('History'))
+        else:
+            self._element.find('History').remove(history_entry._element)
+
     def __str__(self):
         # filter out NoneTypes and join into string
         pathstr = '/'.join('' if p==None else p for p in self.path)
-        if self.is_a_history_entry:
-            return '[History of: {}]'.format(pathstr)
         return 'Entry: "{} ({})"'.format(pathstr, self.username)
+
+
+class HistoryEntry(Entry):
+
+    def __str__(self):
+        pathstr = super().__str__()
+        return 'HistoryEntry: {}'.format(pathstr)
+
+    def __eq__(self, other):
+        # all history items share the same uuid, so examine xml directly
+        return self._element == other._element

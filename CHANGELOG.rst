@@ -1,3 +1,7 @@
+------------------
+- added Entry.delete_history
+- added HistoryEntry class
+
 4.0.0 - 2021-01-15
 ------------------
 - paths changed from strings to lists

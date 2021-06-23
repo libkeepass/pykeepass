@@ -638,7 +638,7 @@ class EntryHistoryTests3(KDBX3Tests):
             for item in hist:
                 self.assertTrue(item.is_a_history_entry)
                 self.assertEqual(item.group, entry.group)
-                self.assertTrue(str(item).startswith('[History of:'))
+                self.assertTrue(str(item).startswith('HistoryEntry:'))
 
         # here history items are expected
         res2 = self.kp.find_entries(title=prefix + 'title', history=True)
@@ -698,7 +698,6 @@ class EntryHistoryTests3(KDBX3Tests):
             for item in hist:
                 self.assertTrue(item.is_a_history_entry)
                 self.assertEqual(item.group, entry.group)
-                self.assertTrue(str(item).startswith('[History of:'))
 
         res2 = self.kp.find_entries(title=changed + 'title', history=True)
         self.assertEqual(len(res2), 6)
@@ -706,6 +705,16 @@ class EntryHistoryTests3(KDBX3Tests):
             if entry not in res1:
                 self.assertTrue(entry.is_a_history_entry)
 
+        # try deleting a history entry
+        h = e1.history[0]
+        self.assertIn(h, e1.history)
+        e1.delete_history(h)
+        self.assertNotIn(h, e1.history)
+
+        # delete all history
+        self.assertTrue(len(e1.history) > 0)
+        e1.delete_history(all=True)
+        self.assertTrue(len(e1.history) == 0)
 
 class GroupTests3(KDBX3Tests):
 
