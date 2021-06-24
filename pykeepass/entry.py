@@ -307,7 +307,8 @@ class Entry(BaseElement):
 class HistoryEntry(Entry):
 
     def __str__(self):
-        pathstr = super().__str__()
+        # FIXME: python2
+        pathstr = super(HistoryEntry, self).__str__()
         return 'HistoryEntry: {}'.format(pathstr)
 
     def __eq__(self, other):
