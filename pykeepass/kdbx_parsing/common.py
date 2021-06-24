@@ -42,7 +42,7 @@ class DynamicDict(Adapter):
     """
 
     def __init__(self, key, subcon, lump=[]):
-        super(DynamicDict, self).__init__(subcon)
+        super().__init__(subcon)
         self.key = key
         self.lump = lump
 
@@ -194,7 +194,7 @@ class UnprotectedStream(Adapter):
     protected_xpath = '//Value[@Protected=\'True\']'
 
     def __init__(self, protected_stream_key, subcon):
-        super(UnprotectedStream, self).__init__(subcon)
+        super().__init__(subcon)
         self.protected_stream_key = protected_stream_key
 
     def _decode(self, tree, con, path):

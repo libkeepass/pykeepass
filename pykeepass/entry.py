@@ -39,7 +39,7 @@ class Entry(BaseElement):
         self._kp = kp
 
         if element is None:
-            super(Entry, self).__init__(
+            super().__init__(
                 element=Element('Entry'),
                 kp=kp,
                 expires=expires,
@@ -307,8 +307,7 @@ class Entry(BaseElement):
 class HistoryEntry(Entry):
 
     def __str__(self):
-        # FIXME: python2
-        pathstr = super(HistoryEntry, self).__str__()
+        pathstr = super().__str__()
         return 'HistoryEntry: {}'.format(pathstr)
 
     def __eq__(self, other):

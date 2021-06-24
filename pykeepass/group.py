@@ -20,7 +20,7 @@ class Group(BaseElement):
         self._kp = kp
 
         if element is None:
-            super(Group, self).__init__(
+            super().__init__(
                 element=Element('Group'),
                 kp=kp,
                 expires=expires,
