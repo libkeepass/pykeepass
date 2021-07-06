@@ -1026,17 +1026,17 @@ class KDBXTests(unittest.TestCase):
                  filenames_in, filenames_out, passwords, transformed_keys,
                  keyfiles, encryption_algorithms, kdf_algorithms, versions
         ):
-            kp = PyKeePass(
+            old_kp = PyKeePass(
                 filename_in,
                 password,
                 None if keyfile is None else os.path.join(base_dir, keyfile),
                 transformed_key=transformed_key
             )
-            self.assertEqual(kp.encryption_algorithm, encryption_algorithm)
-            self.assertEqual(kp.kdf_algorithm, kdf_algorithm)
-            self.assertEqual(kp.version, version)
+            self.assertEqual(old_kp.encryption_algorithm, encryption_algorithm)
+            self.assertEqual(old_kp.kdf_algorithm, kdf_algorithm)
+            self.assertEqual(old_kp.version, version)
 
-            kp.save(
+            old_kp.save(
                 filename_out,
                 transformed_key=transformed_key
             )
@@ -1045,17 +1045,35 @@ class KDBXTests(unittest.TestCase):
                 # rewind so PyKeePass can read from the same stream
                 filename_out.seek(0)
 
-            kp = PyKeePass(
+            new_kp = PyKeePass(
                 filename_out,
                 password,
                 None if keyfile is None else os.path.join(base_dir, keyfile),
                 transformed_key=transformed_key
             )
 
+            def regen_test(old_kp, new_kp, attr):
+                # import recursive getattr
+                from operator import attrgetter
+                self.assertNotEqual(
+                    attrgetter(attr)(old_kp),
+                    attrgetter(attr)(new_kp),
+                    "regen test failed for {} on file {}".format(attr, old_kp.filename)
+                )
+
+            # verify that various seeds have been regenerated after saving
+            regen_test(old_kp, new_kp, 'kdbx.header.value.dynamic_header.master_seed.data')
+            regen_test(old_kp, new_kp, 'kdbx.header.value.dynamic_header.encryption_iv.data')
+            if new_kp.version == (3, 0):
+                regen_test(old_kp, new_kp, 'kdbx.header.value.dynamic_header.protected_stream_key.data')
+                regen_test(old_kp, new_kp, 'kdbx.header.value.dynamic_header.old_start_bytes.data')
+            if new_kp.version == (4, 1):
+                regen_test(old_kp, new_kp, 'kdbx.body.payload.inner_header.protected_stream_key.data')
+
+        # remove old files
         for filename in os.listdir(base_dir):
             if filename.endswith('.out'):
                 os.remove(os.path.join(base_dir, filename))
-
 
     def test_credentials_error(self):
 
