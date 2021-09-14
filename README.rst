@@ -174,7 +174,7 @@ If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is no
    Entry: "testing (foo_user)"
 
    # add a new entry to the social group
-   >>> group = find_groups(name='social', first=True)
+   >>> group = kp.find_groups(name='social', first=True)
    >>> entry = kp.add_entry(group, 'testing', 'foo_user', 'passw0rd')
    Entry: "testing (foo_user)"
 
