@@ -11,6 +11,7 @@ import re
 import uuid
 import zlib
 from copy import deepcopy
+from os.path import exists
 
 from construct import Container, ChecksumError
 from lxml import etree
@@ -128,7 +129,7 @@ class PyKeePass(object):
 
         self.read(self.filename, self.password, self.keyfile)
 
-    def save(self, filename=None, transformed_key=None):
+    def save(self, filename=None, transformed_key=None, force=False):
         """Save current database object to disk.
 
         Args:
@@ -137,12 +138,21 @@ class PyKeePass(object):
                 PyKeePass.filename is unchanged.
             transformed_key (:obj:`bytes`, optional): precomputed transformed
                 key.
+            force (:obj:`bool`, optional): force write if preconditions fail
         """
+        seek_msg = (
+            'Using a non-seekable medium may cause KDBX corruption,'
+            ' use force=True to override'
+        )
+
         output = None
         if not filename:
             filename = self.filename
 
         if hasattr(filename, "write"):
+            if not getattr(filename, "seekable", lambda: 0)() and not force:
+                raise Exception(seek_msg)
+
             output = KDBX.build_stream(
                 self.kdbx,
                 filename,
@@ -150,7 +160,13 @@ class PyKeePass(object):
                 keyfile=self.keyfile,
                 transformed_key=transformed_key
             )
+
         else:
+            if exists(filename):
+                with open(filename) as file:
+                    if not file.seekable() and not force:
+                        raise Exception(seek_msg)
+
             output = KDBX.build_file(
                 self.kdbx,
                 filename,
