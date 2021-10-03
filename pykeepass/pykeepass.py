@@ -10,8 +10,11 @@ import os
 import re
 import uuid
 import zlib
+import socket
 from copy import deepcopy
 from os.path import exists
+from stat import S_ISSOCK
+from io import BytesIO
 
 from construct import Container, ChecksumError
 from lxml import etree
@@ -130,10 +133,11 @@ class PyKeePass(object):
         self.read(self.filename, self.password, self.keyfile)
 
     def save(self, filename=None, transformed_key=None, force=False):
-        """Save current database object to disk.
+        """Save current database object to disk, buffer or socket.
 
         Args:
-            filename (:obj:`str`, optional): path to database or stream object.
+            filename (:obj:`str`, optional): path to database, stream object
+                or socket.
                 If None, the path given when the database was opened is used.
                 PyKeePass.filename is unchanged.
             transformed_key (:obj:`bytes`, optional): precomputed transformed
@@ -160,6 +164,20 @@ class PyKeePass(object):
                 keyfile=self.keyfile,
                 transformed_key=transformed_key
             )
+
+        elif exists(filename) and S_ISSOCK(os.stat(filename).st_mode):
+            target = BytesIO()
+            output = KDBX.build_stream(
+                self.kdbx,
+                target,
+                password=self.password,
+                keyfile=self.keyfile,
+                transformed_key=transformed_key
+            )
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+                target.seek(0)
+                sock.connect(filename)
+                sock.sendall(target.read())
 
         else:
             if exists(filename):
