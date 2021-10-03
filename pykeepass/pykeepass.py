@@ -743,6 +743,32 @@ class PyKeePass(object):
         for reference in binaries_gt:
             reference.id = reference.id - 1
 
+    @property
+    def needs_password_change(self):
+        """Check whether a password change is necessary."""
+        return self.password_change_force_days >= 0
+
+    @property
+    def password_change_force_days(self):
+        """Check amount of days until password force reset."""
+        path = '/KeePassFile/Meta/MasterKeyChangeForce'
+        item = self._xpath(path, first=True)
+        value = item.text
+
+        assert value  # should be always present and non-empty
+        return int(value)
+
+    @password_change_force_days.setter
+    def password_change_force_days(self, value):
+        """Set amount of days until password force reset.
+
+        Args:
+            value (`int`): Number of days until reset (-1 to disable)
+        """
+        path = '/KeePassFile/Meta/MasterKeyChangeForce'
+        item = self._xpath(path, first=True)
+        item.text = repr(value)
+
 
 def create_database(
         filename, password=None, keyfile=None, transformed_key=None
