@@ -81,11 +81,14 @@ class Entry(BaseElement):
         if field is not None:
             return field.text
 
-    def _set_string_field(self, key, value):
+    def _set_string_field(self, key, value, **kwargs):
         field = self._xpath('String/Key[text()="{}"]/..'.format(key), first=True)
         if field is not None:
             self._element.remove(field)
-        self._element.append(E.String(E.Key(key), E.Value(value)))
+        if kwargs:
+            self._element.append(E.String(E.Key(key), (E.Value(value, **kwargs))))
+        else:
+            self._element.append(E.String(E.Key(key), E.Value(value)))
 
     def _get_string_field_keys(self, exclude_reserved=False):
         results = [x.find('Key').text for x in self._element.findall('String')]
@@ -236,9 +239,9 @@ class Entry(BaseElement):
             p = p.parentgroup
         return path
 
-    def set_custom_property(self, key, value):
+    def set_custom_property(self, key, value, **kwargs):
         assert key not in reserved_keys, '{} is a reserved key'.format(key)
-        return self._set_string_field(key, value)
+        return self._set_string_field(key, value, *kwargs)
 
     def get_custom_property(self, key):
         assert key not in reserved_keys, '{} is a reserved key'.format(key)

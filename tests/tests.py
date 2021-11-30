@@ -490,6 +490,7 @@ class EntryTests3(KDBX3Tests):
         entry.icon = icons.GLOBE
         entry.set_custom_property('foo', 'bar')
         entry.set_custom_property('multiline', 'hello\nworld')
+        entry.set_custom_property('seed', '0123456789', Protected=True)
 
         self.assertEqual(entry.title, changed_string + 'title')
         self.assertEqual(entry.username, changed_string + 'username')
