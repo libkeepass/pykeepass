@@ -63,7 +63,7 @@ class Entry(BaseElement):
                 E.AutoType(
                     E.Enabled(str(autotype_enabled)),
                     E.DataTransferObfuscation('0'),
-                    E.DefaultSequence(str(autotype_sequence))
+                    E.DefaultSequence(str(autotype_sequence) if autotype_sequence else '')
                 )
             )
 
@@ -205,7 +205,9 @@ class Entry(BaseElement):
     @property
     def autotype_sequence(self):
         sequence = self._element.find('AutoType/DefaultSequence')
-        return sequence.text if sequence is not None else None
+        if sequence is None or sequence.text == '':
+            return None
+        return sequence.text
 
     @autotype_sequence.setter
     def autotype_sequence(self, value):

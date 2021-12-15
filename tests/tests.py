@@ -230,6 +230,7 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual(results.notes, unique_str + 'notes')
         self.assertEqual(results.tags, [unique_str + 'tags'])
         self.assertTrue(results.uuid != None)
+        self.assertTrue(results.autotype_sequence is None)
         # convert naive datetime to utc
         expiry_time_utc = expiry_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC'))
         self.assertEqual(results.icon, icons.KEY)
@@ -1087,3 +1088,4 @@ class KDBXTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
