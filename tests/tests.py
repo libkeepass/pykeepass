@@ -23,17 +23,24 @@ from pykeepass.kdbx_parsing import KDBX
 from pykeepass.exceptions import BinaryError, CredentialsError
 
 """
-Missing Tests:
+There are separate classes for testing with KDBX3 and KDBX4 databases.
+Most tests are shared between the two, with the KDBX4 classes subclassing
+from KDBX3.
 
-- add entry
-  - force_creation
-- root_group
-- Group attribute tests
-- Entry attribute tests
-  - ctime - get/set
-  - atime - get/set
-  - mtime - get/set
-  - expiry_time - get/set
+self.kp is a database available to you for testing with.  If you need to run
+a test that involves saving, use self.kp_tmp, which is deleted after the test.
+
+Test organization:
+
+EntryFindTests3/GroupFindTests3 - tests for find() function
+RecycleBinTests3                - tests for recyclebin/trash
+EntryTests3                     - tests for attributes/getters/setters of Entrys
+EntryHistoryTests3              - tests for history creation functions of Entry
+GroupTests3                     - tests for attributes/getters/setters of Groups
+AttachmentTests3                - tests for file attachments
+PyKeePassTests3                 - tests for attributes/functions of PyKeePass objects
+BugRegressionTests3             - add a test when fixing reported issues
+KDBXTests                       - tests for opening/saving databases
 """
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
