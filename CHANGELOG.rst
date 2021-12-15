@@ -1,6 +1,12 @@
 ------------------
-- added Entry.delete_history
+- added Entry.delete_history()
 - added HistoryEntry class
+- added Group.touch()
+- support 2.0 keyfiles
+- added PyKeePass.reload()
+- dropped python2 tests
+- fixed #284 - autotype_sequence returns string 'None'
+- fixed #244 - incorrect PKCS padding error
 
 4.0.0 - 2021-01-15
 ------------------
