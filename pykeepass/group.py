@@ -20,7 +20,7 @@ class Group(BaseElement):
         self._kp = kp
 
         if element is None:
-            super(Group, self).__init__(
+            super().__init__(
                 element=Element('Group'),
                 kp=kp,
                 expires=expires,
@@ -77,14 +77,14 @@ class Group(BaseElement):
     def path(self):
         # The root group is an orphan
         if self.is_root_group or self.parentgroup is None:
-            return '/'
+            return []
         p = self.parentgroup
-        ppath = ''
+        path = [self.name]
         while p is not None and not p.is_root_group:
             if p.name is not None:  # dont make the root group appear
-                ppath = '{}/{}'.format(p.name, ppath)
+                path.insert(0, p.name)
             p = p.parentgroup
-        return '{}{}/'.format(ppath, self.name)
+        return path
 
     def append(self, entries):
         if type(entries) is list:
@@ -94,4 +94,6 @@ class Group(BaseElement):
             self._element.append(entries._element)
 
     def __str__(self):
-        return 'Group: "{}"'.format(self.path)
+        # filter out NoneTypes and join into string
+        pathstr = '/'.join('' if p==None else p for p in self.path)
+        return 'Group: "{}"'.format(pathstr)

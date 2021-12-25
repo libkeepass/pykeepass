@@ -39,7 +39,7 @@ class Entry(BaseElement):
         self._kp = kp
 
         if element is None:
-            super(Entry, self).__init__(
+            super().__init__(
                 element=Element('Entry'),
                 kp=kp,
                 expires=expires,
@@ -49,7 +49,7 @@ class Entry(BaseElement):
             self._element.append(E.String(E.Key('Title'), E.Value(title)))
             self._element.append(E.String(E.Key('UserName'), E.Value(username)))
             self._element.append(
-                E.String(E.Key('Password'), E.Value(password, Protected="False"))
+                E.String(E.Key('Password'), E.Value(password, Protected="True"))
             )
             if url:
                 self._element.append(E.String(E.Key('URL'), E.Value(url)))
@@ -63,7 +63,7 @@ class Entry(BaseElement):
                 E.AutoType(
                     E.Enabled(str(autotype_enabled)),
                     E.DataTransferObfuscation('0'),
-                    E.DefaultSequence(str(autotype_sequence))
+                    E.DefaultSequence(str(autotype_sequence) if autotype_sequence else '')
                 )
             )
 
@@ -183,7 +183,7 @@ class Entry(BaseElement):
     @property
     def history(self):
         if self._element.find('History') is not None:
-            return [Entry(element=x, kp=self._kp) for x in self._element.find('History').findall('Entry')]
+            return [HistoryEntry(element=x, kp=self._kp) for x in self._element.find('History').findall('Entry')]
         else:
             return []
 
@@ -208,7 +208,9 @@ class Entry(BaseElement):
     @property
     def autotype_sequence(self):
         sequence = self._element.find('AutoType/DefaultSequence')
-        return sequence.text if sequence is not None else None
+        if sequence is None or sequence.text == '':
+            return None
+        return sequence.text
 
     @autotype_sequence.setter
     def autotype_sequence(self, value):
@@ -223,22 +225,19 @@ class Entry(BaseElement):
 
     @property
     def path(self):
+        """Path to element as list.  List contains all parent group names
+        ending with entry title.  List may contain strings or NoneTypes."""
+
         # The root group is an orphan
-        if self.is_a_history_entry:
-            pentry = Entry(
-                element=self._element.getparent().getparent(),
-                kp=self._kp
-            ).title
-            return '[History of: {}]'.format(pentry)
         if self.parentgroup is None:
             return None
         p = self.parentgroup
-        ppath = ''
+        path = [self.title]
         while p is not None and not p.is_root_group:
             if p.name is not None:  # dont make the root group appear
-                ppath = '{}/{}'.format(p.name, ppath)
+                path.insert(0, p.name)
             p = p.parentgroup
-        return '{}{}'.format(ppath, self.title)
+        return path
 
     def set_custom_property(self, key, value, protect=False):
         assert key not in reserved_keys, '{} is a reserved key'.format(key)
@@ -276,15 +275,6 @@ class Entry(BaseElement):
         }
         return '{{REF:{}@I:{}}}'.format(attribute_to_field[attribute], self.uuid.hex.upper())
 
-    def touch(self, modify=False):
-        '''
-        Update last access time of an entry
-        '''
-        now = datetime.now()
-        self.atime = now
-        if modify:
-            self.mtime = now
-
     def save_history(self):
         '''
         Save the entry in its history
@@ -299,5 +289,32 @@ class Entry(BaseElement):
             history.append(archive)
             self._element.append(history)
 
+    def delete_history(self, history_entry=None, all=False):
+        """
+        Delete entries from history
+
+        Args:
+            history_entry (Entry): history item to delete
+            all (bool): delete all entries from history.  Default is False
+        """
+
+        if all:
+            self._element.remove(self._element.find('History'))
+        else:
+            self._element.find('History').remove(history_entry._element)
+
     def __str__(self):
-        return 'Entry: "{} ({})"'.format(self.path, self.username)
+        # filter out NoneTypes and join into string
+        pathstr = '/'.join('' if p==None else p for p in self.path)
+        return 'Entry: "{} ({})"'.format(pathstr, self.username)
+
+
+class HistoryEntry(Entry):
+
+    def __str__(self):
+        pathstr = super().__str__()
+        return 'HistoryEntry: {}'.format(pathstr)
+
+    def __eq__(self, other):
+        # all history items share the same uuid, so examine xml directly
+        return self._element == other._element

@@ -14,7 +14,7 @@ from lxml.builder import E
 class BaseElement(object):
     """Entry and Group inherit from this class"""
 
-    def __init__(self, element=None, kp=None, icon=None, expires=False,
+    def __init__(self, element, kp=None, icon=None, expires=False,
                  expiry_time=None):
 
         self._element = element
@@ -221,3 +221,15 @@ class BaseElement(object):
             return self.uuid == other.uuid
         else:
             return False
+
+    def touch(self, modify=False):
+        """
+        Update last access time of an entry/group
+
+        Args:
+            modify (bool): update access time as well a modification time
+        """
+        now = datetime.now()
+        self.atime = now
+        if modify:
+            self.mtime = now

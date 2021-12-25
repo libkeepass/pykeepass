@@ -1,25 +1,32 @@
 from setuptools import find_packages, setup
 
+with open("README.rst") as file:
+    README = file.read()
+
+version = {}
+with open("pykeepass/version.py") as file:
+    exec(file.read(), version)
 
 setup(
     name="pykeepass",
-    version="3.1.3",
+    version=version["__version__"],
     license="GPL3",
     description="Python library to interact with keepass databases "
-                "(supports KDBX3 and KDBX4)",
-    long_description=open("README.rst").read(),
+    "(supports KDBX3 and KDBX4)",
+    long_description=README,
     author="Philipp Schmitt",
     author_email="philipp@schmitt.co",
-    url="https://github.com/pschmitt/pykeepass",
-    packages=find_packages(),
+    url="https://github.com/libkeepass/pykeepass",
+    packages=find_packages(include=['pykeepass', 'pykeepass.*']),
     install_requires=[
         "python-dateutil",
-        "construct",
+        # FIXME python2 - last version to support python2
+        "construct==2.10.67",
         "argon2_cffi",
-        "pycryptodome",
+        "pycryptodomex>=3.6.2",
         "lxml",
         # FIXME python2
-        "future"
+        "future",
     ],
-    include_package_data=True
+    include_package_data=True,
 )

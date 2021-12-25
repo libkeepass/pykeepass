@@ -1,8 +1,21 @@
-pykeepass
-============
+PyKeePass
+=========
 
-.. image:: https://github.com/libkeepass/pykeepass/workflows/CI/badge.svg
-   :target: https://github.com/libkeepass/pykeepass/actions?query=workflow%3ACI
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :glob:
+
+   pykeepass
+   group
+   entry
+   attachment
+   icons
+   exceptions
+   baseelement
+
+.. image:: https://travis-ci.org/libkeepass/pykeepass.svg?branch=master
+   :target: https://travis-ci.org/libkeepass/pykeepass
 
 .. image:: https://readthedocs.org/projects/pykeepass/badge/?version=latest
    :target: https://pykeepass.readthedocs.io/en/latest/?badge=latest
@@ -13,16 +26,17 @@ pykeepass
 
 .. image:: https://img.shields.io/badge/irc-%23pykeepass-brightgreen
    :target: https://webchat.freenode.net/?channels=pykeepass
-    
+
 This library allows you to write entries to a KeePass database.
 
 Come chat at `#pykeepass`_ on Freenode or `#pykeepass:matrix.org`_ on Matrix.
 
 .. _#pykeepass: irc://irc.freenode.net
-.. _#pykeepass\:matrix.org: https://matrix.to/#/%23pykeepass:matrix.org 
+.. _#pykeepass\:matrix.org: https://matrix.to/#/%23pykeepass:matrix.org
 
 Example
---------------
+-------
+
 .. code:: python
 
    from pykeepass import PyKeePass
@@ -59,16 +73,16 @@ Example
 
 
 Finding Entries
-----------------------
+---------------
 
 **find_entries** (title=None, username=None, password=None, url=None, notes=None, path=None, uuid=None, tags=None, string=None, group=None, recursive=True, regex=False, flags=None, history=False, first=False)
 
-Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, and ``autotype_sequence`` are strings, ``path`` is a list, ``string`` is a dict, ``autotype_enabled`` is a boolean, ``uuid`` is a ``uuid.UUID`` and ``tags`` is a list of strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
+Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``path``, and ``autotype_sequence`` are strings, ``string`` is a dict, ``autotype_enabled`` is a boolean, ``uuid`` is a ``uuid.UUID`` and ``tags`` is a list of strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
-.. _flags: https://www.w3.org/TR/xpath-functions/#flags 
+.. _flags: https://www.w3.org/TR/xpath-functions/#flags
 
-The ``path`` list is a full path to an entry (ex. ``['foobar_group', 'foobar_entry']``).  This implies ``first=True``.  All other arguments are ignored when this is given.  This is useful for handling user input.
+The ``path`` string is a full path to an entry (ex. ``'foobar_group/foobar_entry'``).  This implies ``first=True``.  All other arguments are ignored when this is given.  This is useful for handling user input.
 
 The ``string`` dict allows for searching custom string fields.  ex. ``{'custom_field1': 'custom value', 'custom_field2': 'custom value'}``
 
@@ -108,16 +122,16 @@ a flattened list of all entries in the database
 
 
 Finding Groups
-----------------------
+--------------
 
 **find_groups** (name=None, path=None, uuid=None, notes=None, group=None, recursive=True, regex=False, flags=None, first=False)
 
-where ``name`` and ``notes`` are strings, ``path`` is a list, ``uuid`` is a ``uuid.UUID``. This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
+where ``name``, ``path``, and ``notes`` are strings, ``uuid`` is a ``uuid.UUID``. This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
-.. _flags: https://www.w3.org/TR/xpath-functions/#flags 
+.. _flags: https://www.w3.org/TR/xpath-functions/#flags
 
-The ``path`` list is a full path to a group (ex. ``['foobar_group', 'sub_group']``).  This implies ``first=True``.  All other arguments are ignored when this is given.  This is useful for handling user input.
+The ``path`` string is a full path to a group (ex. ``'foobar_group/sub_group'``).  This implies ``first=True``.  All other arguments are ignored when this is given.  This is useful for handling user input.
 
 The ``group`` argument determines what ``Group`` to search under, and the ``recursive`` boolean controls whether to search recursively.
 
@@ -145,7 +159,7 @@ a flattened list of all groups in the database
    >>> kp.find_groups(name='foo.*', regex=True)
    [Group: "foo", Group "foobar"]
 
-   >>> kp.find_groups(path=['social'], regex=True)
+   >>> kp.find_groups(path='social/', regex=True)
    [Group: "social", Group: "social/foo_subgroup"]
 
    >>> kp.find_groups(name='social', first=True).subgroups
@@ -157,6 +171,7 @@ a flattened list of all groups in the database
 
 Adding Entries
 --------------
+
 **add_entry** (destination_group, title, username, password, url=None, notes=None, tags=None, expiry_time=None, icon=None, force_creation=False)
 
 **delete_entry** (entry)
@@ -174,7 +189,7 @@ If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is no
    Entry: "testing (foo_user)"
 
    # add a new entry to the social group
-   >>> group = kp.find_groups(name='social', first=True)
+   >>> group = find_groups(name='social', first=True)
    >>> entry = kp.add_entry(group, 'testing', 'foo_user', 'passw0rd')
    Entry: "testing (foo_user)"
 
@@ -192,6 +207,7 @@ If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is no
 
 Adding Groups
 --------------
+
 **add_group** (destination_group, group_name, icon=None, notes=None)
 
 **delete_group** (group)
@@ -291,7 +307,7 @@ the entry that this attachment is attached to
    >>> a = e.add_attachment(binary_id, 'hello.txt')
    >>> a
    Attachment: 'hello.txt' -> 0
-     
+
    # access attachments
    >>> a
    Attachment: 'hello.txt' -> 0
@@ -320,6 +336,7 @@ the entry that this attachment is attached to
 
 Miscellaneous
 -------------
+
 **read** (filename=None, password=None, keyfile=None, transformed_key=None)
 
 where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.  Alternatively, the derived key can be supplied directly through ``transformed_key``.
@@ -350,15 +367,14 @@ string containing algorithm used to encrypt database.  Possible values are ``aes
 
 create a new database at ``filename`` with supplied credentials.  Returns ``PyKeePass`` object
 
-**trash_group** (group)
-
-move a group to the recycle bin.  The recycle bin is created if it does not exit.  ``group`` must be an empty Group.
-
-**empty_group** (group)
-
-delete all entries and subgroups of a group.  ``group`` is an instance of ``Group``.
-
 Tests
--------------
+-----
 
-To run them issue :code:`python tests/tests.py`
+To run them issue :code:`python -m unittest discover` in the repository.
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

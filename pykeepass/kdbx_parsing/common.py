@@ -1,18 +1,23 @@
-from Crypto.Cipher import AES, ChaCha20, Salsa20
+from Cryptodome.Cipher import AES, ChaCha20, Salsa20
 from .twofish import Twofish
-from Crypto.Util import Padding as CryptoPadding
+from Cryptodome.Util import Padding as CryptoPadding
 import hashlib
 from construct import (
     Adapter, BitStruct, BitsSwapped, Container, Flag, Padding, ListContainer, Mapping, GreedyBytes, Int32ul, Switch
 )
 from lxml import etree
+from copy import deepcopy
 import base64
+from binascii import Error as BinasciiError
 import unicodedata
 import zlib
 import re
 import codecs
 from io import BytesIO
 from collections import OrderedDict
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class HeaderChecksumError(Exception):
@@ -37,7 +42,7 @@ class DynamicDict(Adapter):
     """
 
     def __init__(self, key, subcon, lump=[]):
-        super(DynamicDict, self).__init__(subcon)
+        super().__init__(subcon)
         self.key = key
         self.lump = lump
 
@@ -115,7 +120,17 @@ def compute_key_composite(password=None, keyfile=None):
         try:
             with open(keyfile, 'r') as f:
                 tree = etree.parse(f).getroot()
-                keyfile_composite = base64.b64decode(tree.find('Key/Data').text)
+                version = tree.find('Meta/Version').text
+                data_element = tree.find('Key/Data')
+                if version.startswith('1.0'):
+                    keyfile_composite = base64.b64decode(data_element.text)
+                elif version.startswith('2.0'):
+                    # read keyfile data and convert to bytes
+                    keyfile_composite = bytes.fromhex(data_element.text.strip())
+                    # validate bytes against hash
+                    hash = bytes.fromhex(data_element.attrib['Hash'])
+                    hash_computed = hashlib.sha256(keyfile_composite).digest()[:4]
+                    assert hash == hash_computed, "Keyfile has invalid hash"
         # otherwise, try to read plain keyfile
         except (etree.XMLSyntaxError, UnicodeDecodeError):
             try:
@@ -164,7 +179,8 @@ class XML(Adapter):
     """Bytes <---> lxml etree"""
 
     def _decode(self, data, con, path):
-        return etree.parse(BytesIO(data))
+        parser = etree.XMLParser(remove_blank_text=True)
+        return etree.parse(BytesIO(data), parser)
 
     def _encode(self, tree, con, path):
         return etree.tostring(tree)
@@ -176,38 +192,42 @@ class UnprotectedStream(Adapter):
     provided by get_cipher"""
 
     protected_xpath = '//Value[@Protected=\'True\']'
-    unprotected_xpath = '//Value[@Protected=\'False\']'
 
     def __init__(self, protected_stream_key, subcon):
-        super(UnprotectedStream, self).__init__(subcon)
+        super().__init__(subcon)
         self.protected_stream_key = protected_stream_key
 
     def _decode(self, tree, con, path):
         cipher = self.get_cipher(self.protected_stream_key(con))
         for elem in tree.xpath(self.protected_xpath):
             if elem.text is not None:
-                result = cipher.decrypt(base64.b64decode(elem.text)).decode('utf-8')
-                # strip invalid XML characters - https://stackoverflow.com/questions/8733233
-                result = re.sub(
-                    u'[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+',
-                    '',
-                    result
-                )
-                elem.text = result
-            elem.attrib['Protected'] = 'False'
+                try:
+                    result = cipher.decrypt(base64.b64decode(elem.text)).decode('utf-8')
+                    # strip invalid XML characters - https://stackoverflow.com/questions/8733233
+                    result = re.sub(
+                        u'[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+',
+                        '',
+                        result
+                    )
+                    elem.text = result
+                except (UnicodeDecodeError, BinasciiError, ValueError):
+                    # FIXME: this should be a warning eventually, need to fix all databases in tests/ first
+                    log.error(
+                        "Element at {} marked as protected, but could not unprotect".format(tree.getpath(elem))
+                    )
         return tree
 
     def _encode(self, tree, con, path):
+        tree_copy = deepcopy(tree)
         cipher = self.get_cipher(self.protected_stream_key(con))
-        for elem in tree.xpath(self.unprotected_xpath):
+        for elem in tree_copy.xpath(self.protected_xpath):
             if elem.text is not None:
                 elem.text = base64.b64encode(
                     cipher.encrypt(
                         elem.text.encode('utf-8')
                     )
                 )
-            elem.attrib['Protected'] = 'True'
-        return tree
+        return tree_copy
 
 
 class ARCFourVariantStream(UnprotectedStream):
@@ -279,11 +299,21 @@ class DecryptedPayload(Adapter):
             con._.header.value.dynamic_header.encryption_iv.data
         )
         payload_data = cipher.decrypt(payload_data)
+        # FIXME: Construct ugliness.  Fixes #244.  First 32 bytes of decrypted kdbx3 payload
+        # should be checked against stream_start_bytes for a CredentialsError.  Due to construct
+        # limitations, we have to decrypt the whole payload in order to check the first 32 bytes.
+        # However, when the credentials are wrong the invalid decrypted payload cannot
+        # be unpadded correctly.  Instead, catch the unpad ValueError exception raised by unpad()
+        # and allow kdbx3.py to raise a ChecksumError
+        try:
+            payload_data = self.unpad(payload_data)
+        except ValueError:
+            log.debug("Decryption unpadding failed")
 
         return payload_data
 
     def _encode(self, payload_data, con, path):
-        payload_data = CryptoPadding.pad(payload_data, 16)
+        payload_data = self.pad(payload_data)
         cipher = self.get_cipher(
             con.master_key,
             con._.header.value.dynamic_header.encryption_iv.data
@@ -296,16 +326,28 @@ class DecryptedPayload(Adapter):
 class AES256Payload(DecryptedPayload):
     def get_cipher(self, master_key, encryption_iv):
         return AES.new(master_key, AES.MODE_CBC, encryption_iv)
+    def pad(self, data):
+        return CryptoPadding.pad(data, 16)
+    def unpad(self, data):
+        return CryptoPadding.unpad(data, 16)
 
 
 class ChaCha20Payload(DecryptedPayload):
     def get_cipher(self, master_key, encryption_iv):
         return ChaCha20.new(key=master_key, nonce=encryption_iv)
+    def pad(self, data):
+        return data
+    def unpad(self, data):
+        return data
 
 
 class TwoFishPayload(DecryptedPayload):
     def get_cipher(self, master_key, encryption_iv):
         return Twofish.new(master_key, mode=Twofish.MODE_CBC, IV=encryption_iv)
+    def pad(self, data):
+        return CryptoPadding.pad(data, 16)
+    def unpad(self, data):
+        return CryptoPadding.unpad(data, 16)
 
 
 class Decompressed(Adapter):

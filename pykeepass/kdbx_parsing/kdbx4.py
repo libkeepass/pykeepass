@@ -1,4 +1,3 @@
-#!/bin/env python3
 # Evan Widloski - 2018-04-11
 # keepass decrypt experimentation
 
@@ -259,7 +258,7 @@ Body = Struct(
         this._.header.data,
         # exception=HeaderChecksumError,
     ),
-    "hmac" / Checksum(
+    "cred_check" / Checksum(
         Bytes(32),
         compute_header_hmac_hash,
         this,

@@ -1,7 +1,39 @@
-3.2.0 - 2019-
 ------------------
-- fix for binary attachments missing Compressed attribute
+- added Entry.delete_history()
+- added HistoryEntry class
+- added Group.touch()
+- support 2.0 keyfiles
+- added PyKeePass.reload()
+- dropped python2 tests
+- fixed #284 - autotype_sequence returns string 'None'
+- fixed #244 - incorrect PKCS padding error
+
+4.0.0 - 2021-01-15
+------------------
+- paths changed from strings to lists
+- added PyKeePass.recyclebin_group
+- added PyKeePass.trash_group()
+- added PyKeePass.trash_entry()
+- added PyKeePass.empty_group()
+- support reading/saving from streams
+- fixed PyKeePass.dump_xml() pretty printing
+- fixed #212 - properly pad encrypted payload
+- fixed #222 - corrected transform_rounds field length
+
+3.2.1 - 2020-07-19
+------------------
+- pin construct version to last supporting python2
+- hard dependency on pycryptodomex
+- fixed #193 - kp.groups, kp.entries not returning elements with name/title None
+
+3.2.0 - 2020-01-18
+------------------
 - added PyKeePass.xml()
+- added create_database()
+- added tag searching - #182
+- fixed #181 - binary attachments missing Compressed attribute unparseable
+- fixed #129 - protected multiline fields missing newline
+- fixed problem where entries are protected after save
 
 3.1.0 - 2019-10-24
 ------------------
