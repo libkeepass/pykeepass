@@ -19,9 +19,10 @@ from .common import (
 
 # -------------------- Key Derivation --------------------
 
-# https://github.com/keepassxreboot/keepassxc/blob/8324d03f0a015e62b6182843b4478226a5197090/src/format/KeePass2.cpp#L24-L26
+# https://github.com/keepassxreboot/keepassxc/blob/bc55974ff304794e53c925442784c50a2fdaf6ee/src/format/KeePass2.cpp#L30-L33
 kdf_uuids = {
     'argon2': b'\xefcm\xdf\x8c)DK\x91\xf7\xa9\xa4\x03\xe3\n\x0c',
+    'argon2id': b'\x9e)\x8b\x19V\xdbGs\xb2=\xfc>\xc6\xf0\xa1\xe6',
     'aeskdf': b'\xc9\xd9\xf3\x9ab\x8aD`\xbft\r\x08\xc1\x8aO\xea',
 }
 
@@ -37,12 +38,12 @@ def compute_transformed(context):
 
     if context._._.transformed_key is not None:
         transformed_key = context._._.transformed_key
-    elif kdf_parameters['$UUID'].value == kdf_uuids['argon2']:
+    elif kdf_parameters['$UUID'].value in (kdf_uuids['argon2'], kdf_uuids['argon2id']):
         transformed_key = argon2.low_level.hash_secret_raw(
             secret=key_composite,
             salt=kdf_parameters['S'].value,
             hash_len=32,
-            type=argon2.low_level.Type.D,
+            type=(argon2.low_level.Type.ID if kdf_parameters['$UUID'].value == kdf_uuids['argon2id'] else argon2.low_level.Type.D),
             time_cost=kdf_parameters['I'].value,
             memory_cost=kdf_parameters['M'].value // 1024,
             parallelism=kdf_parameters['P'].value,

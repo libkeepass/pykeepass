@@ -185,6 +185,8 @@ class PyKeePass(object):
             kdf_parameters = self.kdbx.header.value.dynamic_header.kdf_parameters.data.dict
             if kdf_parameters['$UUID'].value == kdf_uuids['argon2']:
                 return 'argon2'
+            elif kdf_parameters['$UUID'].value == kdf_uuids['argon2id']:
+                return 'argon2id'
             elif kdf_parameters['$UUID'].value == kdf_uuids['aeskdf']:
                 return 'aeskdf'
 
