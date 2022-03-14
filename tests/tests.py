@@ -915,6 +915,8 @@ class KDBXTests(unittest.TestCase):
             os.path.join(base_dir, 'test4_transformed.kdbx'),     # KDBX v4 transformed_key open
             stream,
             os.path.join(base_dir, 'test4_aes_uncompressed.kdbx'),# KDBX v4 AES uncompressed
+            os.path.join(base_dir, 'test4_twofish_uncompressed.kdbx'),# KDBX v4 Twofish uncompressed
+            os.path.join(base_dir, 'test4_chacha20_uncompressed.kdbx'),# KDBX v4 ChaCha uncompressed
             os.path.join(base_dir, 'test4_argon2id.kdbx'),        # KDBX v4 Argon2id
         ]
         filenames_out = [
@@ -929,6 +931,8 @@ class KDBXTests(unittest.TestCase):
             os.path.join(base_dir, 'test4_transformed.kdbx.out'),
             BytesIO(),
             os.path.join(base_dir, 'test4_aes_uncompressed.kdbx.out'),
+            os.path.join(base_dir, 'test4_twofish_uncompressed.kdbx.out'),# KDBX v4 Twofish uncompressed
+            os.path.join(base_dir, 'test4_chacha20_uncompressed.kdbx.out'),# KDBX v4 ChaCha uncompressed
             os.path.join(base_dir, 'test4_argon2id.kdbx.out'),
         ]
         passwords = [
@@ -941,6 +945,8 @@ class KDBXTests(unittest.TestCase):
             'password',
             None,
             None,
+            'password',
+            'password',
             'password',
             'password',
             'password',
@@ -958,6 +964,8 @@ class KDBXTests(unittest.TestCase):
             None,
             None,
             None,
+            None,
+            None,
         ]
         keyfiles = [
             'test3.key',
@@ -970,6 +978,8 @@ class KDBXTests(unittest.TestCase):
             None,
             None,
             'test3.key',
+            None,
+            None,
             None,
             None,
         ]
@@ -985,6 +995,8 @@ class KDBXTests(unittest.TestCase):
             'chacha20',
             'aes256',
             'aes256',
+            'twofish',
+            'chacha20',
             'aes256',
         ]
         kdf_algorithms = [
@@ -999,6 +1011,8 @@ class KDBXTests(unittest.TestCase):
             'argon2',
             'aeskdf',
             'argon2',
+            'argon2',
+            'argon2',
             'argon2id',
         ]
         versions = [
@@ -1012,6 +1026,8 @@ class KDBXTests(unittest.TestCase):
             (3, 1),
             (4, 0),
             (3, 1),
+            (4, 0),
+            (4, 0),
             (4, 0),
             (4, 0),
         ]
