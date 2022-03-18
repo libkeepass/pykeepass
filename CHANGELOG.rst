@@ -1,3 +1,10 @@
+4.0.2 -
+------------------
+- added support for argon2id key derivation function
+- added credential expiry functions
+
+
+4.0.1 - 2021-05-22
 ------------------
 - added Entry.delete_history()
 - added HistoryEntry class

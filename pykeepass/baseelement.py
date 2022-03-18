@@ -3,12 +3,9 @@ from __future__ import absolute_import
 import base64
 import struct
 import uuid
-from binascii import Error as BinasciiError
-from datetime import datetime, timedelta
-
-from dateutil import parser, tz
 from lxml import etree
 from lxml.builder import E
+from datetime import datetime
 
 
 class BaseElement(object):
@@ -23,9 +20,9 @@ class BaseElement(object):
         )
         if icon:
             self._element.append(E.IconID(icon))
-        current_time_str = self._encode_time(datetime.now())
+        current_time_str = self._kp._encode_time(datetime.now())
         if expiry_time:
-            expiry_time_str = self._encode_time(expiry_time)
+            expiry_time_str = self._kp._encode_time(expiry_time)
         else:
             expiry_time_str = current_time_str
 
@@ -92,70 +89,19 @@ class BaseElement(object):
     def _path(self):
         return self._element.getroottree().getpath(self._element)
 
-    def _datetime_to_utc(self, dt):
-        """Convert naive datetimes to UTC"""
-
-        if not dt.tzinfo:
-            dt = dt.replace(tzinfo=tz.gettz())
-        return dt.astimezone(tz.gettz('UTC'))
-
-    def _encode_time(self, value):
-        """Convert datetime to base64 or plaintext string"""
-
-        if self._kp.version >= (4, 0):
-            diff_seconds = int(
-                (
-                    self._datetime_to_utc(value) -
-                    datetime(
-                        year=1,
-                        month=1,
-                        day=1,
-                        tzinfo=tz.gettz('UTC')
-                    )
-                ).total_seconds()
-            )
-            return base64.b64encode(
-                struct.pack('<Q', diff_seconds)
-            ).decode('utf-8')
-        else:
-            return self._datetime_to_utc(value).isoformat()
-
-    def _decode_time(self, text):
-        """Convert base64 time or plaintext time to datetime"""
-
-        if self._kp.version >= (4, 0):
-            # decode KDBX4 date from b64 format
-            try:
-                return (
-                    datetime(year=1, month=1, day=1, tzinfo=tz.gettz('UTC')) +
-                    timedelta(
-                        seconds=struct.unpack('<Q', base64.b64decode(text))[0]
-                    )
-                )
-            except BinasciiError:
-                return parser.parse(
-                    text,
-                    tzinfos={'UTC': tz.gettz('UTC')}
-                )
-        else:
-            return parser.parse(
-                text,
-                tzinfos={'UTC': tz.gettz('UTC')}
-            )
-
     def _get_times_property(self, prop):
         times = self._element.find('Times')
         if times is not None:
             prop = times.find(prop)
             if prop is not None:
-                return self._decode_time(prop.text)
+                return self._kp._decode_time(prop.text)
 
     def _set_times_property(self, prop, value):
         times = self._element.find('Times')
         if times is not None:
             prop = times.find(prop)
             if prop is not None:
-                prop.text = self._encode_time(value)
+                prop.text = self._kp._encode_time(value)
 
     @property
     def expires(self):
@@ -172,7 +118,11 @@ class BaseElement(object):
     @property
     def expired(self):
         if self.expires:
-            return self._datetime_to_utc(datetime.utcnow()) > self._datetime_to_utc(self.expiry_time)
+            return (
+                self._kp._datetime_to_utc(datetime.utcnow()) >
+                self._kp._datetime_to_utc(self.expiry_time)
+            )
+
         return False
 
     @property

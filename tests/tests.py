@@ -819,6 +819,47 @@ class PyKeePassTests3(KDBX3Tests):
             first_line = f.readline()
             self.assertEqual(first_line, '<?xml version=\'1.0\' encoding=\'utf-8\' standalone=\'yes\'?>\n')
 
+    def test_credchange(self):
+        """
+        - test rec/req boolean (expired, no expired, days=-1)
+        - test get/set days
+        - test cred set timer reset
+        """
+
+        required_days = 5
+        recommended_days = 5
+        unexpired_date = datetime.now() - timedelta(days=1)
+        expired_date = datetime.now() - timedelta(days=10)
+
+        self.kp.credchange_required_days = required_days
+        self.kp.credchange_recommended_days = recommended_days
+
+        # test not expired
+        self.kp.credchange_date = unexpired_date
+        self.assertFalse(self.kp.credchange_required)
+        self.assertFalse(self.kp.credchange_recommended)
+
+        # test expired
+        self.kp.credchange_date = expired_date
+        self.assertTrue(self.kp.credchange_required)
+        self.assertTrue(self.kp.credchange_recommended)
+
+        # test expiry disabled
+        self.kp.credchange_required_days = -1
+        self.kp.credchange_recommended_days = -1
+        self.assertFalse(self.kp.credchange_required)
+        self.assertFalse(self.kp.credchange_recommended)
+
+        # test credential update
+        self.kp.credchange_required_days = required_days
+        self.kp.credchange_recommended_days = recommended_days
+        self.kp.credchange_date = expired_date
+        self.assertTrue(self.kp.credchange_required)
+        self.assertTrue(self.kp.credchange_recommended)
+        self.kp.keyfile = 'foo'
+        self.assertFalse(self.kp.credchange_required)
+        self.assertFalse(self.kp.credchange_recommended)
+
     def tearDown(self):
         os.remove(os.path.join(base_dir, 'change_creds.kdbx'))
 

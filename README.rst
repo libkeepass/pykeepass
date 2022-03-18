@@ -310,13 +310,37 @@ the entry that this attachment is attached to
 
    # search attachments
    >>> kp.find_attachments(filename='hello.txt')
-   [Attachment: 'hello.txt' -> 0]
+   [Attachment: 'hello.txt** -> 0]
 
    # delete attachment reference
    >>> e.delete_attachment(a)
 
    # or, delete both attachment reference and binary
-   >>> kp.delete_binary(binary_id)
+   >>> kp.delete_binary(binary_id**
+
+Credential Expiry
+-----------------
+
+**credchange_date**
+
+datetime object with date of last credentials change
+
+**credchange_required**
+
+boolean whether database credentials have expired and are required to change
+
+**credchange_recommended**
+
+boolean whether database credentials have expired and are recommended to change
+
+**credchange_required_days**
+
+days after **credchange_date** that credential update is required
+
+**credchange_recommended_days**
+
+days after **credchange_date** that credential update is recommended
+
 
 Miscellaneous
 -------------
@@ -324,7 +348,7 @@ Miscellaneous
 
 where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.  Alternatively, the derived key can be supplied directly through ``transformed_key``.
 
-Can raise ``CredentialsError``, ``HeaderChecksumError``, or ``PayloadChecksumError``.
+Can raise ``CredentialsError``, ``HeaderChecksumError``, or ``PayloadChecksumError**.
 
 **save** (filename=None)
 

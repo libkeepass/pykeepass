@@ -8,11 +8,15 @@ import base64
 import logging
 import os
 import re
+import struct
 import uuid
 import zlib
-from copy import deepcopy
 
+from binascii import Error as BinasciiError
 from construct import Container, ChecksumError
+from copy import deepcopy
+from dateutil import parser, tz
+from datetime import datetime, timedelta
 from lxml import etree
 from lxml.builder import E
 
@@ -84,8 +88,8 @@ class PyKeePass(object):
         Todo:
             - raise, no filename provided, database not open
         """
-        self.password = password
-        self.keyfile = keyfile
+        self._password = password
+        self._keyfile = keyfile
         if filename:
             self.filename = filename
         else:
@@ -745,6 +749,145 @@ class PyKeePass(object):
         for reference in binaries_gt:
             reference.id = reference.id - 1
 
+    # ---------- Credential Changing and Expiry ----------
+
+    # make password/keyfile into property instead of attribute so
+    # MasterKeyChanged can be set correctly
+    @property
+    def password(self):
+        return self._password
+
+    @password.setter
+    def password(self, password):
+        self._password = password
+        self.credchange_date = datetime.now()
+
+    @property
+    def keyfile(self):
+        return self._keyfile
+
+    @keyfile.setter
+    def keyfile(self, keyfile):
+        self._keyfile = keyfile
+        self.credchange_date = datetime.now()
+
+    @property
+    def credchange_required_days(self):
+        """Days until password update should be required"""
+        e = self._xpath('/KeePassFile/Meta/MasterKeyChangeForce', first=True)
+        if e is not None:
+            return int(e.text)
+
+    @property
+    def credchange_recommended_days(self):
+        """Days until password update should be recommended"""
+        e = self._xpath('/KeePassFile/Meta/MasterKeyChangeRec', first=True)
+        if e is not None:
+            return int(e.text)
+
+    @credchange_required_days.setter
+    def credchange_required_days(self, days):
+        """Set credentials required expiry days
+
+        Args:
+            days (int): days from password change until expiry
+        """
+
+        path = '/KeePassFile/Meta/MasterKeyChangeForce'
+        item = self._xpath(path, first=True)
+        item.text = str(days)
+
+    @credchange_recommended_days.setter
+    def credchange_recommended_days(self, days):
+        """Set credentials recommended expiry days
+
+        Args:
+            days (int): days from password change until warning
+        """
+
+        path = '/KeePassFile/Meta/MasterKeyChangeRec'
+        item = self._xpath(path, first=True)
+        item.text = str(days)
+
+    @property
+    def credchange_date(self):
+        e = self._xpath('/KeePassFile/Meta/MasterKeyChanged', first=True)
+        if e is not None:
+            return self._decode_time(e.text)
+
+    @credchange_date.setter
+    def credchange_date(self, date):
+        time = self._xpath('/KeePassFile/Meta/MasterKeyChanged', first=True)
+        time.text = self._encode_time(date)
+
+    @property
+    def credchange_required(self):
+        change_date = self.credchange_date
+        if change_date is None or self.credchange_required_days == -1:
+            return False
+        now_date = self._datetime_to_utc(datetime.now())
+        return (now_date - change_date).days > self.credchange_required_days
+
+    @property
+    def credchange_recommended(self):
+        change_date = self.credchange_date
+        if change_date is None or self.credchange_recommended_days == -1:
+            return False
+        now_date = self._datetime_to_utc(datetime.now())
+        return (now_date - change_date).days > self.credchange_recommended_days
+
+    # ---------- Datetime Functions ----------
+
+    def _datetime_to_utc(self, dt):
+        """Convert naive datetimes to UTC"""
+
+        if not dt.tzinfo:
+            dt = dt.replace(tzinfo=tz.gettz())
+        return dt.astimezone(tz.gettz('UTC'))
+
+    def _encode_time(self, value):
+        """Convert datetime to base64 or plaintext string"""
+
+        if self.version >= (4, 0):
+            diff_seconds = int(
+                (
+                    self._datetime_to_utc(value) -
+                    datetime(
+                        year=1,
+                        month=1,
+                        day=1,
+                        tzinfo=tz.gettz('UTC')
+                    )
+                ).total_seconds()
+            )
+            return base64.b64encode(
+                struct.pack('<Q', diff_seconds)
+            ).decode('utf-8')
+        else:
+            return self._datetime_to_utc(value).isoformat()
+
+    def _decode_time(self, text):
+        """Convert base64 time or plaintext time to datetime"""
+
+        if self.version >= (4, 0):
+            # decode KDBX4 date from b64 format
+            try:
+                return (
+                    datetime(year=1, month=1, day=1, tzinfo=tz.gettz('UTC')) +
+                    timedelta(
+                        seconds=struct.unpack('<Q', base64.b64decode(text))[0]
+                    )
+                )
+            except BinasciiError:
+                return parser.parse(
+                    text,
+                    tzinfos={'UTC': tz.gettz('UTC')}
+                )
+        else:
+            return parser.parse(
+                text,
+                tzinfos={'UTC': tz.gettz('UTC')}
+            )
 
 def create_database(
         filename, password=None, keyfile=None, transformed_key=None
