@@ -2,6 +2,7 @@
 ------------------
 - added support for argon2id key derivation function
 - added credential expiry functions
+- fixes #223 - safe saving
 
 
 4.0.1 - 2021-05-22

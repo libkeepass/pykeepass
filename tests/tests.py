@@ -41,16 +41,17 @@ logger = logging.getLogger("pykeepass")
 
 
 class KDBX3Tests(unittest.TestCase):
-    database = 'test3.kdbx'
+    database = os.path.join(base_dir, 'test3.kdbx')
     password = 'password'
-    keyfile = 'test3.key'
+    keyfile = os.path.join(base_dir, 'test3.key')
+
+    database_tmp = os.path.join(base_dir, 'test3_tmp.kdbx')
+    keyfile_tmp = os.path.join(base_dir, 'test3_tmp.key')
 
     # get some things ready before testing
     def setUp(self):
-        shutil.copy(
-            os.path.join(base_dir, self.database),
-            os.path.join(base_dir, 'change_creds.kdbx')
-        )
+        shutil.copy(self.database, self.database_tmp)
+        shutil.copy(self.keyfile, self.keyfile_tmp)
         self.kp = PyKeePass(
             os.path.join(base_dir, self.database),
             password=self.password,
@@ -58,16 +59,23 @@ class KDBX3Tests(unittest.TestCase):
         )
         # for tests which modify the database, use this
         self.kp_tmp = PyKeePass(
-            os.path.join(base_dir, 'change_creds.kdbx'),
+            os.path.join(base_dir, self.database_tmp),
             password=self.password,
-            keyfile=os.path.join(base_dir, self.keyfile)
+            keyfile=os.path.join(base_dir, self.keyfile_tmp)
         )
+
+    def tearDown(self):
+        os.remove(self.keyfile_tmp)
+        os.remove(self.database_tmp)
 
 
 class KDBX4Tests(KDBX3Tests):
-    database = 'test4.kdbx'
+    database = os.path.join(base_dir, 'test4.kdbx')
     password = 'password'
-    keyfile = 'test4.key'
+    keyfile = os.path.join(base_dir, 'test4.key')
+
+    database_tmp = os.path.join(base_dir, 'test4_tmp.kdbx')
+    keyfile_tmp = os.path.join(base_dir, 'test4_tmp.key')
 
 
 class EntryFindTests3(KDBX3Tests):
@@ -739,39 +747,26 @@ class GroupTests3(KDBX3Tests):
 
 class AttachmentTests3(KDBX3Tests):
     # get some things ready before testing
-    def setUp(self):
-        shutil.copy(
-            os.path.join(base_dir, self.database),
-            os.path.join(base_dir, 'test_attachment.kdbx')
-        )
-        self.open()
-
-    def open(self):
-        self.kp = PyKeePass(
-            os.path.join(base_dir, 'test_attachment.kdbx'),
-            password=self.password,
-            keyfile=os.path.join(base_dir, self.keyfile)
-        )
 
     def test_create_delete_binary(self):
         with self.assertRaises(BinaryError):
-            self.kp.delete_binary(999)
+            self.kp_tmp.delete_binary(999)
         with self.assertRaises(BinaryError):
-            e = self.kp.entries[0]
+            e = self.kp_tmp.entries[0]
             e.add_attachment(filename='foo.txt', id=123)
             e.attachments[0].binary
 
-        binary_id = self.kp.add_binary(b'Ronald McDonald Trump')
-        self.kp.save()
-        self.open()
-        self.assertEqual(self.kp.binaries[binary_id], b'Ronald McDonald Trump')
-        self.assertEqual(len(self.kp.attachments), 1)
+        binary_id = self.kp_tmp.add_binary(b'Ronald McDonald Trump')
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+        self.assertEqual(self.kp_tmp.binaries[binary_id], b'Ronald McDonald Trump')
+        self.assertEqual(len(self.kp_tmp.attachments), 1)
 
-        num_attach = len(self.kp.binaries)
-        self.kp.delete_binary(binary_id)
-        self.kp.save()
-        self.open()
-        self.assertEqual(len(self.kp.binaries), num_attach - 1)
+        num_attach = len(self.kp_tmp.binaries)
+        self.kp_tmp.delete_binary(binary_id)
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+        self.assertEqual(len(self.kp_tmp.binaries), num_attach - 1)
 
     def test_attachment_reference_decrement(self):
         e = self.kp.entries[0]
@@ -793,9 +788,6 @@ class AttachmentTests3(KDBX3Tests):
         self.assertEqual(a.data, b'foobar')
         self.assertEqual(a.id, binary_id)
         self.assertEqual(a.filename, 'test.txt')
-
-    def tearDown(self):
-        os.remove(os.path.join(base_dir, 'test_attachment.kdbx'))
 
 
 class PyKeePassTests3(KDBX3Tests):
@@ -860,10 +852,6 @@ class PyKeePassTests3(KDBX3Tests):
         self.assertFalse(self.kp.credchange_required)
         self.assertFalse(self.kp.credchange_recommended)
 
-    def tearDown(self):
-        os.remove(os.path.join(base_dir, 'change_creds.kdbx'))
-
-
 class BugRegressionTests3(KDBX3Tests):
     def test_issue129(self):
         # issue 129 - protected multiline string fields lose newline
@@ -902,6 +890,18 @@ class BugRegressionTests3(KDBX3Tests):
         e = self.kp_tmp.find_entries(title='protect_test', first=True)
         self.assertEqual(e.password, 'pass')
 
+    def test_issue223(self):
+        # issue 223 - database is clobbered when kp.save() fails
+        # even if exception is caught
+
+        # change keyfile so database save fails
+        self.kp_tmp.keyfile = 'foo'
+        with self.assertRaises(Exception):
+            self.kp_tmp.save()
+
+        # try to open database
+        self.kp_tmp.keyfile = self.keyfile_tmp
+        kp = PyKeePass(self.database_tmp, self.password, self.keyfile_tmp)
 
 
 class EntryFindTests4(KDBX4Tests, EntryFindTests3):

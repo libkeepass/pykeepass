@@ -8,6 +8,7 @@ import base64
 import logging
 import os
 import re
+import shutil
 import struct
 import uuid
 import zlib
@@ -142,12 +143,12 @@ class PyKeePass(object):
             transformed_key (:obj:`bytes`, optional): precomputed transformed
                 key.
         """
-        output = None
+
         if not filename:
             filename = self.filename
 
         if hasattr(filename, "write"):
-            output = KDBX.build_stream(
+            KDBX.build_stream(
                 self.kdbx,
                 filename,
                 password=self.password,
@@ -155,14 +156,21 @@ class PyKeePass(object):
                 transformed_key=transformed_key
             )
         else:
-            output = KDBX.build_file(
-                self.kdbx,
-                filename,
-                password=self.password,
-                keyfile=self.keyfile,
-                transformed_key=transformed_key
-            )
-        return output
+            # save to temporary file to prevent database clobbering
+            # see issues 223, 101
+            # FIXME python2 - use pathlib.Path.withsuffix
+            filename_tmp = filename + '.tmp'
+            try:
+                KDBX.build_file(
+                    self.kdbx,
+                    filename_tmp,
+                    password=self.password,
+                    keyfile=self.keyfile,
+                    transformed_key=transformed_key
+                )
+            except Exception as e:
+                os.remove(filename_tmp)
+            shutil.move(filename_tmp, filename)
 
     @property
     def version(self):
