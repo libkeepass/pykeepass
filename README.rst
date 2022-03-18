@@ -155,11 +155,15 @@ a flattened list of all groups in the database
    Group: "/"
 
 
-Adding Entries
+Entry Functions
 --------------
 **add_entry** (destination_group, title, username, password, url=None, notes=None, tags=None, expiry_time=None, icon=None, force_creation=False)
 
 **delete_entry** (entry)
+
+**trash_entry** (entry)
+
+move a group to the recycle bin.  The recycle bin is created if it does not exit.  ``entry`` must be an empty Entry.
 
 **move_entry** (entry, destination_group)
 
@@ -190,11 +194,19 @@ If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is no
    # save the database
    >>> kp.save()
 
-Adding Groups
---------------
+Group Functions
+---------------
 **add_group** (destination_group, group_name, icon=None, notes=None)
 
 **delete_group** (group)
+
+**trash_group** (group)
+
+move a group to the recycle bin.  The recycle bin is created if it does not exit.  ``group`` must be an empty Group.
+
+**empty_group** (group)
+
+delete all entries and subgroups of a group.  ``group`` is an instance of ``Group**.
 
 **move_group** (group, destination_group)
 
@@ -348,7 +360,11 @@ Miscellaneous
 
 where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.  Alternatively, the derived key can be supplied directly through ``transformed_key``.
 
-Can raise ``CredentialsError``, ``HeaderChecksumError``, or ``PayloadChecksumError**.
+Can raise ``CredentialsError``, ``HeaderChecksumError**, or ``PayloadChecksumError**.
+
+**reload** ()
+
+reload database from disk using previous credentials
 
 **save** (filename=None)
 
@@ -374,13 +390,17 @@ string containing algorithm used to encrypt database.  Possible values are ``aes
 
 create a new database at ``filename`` with supplied credentials.  Returns ``PyKeePass`` object
 
-**trash_group** (group)
+**tree**
 
-move a group to the recycle bin.  The recycle bin is created if it does not exit.  ``group`` must be an empty Group.
+database lxml tree
 
-**empty_group** (group)
+**xml**
 
-delete all entries and subgroups of a group.  ``group`` is an instance of ``Group``.
+get database XML data as string
+
+**dump_xml** (filename)
+
+pretty print database XML to file
 
 Tests
 -------------
