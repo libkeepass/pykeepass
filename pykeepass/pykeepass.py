@@ -170,6 +170,7 @@ class PyKeePass(object):
                 )
             except Exception as e:
                 os.remove(filename_tmp)
+                raise e
             shutil.move(filename_tmp, filename)
 
     @property
