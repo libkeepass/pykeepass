@@ -894,14 +894,31 @@ class BugRegressionTests3(KDBX3Tests):
         # issue 223 - database is clobbered when kp.save() fails
         # even if exception is caught
 
+        # test clobbering with file on disk
         # change keyfile so database save fails
         self.kp_tmp.keyfile = 'foo'
         with self.assertRaises(Exception):
             self.kp_tmp.save()
-
         # try to open database
         self.kp_tmp.keyfile = self.keyfile_tmp
-        kp = PyKeePass(self.database_tmp, self.password, self.keyfile_tmp)
+        PyKeePass(self.database_tmp, self.password, self.keyfile_tmp)
+        # reset test database
+        self.setUp()
+
+        # test clobbering with buffer
+        stream = BytesIO()
+        self.kp_tmp.save(stream)
+        stream.seek(0)
+
+        # change keyfile so database save fails
+        self.kp_tmp.keyfile = 'foo'
+        self.kp_tmp.password = ('invalid', 'type')
+        with self.assertRaises(Exception):
+            self.kp_tmp.save(stream)
+        stream.seek(0)
+        # try to open database
+        self.kp_tmp.keyfile = self.keyfile_tmp
+        PyKeePass(stream, self.password, self.keyfile_tmp)
 
 
 class EntryFindTests4(KDBX4Tests, EntryFindTests3):
