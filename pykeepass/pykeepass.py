@@ -365,8 +365,8 @@ class PyKeePass(object):
             for key, value in kwargs.items():
                 if key not in keys_xp[regex].keys():
                     raise TypeError('Invalid keyword argument "{}"'.format(key))
-
-                xp += keys_xp[regex][key].format(value, flags=flags)
+                if value is not None:
+                    xp += keys_xp[regex][key].format(value, flags=flags)
 
         res = self._xpath(
             xp,

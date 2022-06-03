@@ -920,6 +920,14 @@ class BugRegressionTests3(KDBX3Tests):
         self.kp_tmp.keyfile = self.keyfile_tmp
         PyKeePass(stream, self.password, self.keyfile_tmp)
 
+    def test_issue308(self):
+        # find_entries/find_groups() break when supplied None values directly
+
+        results = self.kp.find_entries(title='foobar_entry')
+        results2 = self.kp.find_entries(title='foobar_entry', username=None)
+
+        self.assertEqual(results, results2)
+
 
 class EntryFindTests4(KDBX4Tests, EntryFindTests3):
     pass
