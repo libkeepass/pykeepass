@@ -410,7 +410,20 @@ get database XML data as string
 
 pretty print database XML to file
 
-Tests
--------------
 
-To run them issue :code:`python tests/tests.py`
+Tests and Debugging
+-------------------
+
+Run tests with :code:`python tests/tests.py`
+
+Enable debugging when doing tests in console:
+
+   >>> from pykeepass.pykeepass import debug_setup
+   >>> debug_setup()
+   >>> kp.entries[0]
+   DEBUG:pykeepass.pykeepass:xpath query: //Entry
+   DEBUG:pykeepass.pykeepass:xpath query: (ancestor::Group)[last()]
+   DEBUG:pykeepass.pykeepass:xpath query: (ancestor::Group)[last()]
+   DEBUG:pykeepass.pykeepass:xpath query: String/Key[text()="Title"]/../Value
+   DEBUG:pykeepass.pykeepass:xpath query: String/Key[text()="UserName"]/../Value
+   Entry: "root_entry (foobar_user)"

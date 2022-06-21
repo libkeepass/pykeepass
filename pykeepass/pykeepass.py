@@ -912,3 +912,9 @@ def create_database(
 
     keepass_instance.save(transformed_key)
     return keepass_instance
+
+def debug_setup():
+    """Convenience function to quickly enable debug messages"""
+
+    logging.basicConfig()
+    logger.setLevel(logging.DEBUG)
