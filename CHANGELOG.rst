@@ -1,3 +1,8 @@
+4.0.3 -
+------------------
+- add otp support
+- add debug_setup() function
+
 4.0.2 - 2022-05-21
 ------------------
 - added support for argon2id key derivation function
