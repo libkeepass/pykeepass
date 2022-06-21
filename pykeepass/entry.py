@@ -24,7 +24,8 @@ reserved_keys = [
     'IconID',
     'Times',
     'History',
-    'Notes'
+    'Notes',
+    'otp'
 ]
 
 # FIXME python2
@@ -32,7 +33,7 @@ reserved_keys = [
 class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
-                 notes=None, tags=None, expires=False, expiry_time=None,
+                 notes=None, otp=None, tags=None, expires=False, expiry_time=None,
                  icon=None, autotype_sequence=None, autotype_enabled=True,
                  element=None, kp=None):
 
@@ -55,6 +56,8 @@ class Entry(BaseElement):
                 self._element.append(E.String(E.Key('URL'), E.Value(url)))
             if notes:
                 self._element.append(E.String(E.Key('Notes'), E.Value(notes)))
+            if otp:
+                self._element.append(E.String(E.Key('otp'), E.Value(otp)))
             if tags:
                 self._element.append(
                     E.Tags(';'.join(tags) if type(tags) is list else tags)
@@ -176,6 +179,14 @@ class Entry(BaseElement):
         # Accept both str or list
         v = ';'.join(value if type(value) is list else [value])
         return self._set_subelement_text('Tags', v)
+
+    @property
+    def otp(self):
+        return self._get_string_field('otp')
+
+    @otp.setter
+    def otp(self, value):
+        return self._set_string_field('otp', value)
 
     @property
     def history(self):

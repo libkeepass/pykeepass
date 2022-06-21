@@ -151,6 +151,11 @@ class EntryFindTests3(KDBX3Tests):
         results = self.kp.find_entries(autotype_enabled=True)
         self.assertEqual(len(results), len(self.kp.entries) - 1)
 
+    def test_find_entries_by_otp(self):
+        results = self.kp.find_entries(otp='otpsecret', regex=True, flags='i')
+        self.assertEqual(len(results), 1)
+        self.assertEqual('foobar_entry', results[0].title)
+
     def test_find_entries(self):
         results = self.kp.find_entries(title='Root_entry', regex=True)
         self.assertEqual(len(results), 0)
@@ -434,6 +439,7 @@ class EntryTests3(KDBX3Tests):
             url='url',
             notes='notes',
             tags='tags',
+            otp='otp',
             expires=True,
             expiry_time=time,
             icon=icons.KEY,
@@ -446,6 +452,7 @@ class EntryTests3(KDBX3Tests):
         self.assertEqual(entry.url, 'url')
         self.assertEqual(entry.notes, 'notes')
         self.assertEqual(entry.tags, ['tags'])
+        self.assertEqual(entry.otp, 'otp')
         self.assertEqual(entry.expires, True)
         self.assertEqual(entry.expiry_time,
                          time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
@@ -498,6 +505,7 @@ class EntryTests3(KDBX3Tests):
         entry.icon = icons.GLOBE
         entry.set_custom_property('foo', 'bar')
         entry.set_custom_property('multiline', 'hello\nworld')
+        entry.otp = "otpsecret"
 
         self.assertEqual(entry.title, changed_string + 'title')
         self.assertEqual(entry.username, changed_string + 'username')
@@ -507,6 +515,7 @@ class EntryTests3(KDBX3Tests):
         self.assertEqual(entry.icon, icons.GLOBE)
         self.assertEqual(entry.get_custom_property('foo'), 'bar')
         self.assertEqual(entry.get_custom_property('multiline'), 'hello\nworld')
+        self.assertEqual(entry.otp, 'otpsecret')
         self.assertIn('foo', entry.custom_properties)
         entry.delete_custom_property('foo')
         self.assertEqual(entry.get_custom_property('foo'), None)

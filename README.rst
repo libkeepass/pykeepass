@@ -58,12 +58,15 @@ Example
    >>> kp.save()
 
 
+..
+    TODO: add `Entry` and `Group` sections to document attributes of each
+
 Finding Entries
-----------------------
+---------------
 
-**find_entries** (title=None, username=None, password=None, url=None, notes=None, path=None, uuid=None, tags=None, string=None, group=None, recursive=True, regex=False, flags=None, history=False, first=False)
+**find_entries** (title=None, username=None, password=None, url=None, notes=None, otp=None, path=None, uuid=None, tags=None, string=None, group=None, recursive=True, regex=False, flags=None, history=False, first=False)
 
-Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, and ``autotype_sequence`` are strings, ``path`` is a list, ``string`` is a dict, ``autotype_enabled`` is a boolean, ``uuid`` is a ``uuid.UUID`` and ``tags`` is a list of strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
+Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``otp``, and ``autotype_sequence`` are strings, ``path`` is a list, ``string`` is a dict, ``autotype_enabled`` is a boolean, ``uuid`` is a ``uuid.UUID`` and ``tags`` is a list of strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
 .. _flags: https://www.w3.org/TR/xpath-functions/#flags 
@@ -106,6 +109,8 @@ a flattened list of all entries in the database
    >>> kp.find_entries(title='facebook', group=group, recursive=False, first=True)
    Entry: "social/facebook (myusername)"
 
+   >>> entry.otp
+   otpauth://totp/test:lkj?secret=TEST%3D%3D%3D%3D&period=30&digits=6&issuer=test
 
 Finding Groups
 ----------------------
