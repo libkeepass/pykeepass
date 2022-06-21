@@ -22,7 +22,7 @@ Come chat at `#pykeepass`_ on Freenode or `#pykeepass:matrix.org`_ on Matrix.
 .. _#pykeepass\:matrix.org: https://matrix.to/#/%23pykeepass:matrix.org 
 
 Example
---------------
+-------
 .. code:: python
 
    from pykeepass import PyKeePass
@@ -104,6 +104,7 @@ a flattened list of all entries in the database
    'facebook.com'
    >>> entry.title
    'foo_entry'
+   >>> entry.title = 'hello'
 
    >>> group = kp.find_group(name='social', first=True)
    >>> kp.find_entries(title='facebook', group=group, recursive=False, first=True)
@@ -112,8 +113,10 @@ a flattened list of all entries in the database
    >>> entry.otp
    otpauth://totp/test:lkj?secret=TEST%3D%3D%3D%3D&period=30&digits=6&issuer=test
 
+
+
 Finding Groups
-----------------------
+--------------
 
 **find_groups** (name=None, path=None, uuid=None, notes=None, group=None, recursive=True, regex=False, flags=None, first=False)
 
@@ -161,7 +164,7 @@ a flattened list of all groups in the database
 
 
 Entry Functions
---------------
+---------------
 **add_entry** (destination_group, title, username, password, url=None, notes=None, tags=None, expiry_time=None, icon=None, force_creation=False)
 
 **delete_entry** (entry)
@@ -211,7 +214,7 @@ move a group to the recycle bin.  The recycle bin is created if it does not exit
 
 **empty_group** (group)
 
-delete all entries and subgroups of a group.  ``group`` is an instance of ``Group**.
+delete all entries and subgroups of a group.  ``group`` is an instance of ``Group``.
 
 **move_group** (group, destination_group)
 
@@ -365,7 +368,7 @@ Miscellaneous
 
 where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.  Alternatively, the derived key can be supplied directly through ``transformed_key``.
 
-Can raise ``CredentialsError``, ``HeaderChecksumError**, or ``PayloadChecksumError**.
+Can raise ``CredentialsError``, ``HeaderChecksumError``, or ``PayloadChecksumError``.
 
 **reload** ()
 
