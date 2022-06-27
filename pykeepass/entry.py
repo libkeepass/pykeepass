@@ -69,6 +69,7 @@ class Entry(BaseElement):
                     E.DefaultSequence(str(autotype_sequence) if autotype_sequence else '')
                 )
             )
+            # FIXME: include custom_properties in constructor
 
         else:
             assert type(element) in [_Element, Element, ObjectifiedElement], \
