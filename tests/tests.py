@@ -768,13 +768,18 @@ class AttachmentTests3(KDBX3Tests):
         self.kp_tmp.save()
         self.kp_tmp.reload()
         self.assertEqual(self.kp_tmp.binaries[binary_id], b'Ronald McDonald Trump')
-        self.assertEqual(len(self.kp_tmp.attachments), 1)
+        self.assertEqual(len(self.kp_tmp.attachments), 2)
 
         num_attach = len(self.kp_tmp.binaries)
         self.kp_tmp.delete_binary(binary_id)
         self.kp_tmp.save()
         self.kp_tmp.reload()
         self.assertEqual(len(self.kp_tmp.binaries), num_attach - 1)
+
+        # test empty attachment - issue 314
+        a = self.kp.find_attachments(filename='foo.txt', first=True)
+        self.assertEqual(a._element.text, None)
+        self.assertEqual(a.data, b'')
 
     def test_attachment_reference_decrement(self):
         e = self.kp.entries[0]
@@ -790,6 +795,7 @@ class AttachmentTests3(KDBX3Tests):
         self.assertEqual(attachment2.id, binary_id2 - 1)
 
     def test_fields(self):
+        # test creation
         e = self.kp.entries[0]
         binary_id = self.kp.add_binary(b'foobar')
         a = e.add_attachment(filename='test.txt', id=binary_id)

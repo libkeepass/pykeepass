@@ -244,7 +244,7 @@ delete all entries and subgroups of a group.  ``group`` is an instance of ``Grou
 Attachments
 -----------
 
-In this section, *binary* refers to the bytes of the attached data (stored at the root level of the database), while *attachment* is a reference to a binary (stored in an entry).  A binary can have none, one or many attachments.
+In this section, *binary* refers to the bytes of the attached data (stored at the root level of the database), while *attachment* is a reference to a binary (stored in an entry).  A binary can be referenced by none, one or many attachments.
 
 **add_binary** (data, compressed=True, protected=True)
 
@@ -263,7 +263,7 @@ where ``id`` is an int, ``filename`` is a string, and element is an ``Entry`` or
 
 **binaries**
 
-list of bytestrings containing binary data.  List index corresponds to attachment id.
+list of bytestrings containing binary data.  List index corresponds to attachment id
 
 **attachments**
 

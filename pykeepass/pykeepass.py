@@ -694,13 +694,16 @@ class PyKeePass(object):
         else:
             binaries = []
             for elem in self._xpath('/KeePassFile/Meta/Binaries/Binary'):
-                if elem.get('Compressed') == 'True':
-                    data = zlib.decompress(
-                        base64.b64decode(elem.text),
-                        zlib.MAX_WBITS | 32
-                    )
+                if elem.text is not None:
+                    if elem.get('Compressed') == 'True':
+                        data = zlib.decompress(
+                            base64.b64decode(elem.text),
+                            zlib.MAX_WBITS | 32
+                        )
+                    else:
+                        data = base64.b64decode(elem.text)
                 else:
-                    data = base64.b64decode(elem.text)
+                    data = b''
                 binaries.insert(int(elem.attrib['ID']), data)
 
         return binaries
