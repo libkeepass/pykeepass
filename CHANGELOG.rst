@@ -1,3 +1,7 @@
+4.0.4 -
+------------------
+- fixed #314 - correctly handle binaries with no data
+- fixed #265 - check for keepass signature
 4.0.3 - 2022-06-21
 ------------------
 - add otp support
