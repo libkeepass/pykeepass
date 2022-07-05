@@ -14,7 +14,7 @@ import uuid
 import zlib
 
 from binascii import Error as BinasciiError
-from construct import Container, ChecksumError
+from construct import Container, ChecksumError, CheckError
 from copy import deepcopy
 from dateutil import parser, tz
 from datetime import datetime, timedelta
@@ -112,19 +112,26 @@ class PyKeePass(object):
                     transformed_key=transformed_key
                 )
 
+        except CheckError as e:
+            if e.path == '(parsing) -> header -> sig_check':
+                raise HeaderChecksumError("Not a KeePass database")
+            else:
+                raise
+
+        # body integrity/verification
         except ChecksumError as e:
             if e.path in (
                     '(parsing) -> body -> cred_check', # KDBX4
                     '(parsing) -> cred_check' # KDBX3
                     ):
-                raise CredentialsError
+                raise CredentialsError("Invalid credentials")
             elif e.path == '(parsing) -> body -> sha256':
-                raise HeaderChecksumError
+                raise HeaderChecksumError("Corrupted database")
             elif e.path in (
                     '(parsing) -> body -> payload -> hmac_hash', # KDBX4
                     '(parsing) -> xml -> block_hash' # KDBX3
                     ):
-                raise PayloadChecksumError
+                raise PayloadChecksumError("Error reading database contents")
             else:
                 raise
 

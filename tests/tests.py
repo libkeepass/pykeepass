@@ -17,10 +17,9 @@ from io import BytesIO
 
 from pykeepass import PyKeePass, icons
 from pykeepass.entry import Entry
-from pykeepass.exceptions import BinaryError
 from pykeepass.group import Group
 from pykeepass.kdbx_parsing import KDBX
-from pykeepass.exceptions import BinaryError, CredentialsError
+from pykeepass.exceptions import BinaryError, CredentialsError, HeaderChecksumError
 
 """
 Missing Tests:
@@ -1143,18 +1142,20 @@ class KDBXTests(unittest.TestCase):
                 os.remove(os.path.join(base_dir, filename))
 
 
-    def test_credentials_error(self):
+    def test_open_error(self):
 
         databases = [
             'test3.kdbx',
             'test3.kdbx',
             'test4.kdbx',
-            'test4.kdbx'
+            'test4.kdbx',
+            'test3.key',
         ]
         passwords = [
             'invalid',
             'password',
             'invalid',
+            'password',
             'password',
         ]
         keyfiles = [
@@ -1162,9 +1163,17 @@ class KDBXTests(unittest.TestCase):
             'test4.key',
             'test4.key',
             'test3.key',
+            'test3.key',
         ]
-        for database, password, keyfile in zip(databases, passwords, keyfiles):
-            with self.assertRaises(CredentialsError):
+        errors = [
+            CredentialsError,
+            CredentialsError,
+            CredentialsError,
+            CredentialsError,
+            HeaderChecksumError,
+        ]
+        for database, password, keyfile, error in zip(databases, passwords, keyfiles, errors):
+            with self.assertRaises(error):
                 PyKeePass(
                     os.path.join(base_dir, database),
                     password,
