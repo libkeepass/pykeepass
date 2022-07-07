@@ -2,6 +2,7 @@
 ------------------
 - fixed #314 - correctly handle binaries with no data
 - fixed #265 - check for keepass signature
+- fixed #319 - support pathlib for filename/keyfile
 4.0.3 - 2022-06-21
 ------------------
 - add otp support

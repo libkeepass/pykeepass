@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 
 from dateutil import tz
 from lxml.etree import Element
+from pathlib import Path
 
 from io import BytesIO
 
@@ -985,7 +986,7 @@ class KDBXTests(unittest.TestCase):
 
         filenames_in = [
             os.path.join(base_dir, 'test3.kdbx'),                 # KDBX v3
-            os.path.join(base_dir, 'test4.kdbx'),                 # KDBX v4
+            Path(base_dir).joinpath('test4.kdbx'),                # KDBX v4 (and test pathlib)
             os.path.join(base_dir, 'test4_aes.kdbx'),             # KDBX v4 AES
             os.path.join(base_dir, 'test4_aeskdf.kdbx'),          # KDBX v3 AESKDF
             os.path.join(base_dir, 'test4_chacha20.kdbx'),        # KDBX v4 ChaCha
@@ -993,7 +994,7 @@ class KDBXTests(unittest.TestCase):
             os.path.join(base_dir, 'test4_hex.kdbx'),             # legacy 64 byte hexadecimal keyfile
             os.path.join(base_dir, 'test3_transformed.kdbx'),     # KDBX v3 transformed_key open
             os.path.join(base_dir, 'test4_transformed.kdbx'),     # KDBX v4 transformed_key open
-            stream,
+            stream,                                               # test stream opening
             os.path.join(base_dir, 'test4_aes_uncompressed.kdbx'),# KDBX v4 AES uncompressed
             os.path.join(base_dir, 'test4_twofish_uncompressed.kdbx'),# KDBX v4 Twofish uncompressed
             os.path.join(base_dir, 'test4_chacha20_uncompressed.kdbx'),# KDBX v4 ChaCha uncompressed
@@ -1001,7 +1002,7 @@ class KDBXTests(unittest.TestCase):
         ]
         filenames_out = [
             os.path.join(base_dir, 'test3.kdbx.out'),
-            os.path.join(base_dir, 'test4.kdbx.out'),
+            Path(base_dir).joinpath('test4.kdbx.out'),
             os.path.join(base_dir, 'test4_aes.kdbx.out'),
             os.path.join(base_dir, 'test4_aeskdf.kdbx.out'),
             os.path.join(base_dir, 'test4_chacha20.kdbx.out'),
@@ -1049,7 +1050,7 @@ class KDBXTests(unittest.TestCase):
         ]
         keyfiles = [
             'test3.key',
-            'test4.key',
+            Path('test4.key'),
             'test4.key',
             'test4.key',
             'test4.key',

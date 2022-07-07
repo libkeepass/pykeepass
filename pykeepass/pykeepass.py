@@ -20,6 +20,7 @@ from dateutil import parser, tz
 from datetime import datetime, timedelta
 from lxml import etree
 from lxml.builder import E
+from pathlib import Path
 
 from pykeepass.attachment import Attachment
 from pykeepass.entry import Entry
@@ -165,8 +166,7 @@ class PyKeePass(object):
         else:
             # save to temporary file to prevent database clobbering
             # see issues 223, 101
-            # FIXME python2 - use pathlib.Path.withsuffix
-            filename_tmp = filename + '.tmp'
+            filename_tmp = Path(filename).with_suffix('.tmp')
             try:
                 KDBX.build_file(
                     self.kdbx,
