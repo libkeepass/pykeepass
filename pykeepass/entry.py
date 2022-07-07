@@ -286,7 +286,8 @@ class Entry(BaseElement):
 
     def save_history(self):
         '''
-        Save the entry in its history
+        Save the entry in its history.  History is not created unless this function is
+        explicitly called.
         '''
         archive = deepcopy(self._element)
         hist = archive.find('History')
