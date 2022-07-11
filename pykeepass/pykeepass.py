@@ -491,7 +491,7 @@ class PyKeePass(object):
     from .deprecated import (
         find_entries_by_title, find_entries_by_username, find_entries_by_password,
         find_entries_by_url, find_entries_by_path, find_entries_by_notes,
-        find_entries_by_string
+        find_entries_by_string, find_entries_by_uuid
     )
 
     def find_entries(self, recursive=True, path=None, group=None, **kwargs):
