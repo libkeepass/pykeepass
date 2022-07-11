@@ -124,6 +124,7 @@ class Entry(BaseElement):
 
     @property
     def title(self):
+        """str: get or set entry title"""
         return self._get_string_field('Title')
 
     @title.setter
@@ -132,6 +133,7 @@ class Entry(BaseElement):
 
     @property
     def username(self):
+        """str: get or set entry username"""
         return self._get_string_field('UserName')
 
     @username.setter
@@ -140,6 +142,7 @@ class Entry(BaseElement):
 
     @property
     def password(self):
+        """str: get or set entry password"""
         return self._get_string_field('Password')
 
     @password.setter
@@ -148,6 +151,7 @@ class Entry(BaseElement):
 
     @property
     def url(self):
+        """str: get or set entry URL"""
         return self._get_string_field('URL')
 
     @url.setter
@@ -156,6 +160,7 @@ class Entry(BaseElement):
 
     @property
     def notes(self):
+        """str: get or set entry notes"""
         return self._get_string_field('Notes')
 
     @notes.setter
@@ -164,6 +169,7 @@ class Entry(BaseElement):
 
     @property
     def icon(self):
+        """str: get or set entry icon. See icons.py"""
         return self._get_subelement_text('IconID')
 
     @icon.setter
@@ -172,6 +178,7 @@ class Entry(BaseElement):
 
     @property
     def tags(self):
+        """str: get or set entry tags"""
         val = self._get_subelement_text('Tags')
         return val.split(';') if val else val
 
@@ -183,6 +190,7 @@ class Entry(BaseElement):
 
     @property
     def otp(self):
+        """str: get or set entry OTP text. (defacto standard)"""
         return self._get_string_field('otp')
 
     @otp.setter
@@ -191,6 +199,7 @@ class Entry(BaseElement):
 
     @property
     def history(self):
+        """:obj:`list` of :obj:`HistoryEntry`: get entry history"""
         if self._element.find('History') is not None:
             return [HistoryEntry(element=x, kp=self._kp) for x in self._element.find('History').findall('Entry')]
         else:
@@ -202,6 +211,7 @@ class Entry(BaseElement):
 
     @property
     def autotype_enabled(self):
+        """bool: get or set autotype enabled state.  Determines whether `autotype_sequence` should be used"""
         enabled = self._element.find('AutoType/Enabled')
         if enabled.text is not None:
             return enabled.text == 'True'
@@ -216,6 +226,7 @@ class Entry(BaseElement):
 
     @property
     def autotype_sequence(self):
+        """str: get or set [autotype string](https://keepass.info/help/base/autotype.html)"""
         sequence = self._element.find('AutoType/DefaultSequence')
         if sequence is None or sequence.text == '':
             return None
@@ -227,6 +238,7 @@ class Entry(BaseElement):
 
     @property
     def is_a_history_entry(self):
+        """bool: check if entry is History entry"""
         parent = self._element.getparent()
         if parent is not None:
             return parent.tag == 'History'
@@ -235,7 +247,7 @@ class Entry(BaseElement):
     @property
     def path(self):
         """Path to element as list.  List contains all parent group names
-        ending with entry title.  List may contain strings or NoneTypes."""
+        ending with entry title.  List contains strings or NoneTypes."""
 
         # The root group is an orphan
         if self.parentgroup is None:
@@ -273,7 +285,16 @@ class Entry(BaseElement):
         return props
 
     def ref(self, attribute):
-        """Create reference to an attribute of this element."""
+        """Create reference to an attribute of this element.
+
+        Args:
+            attribute (str): one of 'title', 'username', 'password', 'url', 'notes', or 'uuid'
+
+        Returns:
+            str: [field reference][fieldref] to this field of this entry
+
+        [fieldref]: https://keepass.info/help/base/fieldrefs.html
+        """
         attribute_to_field = {
             'title': 'T',
             'username': 'U',
