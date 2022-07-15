@@ -418,7 +418,7 @@ pretty print database XML to file
 Tests and Debugging
 -------------------
 
-Run tests with :code:`python tests/tests.py`
+Run tests with :code:`python tests/tests.py` or :code:`python tests/tests.py SomeSpecificTest`
 
 Enable debugging when doing tests in console:
 
