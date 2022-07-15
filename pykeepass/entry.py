@@ -81,15 +81,36 @@ class Entry(BaseElement):
             self._element = element
 
     def _get_string_field(self, key):
+        """Get a string field from an entry
+
+        Args:
+            key (str): name of field
+
+        Returns:
+            (str or None): field value
+        """
+
         field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), first=True)
         if field is not None:
             return field.text
 
-    def _set_string_field(self, key, value):
+    def _set_string_field(self, key, value, protect=False):
+        """Create or overwrite a string field in an Entry
+
+        Args:
+            key (str): name of field
+            value (str): value of field
+            protect (bool): mark whether the field should be protected in memory
+                in other tools.  This property is ignored in PyKeePass and all
+                fields are decrypted immediately upon opening the database.
+        """
         field = self._xpath('String/Key[text()="{}"]/..'.format(key), first=True)
         if field is not None:
             self._element.remove(field)
-        self._element.append(E.String(E.Key(key), E.Value(value)))
+        if protect:
+            self._element.append(E.String(E.Key(key), E.Value(value, Protected="False")))
+        else:
+            self._element.append(E.String(E.Key(key), E.Value(value)))
 
     def _get_string_field_keys(self, exclude_reserved=False):
         results = [x.find('Key').text for x in self._element.findall('String')]
@@ -260,9 +281,9 @@ class Entry(BaseElement):
             p = p.parentgroup
         return path
 
-    def set_custom_property(self, key, value):
+    def set_custom_property(self, key, value, protect=False):
         assert key not in reserved_keys, '{} is a reserved key'.format(key)
-        return self._set_string_field(key, value)
+        return self._set_string_field(key, value, protect)
 
     def get_custom_property(self, key):
         assert key not in reserved_keys, '{} is a reserved key'.format(key)
