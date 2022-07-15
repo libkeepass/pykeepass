@@ -20,6 +20,7 @@ class Attachment(object):
 
     @property
     def id(self):
+        """str: get or set id of binary the attachment points to"""
         return int(self._element.find('Value').attrib['Ref'])
 
     @id.setter
@@ -28,6 +29,7 @@ class Attachment(object):
 
     @property
     def filename(self):
+        """str: get or set filename attachment"""
         return self._element.find('Key').text
 
     @filename.setter
@@ -36,11 +38,13 @@ class Attachment(object):
 
     @property
     def entry(self):
+        """Entry: get entry this attachment is associated with"""
         ancestor = self._element.getparent()
         return pykeepass.entry.Entry(element=ancestor, kp=self._kp)
 
     @property
     def binary(self):
+        """bytes: get binary this attachment points to"""
         try:
             return self._kp.binaries[self.id]
         except IndexError:
@@ -49,4 +53,5 @@ class Attachment(object):
     data = binary
 
     def delete(self):
+        """delete this attachment"""
         self._element.getparent().remove(self._element)

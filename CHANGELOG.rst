@@ -1,3 +1,20 @@
+4.0.4 -
+------------------
+- fixed #314 - correctly handle binaries with no data
+- fixed #265 - check for keepass signature
+- fixed #319 - support pathlib for filename/keyfile
+4.0.3 - 2022-06-21
+------------------
+- add otp support
+- add debug_setup() function
+
+4.0.2 - 2022-05-21
+------------------
+- added support for argon2id key derivation function
+- added credential expiry functions
+- fixes #223 - safe saving
+
+4.0.1 - 2021-05-22
 ------------------
 - added Entry.delete_history()
 - added HistoryEntry class

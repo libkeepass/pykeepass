@@ -24,7 +24,8 @@ reserved_keys = [
     'IconID',
     'Times',
     'History',
-    'Notes'
+    'Notes',
+    'otp'
 ]
 
 # FIXME python2
@@ -32,7 +33,7 @@ reserved_keys = [
 class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
-                 notes=None, tags=None, expires=False, expiry_time=None,
+                 notes=None, otp=None, tags=None, expires=False, expiry_time=None,
                  icon=None, autotype_sequence=None, autotype_enabled=True,
                  element=None, kp=None):
 
@@ -55,6 +56,8 @@ class Entry(BaseElement):
                 self._element.append(E.String(E.Key('URL'), E.Value(url)))
             if notes:
                 self._element.append(E.String(E.Key('Notes'), E.Value(notes)))
+            if otp:
+                self._element.append(E.String(E.Key('otp'), E.Value(otp)))
             if tags:
                 self._element.append(
                     E.Tags(';'.join(tags) if type(tags) is list else tags)
@@ -66,6 +69,7 @@ class Entry(BaseElement):
                     E.DefaultSequence(str(autotype_sequence) if autotype_sequence else '')
                 )
             )
+            # FIXME: include custom_properties in constructor
 
         else:
             assert type(element) in [_Element, Element, ObjectifiedElement], \
@@ -123,6 +127,7 @@ class Entry(BaseElement):
 
     @property
     def title(self):
+        """str: get or set entry title"""
         return self._get_string_field('Title')
 
     @title.setter
@@ -131,6 +136,7 @@ class Entry(BaseElement):
 
     @property
     def username(self):
+        """str: get or set entry username"""
         return self._get_string_field('UserName')
 
     @username.setter
@@ -139,6 +145,7 @@ class Entry(BaseElement):
 
     @property
     def password(self):
+        """str: get or set entry password"""
         return self._get_string_field('Password')
 
     @password.setter
@@ -147,6 +154,7 @@ class Entry(BaseElement):
 
     @property
     def url(self):
+        """str: get or set entry URL"""
         return self._get_string_field('URL')
 
     @url.setter
@@ -155,6 +163,7 @@ class Entry(BaseElement):
 
     @property
     def notes(self):
+        """str: get or set entry notes"""
         return self._get_string_field('Notes')
 
     @notes.setter
@@ -163,6 +172,7 @@ class Entry(BaseElement):
 
     @property
     def icon(self):
+        """str: get or set entry icon. See icons.py"""
         return self._get_subelement_text('IconID')
 
     @icon.setter
@@ -171,6 +181,7 @@ class Entry(BaseElement):
 
     @property
     def tags(self):
+        """str: get or set entry tags"""
         val = self._get_subelement_text('Tags')
         return val.split(';') if val else val
 
@@ -181,7 +192,17 @@ class Entry(BaseElement):
         return self._set_subelement_text('Tags', v)
 
     @property
+    def otp(self):
+        """str: get or set entry OTP text. (defacto standard)"""
+        return self._get_string_field('otp')
+
+    @otp.setter
+    def otp(self, value):
+        return self._set_string_field('otp', value)
+
+    @property
     def history(self):
+        """:obj:`list` of :obj:`HistoryEntry`: get entry history"""
         if self._element.find('History') is not None:
             return [HistoryEntry(element=x, kp=self._kp) for x in self._element.find('History').findall('Entry')]
         else:
@@ -193,6 +214,7 @@ class Entry(BaseElement):
 
     @property
     def autotype_enabled(self):
+        """bool: get or set autotype enabled state.  Determines whether `autotype_sequence` should be used"""
         enabled = self._element.find('AutoType/Enabled')
         if enabled.text is not None:
             return enabled.text == 'True'
@@ -207,6 +229,7 @@ class Entry(BaseElement):
 
     @property
     def autotype_sequence(self):
+        """str: get or set [autotype string](https://keepass.info/help/base/autotype.html)"""
         sequence = self._element.find('AutoType/DefaultSequence')
         if sequence is None or sequence.text == '':
             return None
@@ -218,6 +241,7 @@ class Entry(BaseElement):
 
     @property
     def is_a_history_entry(self):
+        """bool: check if entry is History entry"""
         parent = self._element.getparent()
         if parent is not None:
             return parent.tag == 'History'
@@ -226,7 +250,7 @@ class Entry(BaseElement):
     @property
     def path(self):
         """Path to element as list.  List contains all parent group names
-        ending with entry title.  List may contain strings or NoneTypes."""
+        ending with entry title.  List contains strings or NoneTypes."""
 
         # The root group is an orphan
         if self.parentgroup is None:
@@ -264,7 +288,16 @@ class Entry(BaseElement):
         return props
 
     def ref(self, attribute):
-        """Create reference to an attribute of this element."""
+        """Create reference to an attribute of this element.
+
+        Args:
+            attribute (str): one of 'title', 'username', 'password', 'url', 'notes', or 'uuid'
+
+        Returns:
+            str: [field reference][fieldref] to this field of this entry
+
+        [fieldref]: https://keepass.info/help/base/fieldrefs.html
+        """
         attribute_to_field = {
             'title': 'T',
             'username': 'U',
@@ -277,7 +310,8 @@ class Entry(BaseElement):
 
     def save_history(self):
         '''
-        Save the entry in its history
+        Save the entry in its history.  History is not created unless this function is
+        explicitly called.
         '''
         archive = deepcopy(self._element)
         hist = archive.find('History')

@@ -22,7 +22,7 @@ Come chat at `#pykeepass`_ on Freenode or `#pykeepass:matrix.org`_ on Matrix.
 .. _#pykeepass\:matrix.org: https://matrix.to/#/%23pykeepass:matrix.org 
 
 Example
---------------
+-------
 .. code:: python
 
    from pykeepass import PyKeePass
@@ -58,12 +58,15 @@ Example
    >>> kp.save()
 
 
+..
+    TODO: add `Entry` and `Group` sections to document attributes of each
+
 Finding Entries
-----------------------
+---------------
 
-**find_entries** (title=None, username=None, password=None, url=None, notes=None, path=None, uuid=None, tags=None, string=None, group=None, recursive=True, regex=False, flags=None, history=False, first=False)
+**find_entries** (title=None, username=None, password=None, url=None, notes=None, otp=None, path=None, uuid=None, tags=None, string=None, group=None, recursive=True, regex=False, flags=None, history=False, first=False)
 
-Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, and ``autotype_sequence`` are strings, ``path`` is a list, ``string`` is a dict, ``autotype_enabled`` is a boolean, ``uuid`` is a ``uuid.UUID`` and ``tags`` is a list of strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
+Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``otp``, and ``autotype_sequence`` are strings, ``path`` is a list, ``string`` is a dict, ``autotype_enabled`` is a boolean, ``uuid`` is a ``uuid.UUID`` and ``tags`` is a list of strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
 .. _flags: https://www.w3.org/TR/xpath-functions/#flags 
@@ -101,14 +104,19 @@ a flattened list of all entries in the database
    'facebook.com'
    >>> entry.title
    'foo_entry'
+   >>> entry.title = 'hello'
 
    >>> group = kp.find_group(name='social', first=True)
    >>> kp.find_entries(title='facebook', group=group, recursive=False, first=True)
    Entry: "social/facebook (myusername)"
 
+   >>> entry.otp
+   otpauth://totp/test:lkj?secret=TEST%3D%3D%3D%3D&period=30&digits=6&issuer=test
+
+
 
 Finding Groups
-----------------------
+--------------
 
 **find_groups** (name=None, path=None, uuid=None, notes=None, group=None, recursive=True, regex=False, flags=None, first=False)
 
@@ -155,11 +163,15 @@ a flattened list of all groups in the database
    Group: "/"
 
 
-Adding Entries
---------------
+Entry Functions
+---------------
 **add_entry** (destination_group, title, username, password, url=None, notes=None, tags=None, expiry_time=None, icon=None, force_creation=False)
 
 **delete_entry** (entry)
+
+**trash_entry** (entry)
+
+move a group to the recycle bin.  The recycle bin is created if it does not exit.  ``entry`` must be an empty Entry.
 
 **move_entry** (entry, destination_group)
 
@@ -190,11 +202,19 @@ If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is no
    # save the database
    >>> kp.save()
 
-Adding Groups
---------------
+Group Functions
+---------------
 **add_group** (destination_group, group_name, icon=None, notes=None)
 
 **delete_group** (group)
+
+**trash_group** (group)
+
+move a group to the recycle bin.  The recycle bin is created if it does not exit.  ``group`` must be an empty Group.
+
+**empty_group** (group)
+
+delete all entries and subgroups of a group.  ``group`` is an instance of ``Group``.
 
 **move_group** (group, destination_group)
 
@@ -224,7 +244,7 @@ Adding Groups
 Attachments
 -----------
 
-In this section, *binary* refers to the bytes of the attached data (stored at the root level of the database), while *attachment* is a reference to a binary (stored in an entry).  A binary can have none, one or many attachments.
+In this section, *binary* refers to the bytes of the attached data (stored at the root level of the database), while *attachment* is a reference to a binary (stored in an entry).  A binary can be referenced by none, one or many attachments.
 
 **add_binary** (data, compressed=True, protected=True)
 
@@ -243,7 +263,7 @@ where ``id`` is an int, ``filename`` is a string, and element is an ``Entry`` or
 
 **binaries**
 
-list of bytestrings containing binary data.  List index corresponds to attachment id.
+list of bytestrings containing binary data.  List index corresponds to attachment id
 
 **attachments**
 
@@ -310,13 +330,37 @@ the entry that this attachment is attached to
 
    # search attachments
    >>> kp.find_attachments(filename='hello.txt')
-   [Attachment: 'hello.txt' -> 0]
+   [Attachment: 'hello.txt** -> 0]
 
    # delete attachment reference
    >>> e.delete_attachment(a)
 
    # or, delete both attachment reference and binary
-   >>> kp.delete_binary(binary_id)
+   >>> kp.delete_binary(binary_id**
+
+Credential Expiry
+-----------------
+
+**credchange_date**
+
+datetime object with date of last credentials change
+
+**credchange_required**
+
+boolean whether database credentials have expired and are required to change
+
+**credchange_recommended**
+
+boolean whether database credentials have expired and are recommended to change
+
+**credchange_required_days**
+
+days after **credchange_date** that credential update is required
+
+**credchange_recommended_days**
+
+days after **credchange_date** that credential update is recommended
+
 
 Miscellaneous
 -------------
@@ -326,13 +370,21 @@ where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is 
 
 Can raise ``CredentialsError``, ``HeaderChecksumError``, or ``PayloadChecksumError``.
 
+**reload** ()
+
+reload database from disk using previous credentials
+
 **save** (filename=None)
 
 where ``filename`` is the path of the file to save to.  If ``filename`` is not given, the path given in ``read`` will be used.
 
 **password**
 
-string containing database password.  Can also be set.  Use ``None`` for no password.
+string containing database password.  Can also be set.  Use ``None** for no password.
+
+**filename**
+
+string containing path to database.  Can also be set
 
 **keyfile**
 
@@ -350,15 +402,32 @@ string containing algorithm used to encrypt database.  Possible values are ``aes
 
 create a new database at ``filename`` with supplied credentials.  Returns ``PyKeePass`` object
 
-**trash_group** (group)
+**tree**
 
-move a group to the recycle bin.  The recycle bin is created if it does not exit.  ``group`` must be an empty Group.
+database lxml tree
 
-**empty_group** (group)
+**xml**
 
-delete all entries and subgroups of a group.  ``group`` is an instance of ``Group``.
+get database XML data as string
 
-Tests
--------------
+**dump_xml** (filename)
 
-To run them issue :code:`python tests/tests.py`
+pretty print database XML to file
+
+
+Tests and Debugging
+-------------------
+
+Run tests with :code:`python tests/tests.py`
+
+Enable debugging when doing tests in console:
+
+   >>> from pykeepass.pykeepass import debug_setup
+   >>> debug_setup()
+   >>> kp.entries[0]
+   DEBUG:pykeepass.pykeepass:xpath query: //Entry
+   DEBUG:pykeepass.pykeepass:xpath query: (ancestor::Group)[last()]
+   DEBUG:pykeepass.pykeepass:xpath query: (ancestor::Group)[last()]
+   DEBUG:pykeepass.pykeepass:xpath query: String/Key[text()="Title"]/../Value
+   DEBUG:pykeepass.pykeepass:xpath query: String/Key[text()="UserName"]/../Value
+   Entry: "root_entry (foobar_user)"
