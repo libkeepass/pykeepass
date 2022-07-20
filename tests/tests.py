@@ -597,6 +597,16 @@ class EntryTests3(KDBX3Tests):
         self.assertEqual(len(entry.attachments), num_attach + 1)
         self.assertEqual(entry.attachments[0].filename, 'foobar2.txt')
 
+    def test_is_custom_property_protected(self):
+        e = self.kp.add_entry(self.kp.root_group, 'test-protect', 'some-user', 'pass')
+        e.set_custom_property('protected', 'something', protect=True)
+        e.set_custom_property('explicit-unprotected', 'other', protect=False)
+        e.set_custom_property('not-protected', 'secret')
+        self.assertTrue(e.is_custom_property_protected('protected'))
+        self.assertFalse(e.is_custom_property_protected('explicit-unprotected'))
+        self.assertFalse(e.is_custom_property_protected('not-protected'))
+        self.assertFalse(e.is_custom_property_protected('non-existent'))
+
 
 class EntryHistoryTests3(KDBX3Tests):
 

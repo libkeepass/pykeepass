@@ -294,6 +294,25 @@ class Entry(BaseElement):
             raise AttributeError('Could not find property element')
         self._element.remove(prop)
 
+    def is_custom_property_protected(self, key):
+        """Whether a custom property is protected.
+
+        Return False if the entry does not have a custom property with the
+        specified key.
+
+        Args:
+            key (:obj:`str`): key of the custom property to check.
+
+        Returns:
+            bool: Whether the custom property is protected.
+
+        """
+        assert key not in reserved_keys, '{} is a reserved key'.format(key)
+        field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), first=True)
+        if field is not None:
+            return field.attrib.get("Protected", "False") == "True"
+        return False
+
     @property
     def custom_properties(self):
         keys = self._get_string_field_keys(exclude_reserved=True)
