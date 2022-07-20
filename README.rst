@@ -248,7 +248,7 @@ In this section, *binary* refers to the bytes of the attached data (stored at th
 
 **add_binary** (data, compressed=True, protected=True)
 
-where ``data`` is bytes.  Adds a blob of data to the database. The attachment reference must still be added to an entry (see below).  ``compressed`` only applies to KDBX3 and ``protected`` only applies to KDBX4.  Returns id of attachment.
+where ``data`` is bytes.  Adds a blob of data to the database. The attachment reference must still be added to an entry (see below).  ``compressed`` only applies to KDBX3 and ``protected`` only applies to KDBX4 (no effect if used on wrong database version).  Returns id of attachment.
 
 **delete_binary** (id)
 
