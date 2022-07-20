@@ -42,6 +42,7 @@ class Group(BaseElement):
 
     @property
     def name(self):
+        """str: get or set group name"""
         return self._get_subelement_text('Name')
 
     @name.setter
@@ -50,6 +51,7 @@ class Group(BaseElement):
 
     @property
     def notes(self):
+        """str: get or set group notes"""
         return self._get_subelement_text('Notes')
 
     @notes.setter
@@ -58,23 +60,22 @@ class Group(BaseElement):
 
     @property
     def entries(self):
-        # FIXME
-        # It may be better to keep a list of Entries as a (list) property
-        # ... but that may become out of sync and what is supposed to happen
-        # when an entry is updated?!
-        # On the other side this would make things like "e in g.entries" work
+        """:obj:`list` of :obj:`Entry`: get list of entries in this group"""
         return [pykeepass.entry.Entry(element=x, kp=self._kp) for x in self._element.findall('Entry')]
 
     @property
     def subgroups(self):
+        """:obj:`list` of :obj:`Group`: get list of groups in this group"""
         return [Group(element=x, kp=self._kp) for x in self._element.findall('Group')]
 
     @property
     def is_root_group(self):
+        """bool: return True if this is the database root"""
         return self._element.getparent().tag == 'Root'
 
     @property
     def path(self):
+        """:obj:`list` of (:obj:`str` or None): a list containing names of all parent groups, not including root"""
         # The root group is an orphan
         if self.is_root_group or self.parentgroup is None:
             return []
@@ -87,6 +88,11 @@ class Group(BaseElement):
         return path
 
     def append(self, entries):
+        """Add copy of an entry to this group
+
+        Args:
+            entries (:obj:`Entry` or :obj:`list` of :obj:`Entry`)
+        """
         if type(entries) is list:
             for e in entries:
                 self._element.append(e._element)

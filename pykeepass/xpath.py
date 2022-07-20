@@ -35,6 +35,7 @@ entry_xp = {
         'string': '/String/Key[text()="{}"]/../Value[text()="{}"]/../..',
         'autotype_sequence': '/AutoType/DefaultSequence[text()="{}"]/../..',
         'autotype_enabled': '/AutoType/Enabled[text()="{}"]/../..',
+        'otp': '/String/Key[text()="otp"]/../Value[text()="{}"]/../..',
     },
     True: {
         'title': '/String/Key[text()="Title"]/../Value[re:test(text(), "{}", "{flags}")]/../..',
@@ -47,6 +48,7 @@ entry_xp = {
         'string': '/String/Key[text()="{}"]/../Value[re:test(text(), "{}", "{flags}")]/../..',
         'autotype_sequence': '/AutoType/DefaultSequence[re:test(text(), "{}", "{flags}")]/../..',
         'autotype_enabled': '/AutoType/Enabled[re:test(text(), "{}", "{flags}")]/../..',
+        'otp': '/String/Key[text()="otp"]/../Value[re:test(text(), "{}", "{flags}")]/../..',
     }
 }
 

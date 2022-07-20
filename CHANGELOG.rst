@@ -1,6 +1,33 @@
+4.0.4 -
 ------------------
-- added Entry.delete_history
+- fixed #314 - correctly handle binaries with no data
+- fixed #265 - check for keepass signature
+- fixed #319 - support pathlib for filename/keyfile
+- fixed #194 - added 'protected' arg to _set_string_field
+- use official icon names from KeePass source and deprecate old icons
+- added Entry.is_custom_property_protected()
+
+4.0.3 - 2022-06-21
+------------------
+- add otp support
+- add debug_setup() function
+
+4.0.2 - 2022-05-21
+------------------
+- added support for argon2id key derivation function
+- added credential expiry functions
+- fixes #223 - safe saving
+
+4.0.1 - 2021-05-22
+------------------
+- added Entry.delete_history()
 - added HistoryEntry class
+- added Group.touch()
+- support 2.0 keyfiles
+- added PyKeePass.reload()
+- dropped python2 tests
+- fixed #284 - autotype_sequence returns string 'None'
+- fixed #244 - incorrect PKCS padding error
 
 4.0.0 - 2021-01-15
 ------------------

@@ -12,15 +12,15 @@ from datetime import datetime, timedelta
 
 from dateutil import tz
 from lxml.etree import Element
+from pathlib import Path
 
 from io import BytesIO
 
 from pykeepass import PyKeePass, icons
 from pykeepass.entry import Entry
-from pykeepass.exceptions import BinaryError
 from pykeepass.group import Group
 from pykeepass.kdbx_parsing import KDBX
-from pykeepass.exceptions import BinaryError, CredentialsError
+from pykeepass.exceptions import BinaryError, CredentialsError, HeaderChecksumError
 
 """
 Missing Tests:
@@ -41,16 +41,17 @@ logger = logging.getLogger("pykeepass")
 
 
 class KDBX3Tests(unittest.TestCase):
-    database = 'test3.kdbx'
+    database = os.path.join(base_dir, 'test3.kdbx')
     password = 'password'
-    keyfile = 'test3.key'
+    keyfile = os.path.join(base_dir, 'test3.key')
+
+    database_tmp = os.path.join(base_dir, 'test3_tmp.kdbx')
+    keyfile_tmp = os.path.join(base_dir, 'test3_tmp.key')
 
     # get some things ready before testing
     def setUp(self):
-        shutil.copy(
-            os.path.join(base_dir, self.database),
-            os.path.join(base_dir, 'change_creds.kdbx')
-        )
+        shutil.copy(self.database, self.database_tmp)
+        shutil.copy(self.keyfile, self.keyfile_tmp)
         self.kp = PyKeePass(
             os.path.join(base_dir, self.database),
             password=self.password,
@@ -58,16 +59,23 @@ class KDBX3Tests(unittest.TestCase):
         )
         # for tests which modify the database, use this
         self.kp_tmp = PyKeePass(
-            os.path.join(base_dir, 'change_creds.kdbx'),
+            os.path.join(base_dir, self.database_tmp),
             password=self.password,
-            keyfile=os.path.join(base_dir, self.keyfile)
+            keyfile=os.path.join(base_dir, self.keyfile_tmp)
         )
+
+    def tearDown(self):
+        os.remove(self.keyfile_tmp)
+        os.remove(self.database_tmp)
 
 
 class KDBX4Tests(KDBX3Tests):
-    database = 'test4.kdbx'
+    database = os.path.join(base_dir, 'test4.kdbx')
     password = 'password'
-    keyfile = 'test4.key'
+    keyfile = os.path.join(base_dir, 'test4.key')
+
+    database_tmp = os.path.join(base_dir, 'test4_tmp.kdbx')
+    keyfile_tmp = os.path.join(base_dir, 'test4_tmp.key')
 
 
 class EntryFindTests3(KDBX3Tests):
@@ -142,6 +150,11 @@ class EntryFindTests3(KDBX3Tests):
     def test_find_entries_by_autotype_enabled(self):
         results = self.kp.find_entries(autotype_enabled=True)
         self.assertEqual(len(results), len(self.kp.entries) - 1)
+
+    def test_find_entries_by_otp(self):
+        results = self.kp.find_entries(otp='otpsecret', regex=True, flags='i')
+        self.assertEqual(len(results), 1)
+        self.assertEqual('foobar_entry', results[0].title)
 
     def test_find_entries(self):
         results = self.kp.find_entries(title='Root_entry', regex=True)
@@ -230,6 +243,7 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual(results.notes, unique_str + 'notes')
         self.assertEqual(results.tags, [unique_str + 'tags'])
         self.assertTrue(results.uuid != None)
+        self.assertTrue(results.autotype_sequence is None)
         # convert naive datetime to utc
         expiry_time_utc = expiry_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC'))
         self.assertEqual(results.icon, icons.KEY)
@@ -425,6 +439,7 @@ class EntryTests3(KDBX3Tests):
             url='url',
             notes='notes',
             tags='tags',
+            otp='otp',
             expires=True,
             expiry_time=time,
             icon=icons.KEY,
@@ -437,6 +452,7 @@ class EntryTests3(KDBX3Tests):
         self.assertEqual(entry.url, 'url')
         self.assertEqual(entry.notes, 'notes')
         self.assertEqual(entry.tags, ['tags'])
+        self.assertEqual(entry.otp, 'otp')
         self.assertEqual(entry.expires, True)
         self.assertEqual(entry.expiry_time,
                          time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
@@ -489,6 +505,7 @@ class EntryTests3(KDBX3Tests):
         entry.icon = icons.GLOBE
         entry.set_custom_property('foo', 'bar')
         entry.set_custom_property('multiline', 'hello\nworld')
+        entry.otp = "otpsecret"
 
         self.assertEqual(entry.title, changed_string + 'title')
         self.assertEqual(entry.username, changed_string + 'username')
@@ -498,6 +515,7 @@ class EntryTests3(KDBX3Tests):
         self.assertEqual(entry.icon, icons.GLOBE)
         self.assertEqual(entry.get_custom_property('foo'), 'bar')
         self.assertEqual(entry.get_custom_property('multiline'), 'hello\nworld')
+        self.assertEqual(entry.otp, 'otpsecret')
         self.assertIn('foo', entry.custom_properties)
         entry.delete_custom_property('foo')
         self.assertEqual(entry.get_custom_property('foo'), None)
@@ -578,6 +596,16 @@ class EntryTests3(KDBX3Tests):
         entry.delete_attachment(a)
         self.assertEqual(len(entry.attachments), num_attach + 1)
         self.assertEqual(entry.attachments[0].filename, 'foobar2.txt')
+
+    def test_is_custom_property_protected(self):
+        e = self.kp.add_entry(self.kp.root_group, 'test-protect', 'some-user', 'pass')
+        e.set_custom_property('protected', 'something', protect=True)
+        e.set_custom_property('explicit-unprotected', 'other', protect=False)
+        e.set_custom_property('not-protected', 'secret')
+        self.assertTrue(e.is_custom_property_protected('protected'))
+        self.assertFalse(e.is_custom_property_protected('explicit-unprotected'))
+        self.assertFalse(e.is_custom_property_protected('not-protected'))
+        self.assertFalse(e.is_custom_property_protected('non-existent'))
 
 
 class EntryHistoryTests3(KDBX3Tests):
@@ -738,39 +766,31 @@ class GroupTests3(KDBX3Tests):
 
 class AttachmentTests3(KDBX3Tests):
     # get some things ready before testing
-    def setUp(self):
-        shutil.copy(
-            os.path.join(base_dir, self.database),
-            os.path.join(base_dir, 'test_attachment.kdbx')
-        )
-        self.open()
-
-    def open(self):
-        self.kp = PyKeePass(
-            os.path.join(base_dir, 'test_attachment.kdbx'),
-            password=self.password,
-            keyfile=os.path.join(base_dir, self.keyfile)
-        )
 
     def test_create_delete_binary(self):
         with self.assertRaises(BinaryError):
-            self.kp.delete_binary(999)
+            self.kp_tmp.delete_binary(999)
         with self.assertRaises(BinaryError):
-            e = self.kp.entries[0]
+            e = self.kp_tmp.entries[0]
             e.add_attachment(filename='foo.txt', id=123)
             e.attachments[0].binary
 
-        binary_id = self.kp.add_binary(b'Ronald McDonald Trump')
-        self.kp.save()
-        self.open()
-        self.assertEqual(self.kp.binaries[binary_id], b'Ronald McDonald Trump')
-        self.assertEqual(len(self.kp.attachments), 1)
+        binary_id = self.kp_tmp.add_binary(b'Ronald McDonald Trump')
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+        self.assertEqual(self.kp_tmp.binaries[binary_id], b'Ronald McDonald Trump')
+        self.assertEqual(len(self.kp_tmp.attachments), 2)
 
-        num_attach = len(self.kp.binaries)
-        self.kp.delete_binary(binary_id)
-        self.kp.save()
-        self.open()
-        self.assertEqual(len(self.kp.binaries), num_attach - 1)
+        num_attach = len(self.kp_tmp.binaries)
+        self.kp_tmp.delete_binary(binary_id)
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+        self.assertEqual(len(self.kp_tmp.binaries), num_attach - 1)
+
+        # test empty attachment - issue 314
+        a = self.kp.find_attachments(filename='foo.txt', first=True)
+        self.assertEqual(a._element.text, None)
+        self.assertEqual(a.data, b'')
 
     def test_attachment_reference_decrement(self):
         e = self.kp.entries[0]
@@ -786,15 +806,13 @@ class AttachmentTests3(KDBX3Tests):
         self.assertEqual(attachment2.id, binary_id2 - 1)
 
     def test_fields(self):
+        # test creation
         e = self.kp.entries[0]
         binary_id = self.kp.add_binary(b'foobar')
         a = e.add_attachment(filename='test.txt', id=binary_id)
         self.assertEqual(a.data, b'foobar')
         self.assertEqual(a.id, binary_id)
         self.assertEqual(a.filename, 'test.txt')
-
-    def tearDown(self):
-        os.remove(os.path.join(base_dir, 'test_attachment.kdbx'))
 
 
 class PyKeePassTests3(KDBX3Tests):
@@ -818,9 +836,46 @@ class PyKeePassTests3(KDBX3Tests):
             first_line = f.readline()
             self.assertEqual(first_line, '<?xml version=\'1.0\' encoding=\'utf-8\' standalone=\'yes\'?>\n')
 
-    def tearDown(self):
-        os.remove(os.path.join(base_dir, 'change_creds.kdbx'))
+    def test_credchange(self):
+        """
+        - test rec/req boolean (expired, no expired, days=-1)
+        - test get/set days
+        - test cred set timer reset
+        """
 
+        required_days = 5
+        recommended_days = 5
+        unexpired_date = datetime.now() - timedelta(days=1)
+        expired_date = datetime.now() - timedelta(days=10)
+
+        self.kp.credchange_required_days = required_days
+        self.kp.credchange_recommended_days = recommended_days
+
+        # test not expired
+        self.kp.credchange_date = unexpired_date
+        self.assertFalse(self.kp.credchange_required)
+        self.assertFalse(self.kp.credchange_recommended)
+
+        # test expired
+        self.kp.credchange_date = expired_date
+        self.assertTrue(self.kp.credchange_required)
+        self.assertTrue(self.kp.credchange_recommended)
+
+        # test expiry disabled
+        self.kp.credchange_required_days = -1
+        self.kp.credchange_recommended_days = -1
+        self.assertFalse(self.kp.credchange_required)
+        self.assertFalse(self.kp.credchange_recommended)
+
+        # test credential update
+        self.kp.credchange_required_days = required_days
+        self.kp.credchange_recommended_days = recommended_days
+        self.kp.credchange_date = expired_date
+        self.assertTrue(self.kp.credchange_required)
+        self.assertTrue(self.kp.credchange_recommended)
+        self.kp.keyfile = 'foo'
+        self.assertFalse(self.kp.credchange_required)
+        self.assertFalse(self.kp.credchange_recommended)
 
 class BugRegressionTests3(KDBX3Tests):
     def test_issue129(self):
@@ -860,6 +915,43 @@ class BugRegressionTests3(KDBX3Tests):
         e = self.kp_tmp.find_entries(title='protect_test', first=True)
         self.assertEqual(e.password, 'pass')
 
+    def test_issue223(self):
+        # issue 223 - database is clobbered when kp.save() fails
+        # even if exception is caught
+
+        # test clobbering with file on disk
+        # change keyfile so database save fails
+        self.kp_tmp.keyfile = 'foo'
+        with self.assertRaises(Exception):
+            self.kp_tmp.save()
+        # try to open database
+        self.kp_tmp.keyfile = self.keyfile_tmp
+        PyKeePass(self.database_tmp, self.password, self.keyfile_tmp)
+        # reset test database
+        self.setUp()
+
+        # test clobbering with buffer
+        stream = BytesIO()
+        self.kp_tmp.save(stream)
+        stream.seek(0)
+
+        # change keyfile so database save fails
+        self.kp_tmp.keyfile = 'foo'
+        self.kp_tmp.password = ('invalid', 'type')
+        with self.assertRaises(Exception):
+            self.kp_tmp.save(stream)
+        stream.seek(0)
+        # try to open database
+        self.kp_tmp.keyfile = self.keyfile_tmp
+        PyKeePass(stream, self.password, self.keyfile_tmp)
+
+    def test_issue308(self):
+        # find_entries/find_groups() break when supplied None values directly
+
+        results = self.kp.find_entries(title='foobar_entry')
+        results2 = self.kp.find_entries(title='foobar_entry', username=None)
+
+        self.assertEqual(results, results2)
 
 
 class EntryFindTests4(KDBX4Tests, EntryFindTests3):
@@ -904,7 +996,7 @@ class KDBXTests(unittest.TestCase):
 
         filenames_in = [
             os.path.join(base_dir, 'test3.kdbx'),                 # KDBX v3
-            os.path.join(base_dir, 'test4.kdbx'),                 # KDBX v4
+            Path(base_dir).joinpath('test4.kdbx'),                # KDBX v4 (and test pathlib)
             os.path.join(base_dir, 'test4_aes.kdbx'),             # KDBX v4 AES
             os.path.join(base_dir, 'test4_aeskdf.kdbx'),          # KDBX v3 AESKDF
             os.path.join(base_dir, 'test4_chacha20.kdbx'),        # KDBX v4 ChaCha
@@ -912,12 +1004,15 @@ class KDBXTests(unittest.TestCase):
             os.path.join(base_dir, 'test4_hex.kdbx'),             # legacy 64 byte hexadecimal keyfile
             os.path.join(base_dir, 'test3_transformed.kdbx'),     # KDBX v3 transformed_key open
             os.path.join(base_dir, 'test4_transformed.kdbx'),     # KDBX v4 transformed_key open
-            stream,
-            os.path.join(base_dir, 'test4_aes_uncompressed.kdbx') # KDBX v4 AES uncompressed
+            stream,                                               # test stream opening
+            os.path.join(base_dir, 'test4_aes_uncompressed.kdbx'),# KDBX v4 AES uncompressed
+            os.path.join(base_dir, 'test4_twofish_uncompressed.kdbx'),# KDBX v4 Twofish uncompressed
+            os.path.join(base_dir, 'test4_chacha20_uncompressed.kdbx'),# KDBX v4 ChaCha uncompressed
+            os.path.join(base_dir, 'test4_argon2id.kdbx'),        # KDBX v4 Argon2id
         ]
         filenames_out = [
             os.path.join(base_dir, 'test3.kdbx.out'),
-            os.path.join(base_dir, 'test4.kdbx.out'),
+            Path(base_dir).joinpath('test4.kdbx.out'),
             os.path.join(base_dir, 'test4_aes.kdbx.out'),
             os.path.join(base_dir, 'test4_aeskdf.kdbx.out'),
             os.path.join(base_dir, 'test4_chacha20.kdbx.out'),
@@ -927,8 +1022,9 @@ class KDBXTests(unittest.TestCase):
             os.path.join(base_dir, 'test4_transformed.kdbx.out'),
             BytesIO(),
             os.path.join(base_dir, 'test4_aes_uncompressed.kdbx.out'),
-            os.path.join(base_dir, 'test4_twofish_uncompressed.kdbx.out'),
-            os.path.join(base_dir, 'test4_chacha20_uncompressed.kdbx.out'),
+            os.path.join(base_dir, 'test4_twofish_uncompressed.kdbx.out'),# KDBX v4 Twofish uncompressed
+            os.path.join(base_dir, 'test4_chacha20_uncompressed.kdbx.out'),# KDBX v4 ChaCha uncompressed
+            os.path.join(base_dir, 'test4_argon2id.kdbx.out'),
         ]
         passwords = [
             'password',
@@ -940,6 +1036,7 @@ class KDBXTests(unittest.TestCase):
             'password',
             None,
             None,
+            'password',
             'password',
             'password',
             'password',
@@ -959,10 +1056,11 @@ class KDBXTests(unittest.TestCase):
             None,
             None,
             None,
+            None,
         ]
         keyfiles = [
             'test3.key',
-            'test4.key',
+            Path('test4.key'),
             'test4.key',
             'test4.key',
             'test4.key',
@@ -971,6 +1069,7 @@ class KDBXTests(unittest.TestCase):
             None,
             None,
             'test3.key',
+            None,
             None,
             None,
             None,
@@ -989,6 +1088,7 @@ class KDBXTests(unittest.TestCase):
             'aes256',
             'twofish',
             'chacha20',
+            'aes256',
         ]
         kdf_algorithms = [
             'aeskdf',
@@ -1004,6 +1104,7 @@ class KDBXTests(unittest.TestCase):
             'argon2',
             'argon2',
             'argon2',
+            'argon2id',
         ]
         versions = [
             (3, 1),
@@ -1016,6 +1117,7 @@ class KDBXTests(unittest.TestCase):
             (3, 1),
             (4, 0),
             (3, 1),
+            (4, 0),
             (4, 0),
             (4, 0),
             (4, 0),
@@ -1075,18 +1177,20 @@ class KDBXTests(unittest.TestCase):
             if filename.endswith('.out'):
                 os.remove(os.path.join(base_dir, filename))
 
-    def test_credentials_error(self):
+    def test_open_error(self):
 
         databases = [
             'test3.kdbx',
             'test3.kdbx',
             'test4.kdbx',
-            'test4.kdbx'
+            'test4.kdbx',
+            'test3.key',
         ]
         passwords = [
             'invalid',
             'password',
             'invalid',
+            'password',
             'password',
         ]
         keyfiles = [
@@ -1094,9 +1198,17 @@ class KDBXTests(unittest.TestCase):
             'test4.key',
             'test4.key',
             'test3.key',
+            'test3.key',
         ]
-        for database, password, keyfile in zip(databases, passwords, keyfiles):
-            with self.assertRaises(CredentialsError):
+        errors = [
+            CredentialsError,
+            CredentialsError,
+            CredentialsError,
+            CredentialsError,
+            HeaderChecksumError,
+        ]
+        for database, password, keyfile, error in zip(databases, passwords, keyfiles, errors):
+            with self.assertRaises(error):
                 PyKeePass(
                     os.path.join(base_dir, database),
                     password,
@@ -1105,3 +1217,4 @@ class KDBXTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

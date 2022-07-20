@@ -17,11 +17,11 @@ setup(
     author="Philipp Schmitt",
     author_email="philipp@schmitt.co",
     url="https://github.com/libkeepass/pykeepass",
-    packages=find_packages(),
+    packages=find_packages(include=['pykeepass', 'pykeepass.*']),
     install_requires=[
         "python-dateutil",
         # FIXME python2 - last version to support python2
-        "construct==2.10.54",
+        "construct==2.10.68",
         "argon2_cffi",
         "pycryptodomex>=3.6.2",
         "lxml",

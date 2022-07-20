@@ -8,13 +8,19 @@ import base64
 import logging
 import os
 import re
+import shutil
+import struct
 import uuid
 import zlib
-from copy import deepcopy
 
-from construct import Container, ChecksumError
+from binascii import Error as BinasciiError
+from construct import Container, ChecksumError, CheckError
+from copy import deepcopy
+from dateutil import parser, tz
+from datetime import datetime, timedelta
 from lxml import etree
 from lxml.builder import E
+from pathlib import Path
 
 from pykeepass.attachment import Attachment
 from pykeepass.entry import Entry
@@ -84,8 +90,8 @@ class PyKeePass(object):
         Todo:
             - raise, no filename provided, database not open
         """
-        self.password = password
-        self.keyfile = keyfile
+        self._password = password
+        self._keyfile = keyfile
         if filename:
             self.filename = filename
         else:
@@ -107,19 +113,26 @@ class PyKeePass(object):
                     transformed_key=transformed_key
                 )
 
+        except CheckError as e:
+            if e.path == '(parsing) -> header -> sig_check':
+                raise HeaderChecksumError("Not a KeePass database")
+            else:
+                raise
+
+        # body integrity/verification
         except ChecksumError as e:
             if e.path in (
                     '(parsing) -> body -> cred_check', # KDBX4
                     '(parsing) -> cred_check' # KDBX3
                     ):
-                raise CredentialsError
+                raise CredentialsError("Invalid credentials")
             elif e.path == '(parsing) -> body -> sha256':
-                raise HeaderChecksumError
+                raise HeaderChecksumError("Corrupted database")
             elif e.path in (
                     '(parsing) -> body -> payload -> hmac_hash', # KDBX4
                     '(parsing) -> xml -> block_hash' # KDBX3
                     ):
-                raise PayloadChecksumError
+                raise PayloadChecksumError("Error reading database contents")
             else:
                 raise
 
@@ -138,12 +151,12 @@ class PyKeePass(object):
             transformed_key (:obj:`bytes`, optional): precomputed transformed
                 key.
         """
-        output = None
+
         if not filename:
             filename = self.filename
 
         if hasattr(filename, "write"):
-            output = KDBX.build_stream(
+            KDBX.build_stream(
                 self.kdbx,
                 filename,
                 password=self.password,
@@ -151,14 +164,21 @@ class PyKeePass(object):
                 transformed_key=transformed_key
             )
         else:
-            output = KDBX.build_file(
-                self.kdbx,
-                filename,
-                password=self.password,
-                keyfile=self.keyfile,
-                transformed_key=transformed_key
-            )
-        return output
+            # save to temporary file to prevent database clobbering
+            # see issues 223, 101
+            filename_tmp = Path(filename).with_suffix('.tmp')
+            try:
+                KDBX.build_file(
+                    self.kdbx,
+                    filename_tmp,
+                    password=self.password,
+                    keyfile=self.keyfile,
+                    transformed_key=transformed_key
+                )
+            except Exception as e:
+                os.remove(filename_tmp)
+                raise e
+            shutil.move(filename_tmp, filename)
 
     @property
     def version(self):
@@ -185,6 +205,8 @@ class PyKeePass(object):
             kdf_parameters = self.kdbx.header.value.dynamic_header.kdf_parameters.data.dict
             if kdf_parameters['$UUID'].value == kdf_uuids['argon2']:
                 return 'argon2'
+            elif kdf_parameters['$UUID'].value == kdf_uuids['argon2id']:
+                return 'argon2id'
             elif kdf_parameters['$UUID'].value == kdf_uuids['aeskdf']:
                 return 'aeskdf'
 
@@ -273,6 +295,9 @@ class PyKeePass(object):
             cast (bool): If True, matches are instead instantiated as
                 pykeepass Group, Entry, or Attachment objects.  An exception
                 is raised if a match cannot be cast.  Default is False.
+
+        Returns:
+            `Group`, `Entry`, `Attachment`, or `lxml.etree.Element`
         """
 
         if tree is None:
@@ -305,6 +330,7 @@ class PyKeePass(object):
 
     def _find(self, prefix, keys_xp, path=None, tree=None, first=False,
               history=False, regex=False, flags=None, **kwargs):
+        """Internal function for converting a search into an XPath string"""
 
         xp = ''
 
@@ -350,8 +376,8 @@ class PyKeePass(object):
             for key, value in kwargs.items():
                 if key not in keys_xp[regex].keys():
                     raise TypeError('Invalid keyword argument "{}"'.format(key))
-
-                xp += keys_xp[regex][key].format(value, flags=flags)
+                if value is not None:
+                    xp += keys_xp[regex][key].format(value, flags=flags)
 
         res = self._xpath(
             xp,
@@ -377,53 +403,35 @@ class PyKeePass(object):
 
     # ---------- Groups ----------
 
+    from .deprecated import (
+        find_groups_by_name, find_groups_by_path, find_groups_by_uuid,
+        find_groups_by_notes
+    )
+
     def find_groups(self, recursive=True, path=None, group=None, **kwargs):
+        """
+        Find groups in a database
+
+        Args:
+            name (str): name of group
+            first (bool): return first result instead of list (default False)
+            recursive (bool): do a recursive search of all groups/subgroups
+            path (str): do group search starting from path
+            group (Group): search underneath group
+            uuid (uuid.UUID): group UUID
+            regex (bool): whether `str` search arguments contain [XSLT style][XSLT style] regular expression
+            flags (str): XPath [flags][flags]
+
+        Returns:
+            :obj:`list` of :obj:`Group` or :obj:`Group`
+
+        [XSLT style]: https://www.xml.com/pub/a/2003/06/04/tr.html
+        [flags]: https://www.w3.org/TR/xpath-functions/#flags
+        """
 
         prefix = '//Group' if recursive else '/Group'
         res = self._find(prefix, group_xp, path=path, tree=group, **kwargs)
         return res
-
-    def find_groups_by_name(self, group_name, regex=False, flags=None,
-                            group=None, first=False):
-        return self.find_groups(
-            name=group_name,
-            regex=regex,
-            flags=flags,
-            group=group,
-            first=first
-        )
-
-    def find_groups_by_path(self, group_path_str=None, regex=False, flags=None,
-                            group=None, first=False):
-        return self.find_groups(
-            path=group_path_str,
-            regex=regex,
-            flags=flags,
-            group=group,
-            first=first
-        )
-
-    def find_groups_by_uuid(self, uuid, regex=False, flags=None,
-                            group=None, history=False, first=False):
-        return self.find_groups(
-            uuid=uuid,
-            regex=regex,
-            flags=flags,
-            group=group,
-            history=history,
-            first=first
-        )
-
-    def find_groups_by_notes(self, notes, regex=False, flags=None,
-                             group=None, history=False, first=False):
-        return self.find_groups(
-            notes=notes,
-            regex=regex,
-            flags=flags,
-            group=group,
-            history=history,
-            first=first
-        )
 
     # creates a new group and all parent groups, if necessary
     def add_group(self, destination_group, group_name, icon=None, notes=None):
@@ -439,29 +447,6 @@ class PyKeePass(object):
 
     def delete_group(self, group):
         group.delete()
-
-    def deref(self, value):
-        if not value:
-            return value
-        references = set(re.findall(r'({REF:([TUPANI])@([TUPANI]):([^}]+)})', value))
-        if not references:
-            return value
-        field_to_attribute = {
-            'T': 'title',
-            'U': 'username',
-            'P': 'password',
-            'A': 'url',
-            'N': 'notes',
-            'I': 'uuid',
-        }
-        for ref, wanted_field, search_in, search_value in references:
-            wanted_field = field_to_attribute[wanted_field]
-            search_in = field_to_attribute[search_in]
-            if search_in == 'uuid':
-                search_value = uuid.UUID(search_value)
-            ref_entry = self.find_entries(first=True, **{search_in: search_value})
-            value = value.replace(ref, getattr(ref_entry, wanted_field))
-        return self.deref(value)
 
     def move_group(self, group, destination_group):
         destination_group.append(group)
@@ -502,6 +487,13 @@ class PyKeePass(object):
 
     # ---------- Entries ----------
 
+
+    from .deprecated import (
+        find_entries_by_title, find_entries_by_username, find_entries_by_password,
+        find_entries_by_url, find_entries_by_path, find_entries_by_notes,
+        find_entries_by_string, find_entries_by_uuid
+    )
+
     def find_entries(self, recursive=True, path=None, group=None, **kwargs):
 
         prefix = '//Entry' if recursive else '/Entry'
@@ -509,97 +501,10 @@ class PyKeePass(object):
 
         return res
 
-    def find_entries_by_title(self, title, regex=False, flags=None,
-                              group=None, history=False, first=False):
-        return self.find_entries(
-            title=title,
-            regex=regex,
-            flags=flags,
-            group=group,
-            history=history,
-            first=first
-        )
-
-    def find_entries_by_username(self, username, regex=False, flags=None,
-                                 group=None, history=False, first=False):
-        return self.find_entries(
-            username=username,
-            regex=regex,
-            flags=flags,
-            group=group,
-            history=history,
-            first=first
-        )
-
-    def find_entries_by_password(self, password, regex=False, flags=None,
-                                 group=None, history=False, first=False):
-        return self.find_entries(
-            password=password,
-            regex=regex,
-            flags=flags,
-            group=group,
-            history=history,
-            first=first
-        )
-
-    def find_entries_by_url(self, url, regex=False, flags=None,
-                            group=None, history=False, first=False):
-        return self.find_entries(
-            url=url,
-            regex=regex,
-            flags=flags,
-            group=group,
-            history=history,
-            first=first
-        )
-
-    def find_entries_by_notes(self, notes, regex=False, flags=None,
-                              group=None, history=False, first=False):
-        return self.find_entries(
-            notes=notes,
-            regex=regex,
-            flags=flags,
-            group=group,
-            history=history,
-            first=first
-        )
-
-    def find_entries_by_path(self, path, regex=False, flags=None,
-                             group=None, history=False, first=False):
-        return self.find_entries(
-            path=path,
-            regex=regex,
-            flags=flags,
-            group=group,
-            history=history,
-            first=first
-        )
-
-    def find_entries_by_uuid(self, uuid, regex=False, flags=None,
-                             group=None, history=False, first=False):
-        return self.find_entries(
-            uuid=uuid,
-            regex=regex,
-            flags=flags,
-            group=group,
-            history=history,
-            first=first
-        )
-
-    def find_entries_by_string(self, string, regex=False, flags=None,
-                               group=None, history=False, first=False):
-        return self.find_entries(
-            string=string,
-            regex=regex,
-            flags=flags,
-            group=group,
-            history=history,
-            first=first
-        )
 
     def add_entry(self, destination_group, title, username,
                   password, url=None, notes=None, expiry_time=None,
-                  tags=None, icon=None, force_creation=False):
+                  tags=None, otp=None, icon=None, force_creation=False):
 
         entries = self.find_entries(
             title=title,
@@ -622,6 +527,7 @@ class PyKeePass(object):
                 username=username,
                 password=password,
                 notes=notes,
+                otp=otp,
                 url=url,
                 tags=tags,
                 expires=True if expiry_time else False,
@@ -671,13 +577,16 @@ class PyKeePass(object):
         else:
             binaries = []
             for elem in self._xpath('/KeePassFile/Meta/Binaries/Binary'):
-                if elem.get('Compressed') == 'True':
-                    data = zlib.decompress(
-                        base64.b64decode(elem.text),
-                        zlib.MAX_WBITS | 32
-                    )
+                if elem.text is not None:
+                    if elem.get('Compressed') == 'True':
+                        data = zlib.decompress(
+                            base64.b64decode(elem.text),
+                            zlib.MAX_WBITS | 32
+                        )
+                    else:
+                        data = base64.b64decode(elem.text)
                 else:
-                    data = base64.b64decode(elem.text)
+                    data = b''
                 binaries.insert(int(elem.attrib['ID']), data)
 
         return binaries
@@ -743,10 +652,193 @@ class PyKeePass(object):
         for reference in binaries_gt:
             reference.id = reference.id - 1
 
+    # ---------- Misc ----------
+
+    def deref(self, value):
+
+        """Dereference [field reference][fieldref] of Entry
+
+        Args:
+            ref (str): KeePass reference string to another field
+
+        Returns:
+            str or uuid.UUID
+
+        [fieldref]: https://keepass.info/help/base/fieldrefs.html
+        """
+        if not value:
+            return value
+        references = set(re.findall(r'({REF:([TUPANI])@([TUPANI]):([^}]+)})', value))
+        if not references:
+            return value
+        field_to_attribute = {
+            'T': 'title',
+            'U': 'username',
+            'P': 'password',
+            'A': 'url',
+            'N': 'notes',
+            'I': 'uuid',
+        }
+        for ref, wanted_field, search_in, search_value in references:
+            wanted_field = field_to_attribute[wanted_field]
+            search_in = field_to_attribute[search_in]
+            if search_in == 'uuid':
+                search_value = uuid.UUID(search_value)
+            ref_entry = self.find_entries(first=True, **{search_in: search_value})
+            value = value.replace(ref, getattr(ref_entry, wanted_field))
+        return self.deref(value)
+
+
+    # ---------- Credential Changing and Expiry ----------
+
+    @property
+    def password(self):
+        """str: Get or set database password"""
+        return self._password
+
+    @password.setter
+    def password(self, password):
+        self._password = password
+        self.credchange_date = datetime.now()
+
+    @property
+    def keyfile(self):
+        """str or pathlib.Path: get or set database keyfile"""
+        return self._keyfile
+
+    @keyfile.setter
+    def keyfile(self, keyfile):
+        self._keyfile = keyfile
+        self.credchange_date = datetime.now()
+
+    @property
+    def credchange_required_days(self):
+        """int: Days until password update should be required"""
+        e = self._xpath('/KeePassFile/Meta/MasterKeyChangeForce', first=True)
+        if e is not None:
+            return int(e.text)
+
+    @property
+    def credchange_recommended_days(self):
+        """int: Days until password update should be recommended"""
+        e = self._xpath('/KeePassFile/Meta/MasterKeyChangeRec', first=True)
+        if e is not None:
+            return int(e.text)
+
+    @credchange_required_days.setter
+    def credchange_required_days(self, days):
+        path = '/KeePassFile/Meta/MasterKeyChangeForce'
+        item = self._xpath(path, first=True)
+        item.text = str(days)
+
+    @credchange_recommended_days.setter
+    def credchange_recommended_days(self, days):
+        path = '/KeePassFile/Meta/MasterKeyChangeRec'
+        item = self._xpath(path, first=True)
+        item.text = str(days)
+
+    @property
+    def credchange_date(self):
+        """datetime.datetime: get or set UTC time of last credential change"""
+        e = self._xpath('/KeePassFile/Meta/MasterKeyChanged', first=True)
+        if e is not None:
+            return self._decode_time(e.text)
+
+    @credchange_date.setter
+    def credchange_date(self, date):
+        time = self._xpath('/KeePassFile/Meta/MasterKeyChanged', first=True)
+        time.text = self._encode_time(date)
+
+    @property
+    def credchange_required(self):
+        """bool: Check if credential change is required"""
+        change_date = self.credchange_date
+        if change_date is None or self.credchange_required_days == -1:
+            return False
+        now_date = self._datetime_to_utc(datetime.now())
+        return (now_date - change_date).days > self.credchange_required_days
+
+    @property
+    def credchange_recommended(self):
+        """bool: Check if credential change is recommended"""
+        change_date = self.credchange_date
+        if change_date is None or self.credchange_recommended_days == -1:
+            return False
+        now_date = self._datetime_to_utc(datetime.now())
+        return (now_date - change_date).days > self.credchange_recommended_days
+
+    # ---------- Datetime Functions ----------
+
+    def _datetime_to_utc(self, dt):
+        """Convert naive datetimes to UTC"""
+
+        if not dt.tzinfo:
+            dt = dt.replace(tzinfo=tz.gettz())
+        return dt.astimezone(tz.gettz('UTC'))
+
+    def _encode_time(self, value):
+        """bytestring or plaintext string: Convert datetime to base64 or plaintext string"""
+
+        if self.version >= (4, 0):
+            diff_seconds = int(
+                (
+                    self._datetime_to_utc(value) -
+                    datetime(
+                        year=1,
+                        month=1,
+                        day=1,
+                        tzinfo=tz.gettz('UTC')
+                    )
+                ).total_seconds()
+            )
+            return base64.b64encode(
+                struct.pack('<Q', diff_seconds)
+            ).decode('utf-8')
+        else:
+            return self._datetime_to_utc(value).isoformat()
+
+    def _decode_time(self, text):
+        """datetime.datetime: Convert base64 time or plaintext time to datetime"""
+
+        if self.version >= (4, 0):
+            # decode KDBX4 date from b64 format
+            try:
+                return (
+                    datetime(year=1, month=1, day=1, tzinfo=tz.gettz('UTC')) +
+                    timedelta(
+                        seconds=struct.unpack('<Q', base64.b64decode(text))[0]
+                    )
+                )
+            except BinasciiError:
+                return parser.parse(
+                    text,
+                    tzinfos={'UTC': tz.gettz('UTC')}
+                )
+        else:
+            return parser.parse(
+                text,
+                tzinfos={'UTC': tz.gettz('UTC')}
+            )
 
 def create_database(
         filename, password=None, keyfile=None, transformed_key=None
 ):
+    """
+    Create a new database at ``filename`` with supplied credentials.
+
+    Args:
+        filename (:obj:`str`, optional): path to database or stream object.
+            If None, the path given when the database was opened is used.
+        password (:obj:`str`, optional): database password.  If None,
+            database is assumed to have no password
+        keyfile (:obj:`str`, optional): path to keyfile.  If None,
+            database is assumed to have no keyfile
+        transformed_key (:obj:`bytes`, optional): precomputed transformed
+            key.
+
+    Returns:
+        PyKeePass
+    """
     keepass_instance = PyKeePass(
         BLANK_DATABASE_LOCATION, BLANK_DATABASE_PASSWORD
     )
@@ -757,3 +849,9 @@ def create_database(
 
     keepass_instance.save(transformed_key)
     return keepass_instance
+
+def debug_setup():
+    """Convenience function to quickly enable debug messages"""
+
+    logging.basicConfig()
+    logger.setLevel(logging.DEBUG)
