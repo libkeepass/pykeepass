@@ -3,6 +3,9 @@
 - fixed #314 - correctly handle binaries with no data
 - fixed #265 - check for keepass signature
 - fixed #319 - support pathlib for filename/keyfile
+- fixed #194 - added 'protected' arg to _set_string_field
+- use official icon names from KeePass source and deprecate old icons
+
 4.0.3 - 2022-06-21
 ------------------
 - add otp support
