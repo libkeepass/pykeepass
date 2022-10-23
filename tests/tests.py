@@ -3,6 +3,7 @@
 import logging
 import os
 import shutil
+import tempfile
 import unittest
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -890,8 +891,10 @@ class PyKeePassTests3(KDBX3Tests):
         self.assertEqual('foobar_user', results.username)
 
     def test_dump_xml(self):
-        self.kp.dump_xml('db_dump.xml')
-        with open('db_dump.xml') as f:
+        self.test_dir = tempfile.mkdtemp()
+        self.dump_file = os.path.join(self.test_dir, 'db_dump.xml')
+        self.kp.dump_xml(self.dump_file)
+        with open(self.dump_file) as f:
             first_line = f.readline()
             self.assertEqual(first_line, '<?xml version=\'1.0\' encoding=\'utf-8\' standalone=\'yes\'?>\n')
 
