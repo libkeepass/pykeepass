@@ -15,7 +15,8 @@ from pykeepass.baseelement import BaseElement
 class Group(BaseElement):
 
     def __init__(self, name=None, element=None, icon=None, notes=None,
-                 kp=None, expires=None, expiry_time=None):
+                 kp=None, expires=None, expiry_time=None, 
+                 enable_searching=None):
 
         self._kp = kp
 
@@ -30,6 +31,8 @@ class Group(BaseElement):
             self._element.append(E.Name(name))
             if notes:
                 self._element.append(E.Notes(notes))
+            if isinstance(enable_searching, bool):
+                self._element.append(E.EnableSearching(str(enable_searching).lower()))
 
         else:
             assert type(element) in [_Element, Element, ObjectifiedElement], \
@@ -57,6 +60,26 @@ class Group(BaseElement):
     @notes.setter
     def notes(self, value):
         return self._set_subelement_text('Notes', value)
+        
+    @property
+    def enable_searching(self):
+        """bool: enable or disable search in this group"""
+        if self._get_subelement_text('EnableSearching') == 'false':
+            return False
+        elif self._get_subelement_text('EnableSearching') == 'true':
+            return True
+        # Default option is 'null':
+        else:
+            return None
+
+    @enable_searching.setter
+    def enable_searching(self, value):
+        if value is None:
+            return self._set_subelement_text('EnableSearching', 'null')
+        elif isinstance(value, bool):
+            return self._set_subelement_text('EnableSearching', str(value).lower())
+        else:
+            raise ValueError("enable_searching should be True, False or None")
 
     @property
     def entries(self):

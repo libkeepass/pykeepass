@@ -434,13 +434,16 @@ class PyKeePass(object):
         return res
 
     # creates a new group and all parent groups, if necessary
-    def add_group(self, destination_group, group_name, icon=None, notes=None):
+    def add_group(self, destination_group, group_name, icon=None, 
+			notes=None, enable_searching=None):
         logger.debug('Creating group {}'.format(group_name))
 
         if icon:
-            group = Group(name=group_name, icon=icon, notes=notes, kp=self)
+            group = Group(name=group_name, icon=icon, notes=notes, 
+				kp=self, enable_searching=enable_searching)
         else:
-            group = Group(name=group_name, notes=notes, kp=self)
+            group = Group(name=group_name, notes=notes, kp=self, 
+				enable_searching=enable_searching)
         destination_group.append(group)
 
         return group
@@ -456,6 +459,7 @@ class PyKeePass(object):
         if existing_group is not None:
             return existing_group
         kwargs.setdefault('group_name', 'Recycle Bin')
+        kwargs.setdefault('enable_searching', False)
         group = self.add_group( self.root_group, **kwargs)
         elem = self._xpath('/KeePassFile/Meta/RecycleBinUUID', first=True)
         elem.text = base64.b64encode(group.uuid.bytes).decode('utf-8')
