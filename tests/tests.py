@@ -382,6 +382,8 @@ class RecycleBinTests3(KDBX3Tests):
 
         self.assertIsNotNone(self.kp.recyclebin_group)
         self.assertEqual( len(self.kp.recyclebin_group.entries), 1)
+        self.assertIs(self.kp.recyclebin_group.enable_searching, False)
+        
 
     def test_entry(self):
         entry = self.kp.add_entry( self.kp.root_group, "RecycleBinTest2", "login", "password")
@@ -747,10 +749,56 @@ class EntryHistoryTests3(KDBX3Tests):
 class GroupTests3(KDBX3Tests):
 
     def test_fields(self):
-        self.assertEqual(
-            self.kp.find_groups(name='subgroup2', first=True).path,
-            ['foobar_group', 'subgroup', 'subgroup2']
+        time = datetime.now().replace(microsecond=0)
+        group = Group(
+            name='name',
+            notes='notes',
+            expires=True,
+            expiry_time=time,
+            icon=icons.KEY,
+            kp=self.kp,
+            enable_searching=True
         )
+
+        self.assertEqual(group.name, 'name')
+        self.assertEqual(group.notes, 'notes')
+        self.assertEqual(group.expires, True)
+        self.assertEqual(group.expiry_time,
+                         time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
+        self.assertEqual(group.icon, icons.KEY)
+        self.assertEqual(group.enable_searching, True)
+        
+    def test_set_and_get_fields(self):
+        time = datetime.now().replace(microsecond=0)
+        changed_time = time + timedelta(hours=9)
+        changed_string = 'changed_'
+        group = Group(
+            'name',
+            notes='notes',
+            expires=True,
+            expiry_time=time,
+            icon=icons.KEY,
+            kp=self.kp,
+            enable_searching=True   
+        )
+        
+        group.name = changed_string + 'name'
+        group.notes = changed_string + 'notes'
+        group.expires = False
+        group.expiry_time = changed_time
+        group.icon = icons.GLOBE
+        group.enable_searching = False
+        
+
+        self.assertEqual(group.name, changed_string + 'name')
+        self.assertEqual(group.notes, changed_string + 'notes')
+        self.assertEqual(group.icon, icons.GLOBE)
+        self.assertEqual(group.enable_searching, False)
+        # test time properties
+        self.assertEqual(group.expires, False)
+        self.assertEqual(group.expiry_time,
+                         changed_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
+        
 
     def test_empty_group(self):
         # test that groups are properly emptied
