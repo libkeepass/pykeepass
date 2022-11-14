@@ -105,13 +105,12 @@ a flattened list of all entries in the database
    >>> entry.title
    'foo_entry'
    >>> entry.title = 'hello'
+   >>> entry.otp = 'otpauth://totp/test:lkj?secret=TEST%3D%3D%3D%3D&period=30&digits=6&issuer=test'
+
 
    >>> group = kp.find_group(name='social', first=True)
    >>> kp.find_entries(title='facebook', group=group, recursive=False, first=True)
    Entry: "social/facebook (myusername)"
-
-   >>> entry.otp
-   otpauth://totp/test:lkj?secret=TEST%3D%3D%3D%3D&period=30&digits=6&issuer=test
 
 
 
