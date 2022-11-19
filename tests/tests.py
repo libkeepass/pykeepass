@@ -382,7 +382,7 @@ class RecycleBinTests3(KDBX3Tests):
 
         self.assertIsNotNone(self.kp.recyclebin_group)
         self.assertEqual( len(self.kp.recyclebin_group.entries), 1)
-        self.assertIs(self.kp.recyclebin_group.enable_searching, False)
+        self.assertIs(self.kp.recyclebin_group.searching_enabled, False)
         
 
     def test_entry(self):
@@ -757,7 +757,7 @@ class GroupTests3(KDBX3Tests):
             expiry_time=time,
             icon=icons.KEY,
             kp=self.kp,
-            enable_searching=True
+            searching_enabled=True
         )
 
         self.assertEqual(group.name, 'name')
@@ -766,7 +766,7 @@ class GroupTests3(KDBX3Tests):
         self.assertEqual(group.expiry_time,
                          time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
         self.assertEqual(group.icon, icons.KEY)
-        self.assertEqual(group.enable_searching, True)
+        self.assertEqual(group.searching_enabled, True)
         
     def test_set_and_get_fields(self):
         time = datetime.now().replace(microsecond=0)
@@ -779,7 +779,7 @@ class GroupTests3(KDBX3Tests):
             expiry_time=time,
             icon=icons.KEY,
             kp=self.kp,
-            enable_searching=True   
+            searching_enabled=True   
         )
         
         group.name = changed_string + 'name'
@@ -787,13 +787,13 @@ class GroupTests3(KDBX3Tests):
         group.expires = False
         group.expiry_time = changed_time
         group.icon = icons.GLOBE
-        group.enable_searching = False
+        group.searching_enabled = False
         
 
         self.assertEqual(group.name, changed_string + 'name')
         self.assertEqual(group.notes, changed_string + 'notes')
         self.assertEqual(group.icon, icons.GLOBE)
-        self.assertEqual(group.enable_searching, False)
+        self.assertEqual(group.searching_enabled, False)
         # test time properties
         self.assertEqual(group.expires, False)
         self.assertEqual(group.expiry_time,

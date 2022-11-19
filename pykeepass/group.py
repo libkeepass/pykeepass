@@ -16,7 +16,7 @@ class Group(BaseElement):
 
     def __init__(self, name=None, element=None, icon=None, notes=None,
                  kp=None, expires=None, expiry_time=None, 
-                 enable_searching=None):
+                 searching_enabled=None):
 
         self._kp = kp
 
@@ -31,8 +31,8 @@ class Group(BaseElement):
             self._element.append(E.Name(name))
             if notes:
                 self._element.append(E.Notes(notes))
-            if isinstance(enable_searching, bool):
-                self._element.append(E.EnableSearching(str(enable_searching).lower()))
+            if isinstance(searching_enabled, bool):
+                self._element.append(E.EnableSearching(str(searching_enabled).lower()))
 
         else:
             assert type(element) in [_Element, Element, ObjectifiedElement], \
@@ -62,7 +62,7 @@ class Group(BaseElement):
         return self._set_subelement_text('Notes', value)
         
     @property
-    def enable_searching(self):
+    def searching_enabled(self):
         """bool: enable or disable search in this group"""
         if self._get_subelement_text('EnableSearching') == 'false':
             return False
@@ -72,14 +72,14 @@ class Group(BaseElement):
         else:
             return None
 
-    @enable_searching.setter
-    def enable_searching(self, value):
+    @searching_enabled.setter
+    def searching_enabled(self, value):
         if value is None:
             return self._set_subelement_text('EnableSearching', 'null')
         elif isinstance(value, bool):
             return self._set_subelement_text('EnableSearching', str(value).lower())
         else:
-            raise ValueError("enable_searching should be True, False or None")
+            raise ValueError("searching_enabled should be True, False or None")
 
     @property
     def entries(self):
