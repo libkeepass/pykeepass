@@ -3,5 +3,5 @@ pycryptodomex==3.14.1
 construct==2.10.68
 argon2-cffi==21.3.0
 python-dateutil==2.8.2
-future==0.18.2
+future==0.18.3
 Sphinx>=3.2.1
