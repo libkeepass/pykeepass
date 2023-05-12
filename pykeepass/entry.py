@@ -198,12 +198,12 @@ class Entry(BaseElement):
     def tags(self):
         """str: get or set entry tags"""
         val = self._get_subelement_text('Tags')
-        return val.split(';') if val else val
+        return val.replace(',', ';').split(';') if val else val
 
     @tags.setter
-    def tags(self, value):
+    def tags(self, value, sep=';'):
         # Accept both str or list
-        v = ';'.join(value if type(value) is list else [value])
+        v = sep.join(value if type(value) is list else [value])
         return self._set_subelement_text('Tags', v)
 
     @property

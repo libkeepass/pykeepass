@@ -228,7 +228,7 @@ class EntryFindTests3(KDBX3Tests):
             unique_str + 'pass',
             url=unique_str + 'url',
             notes=unique_str + 'notes',
-            tags=unique_str + 'tags',
+            tags=['tag1', 'tag2', 'tag3;tag4', 'tag5,tag6'],
             expiry_time=expiry_time,
             icon=icons.KEY
         )
@@ -241,7 +241,7 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual(results.password, unique_str + 'pass')
         self.assertEqual(results.url, unique_str + 'url')
         self.assertEqual(results.notes, unique_str + 'notes')
-        self.assertEqual(results.tags, [unique_str + 'tags'])
+        self.assertEqual(len(results.tags), 6)
         self.assertTrue(results.uuid != None)
         self.assertTrue(results.autotype_sequence is None)
         # convert naive datetime to utc
