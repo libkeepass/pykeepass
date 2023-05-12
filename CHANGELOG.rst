@@ -6,6 +6,7 @@
 - fixed #194 - added 'protected' arg to _set_string_field
 - use official icon names from KeePass source and deprecate old icons
 - added Entry.is_custom_property_protected()
+- fixed #338 - allow comma entry tag separator
 
 4.0.3 - 2022-06-21
 ------------------
