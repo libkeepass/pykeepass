@@ -380,7 +380,7 @@ where ``filename`` is the path of the file to save to.  If ``filename`` is not g
 
 **password**
 
-string containing database password.  Can also be set.  Use ``None** for no password.
+string containing database password.  Can also be set.  Use ``None`` for no password.
 
 **filename**
 

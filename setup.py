@@ -14,6 +14,7 @@ setup(
     description="Python library to interact with keepass databases "
     "(supports KDBX3 and KDBX4)",
     long_description=README,
+    long_description_content_type='text/x-rst',
     author="Philipp Schmitt",
     author_email="philipp@schmitt.co",
     url="https://github.com/libkeepass/pykeepass",
