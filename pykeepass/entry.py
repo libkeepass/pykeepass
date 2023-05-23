@@ -57,7 +57,9 @@ class Entry(BaseElement):
             if notes:
                 self._element.append(E.String(E.Key('Notes'), E.Value(notes)))
             if otp:
-                self._element.append(E.String(E.Key('otp'), E.Value(otp)))
+                self._element.append(
+                    E.String(E.Key('otp'), E.Value(otp, Protected="True"))
+                )
             if tags:
                 self._element.append(
                     E.Tags(';'.join(tags) if type(tags) is list else tags)
