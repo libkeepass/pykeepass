@@ -197,6 +197,8 @@ class EntryFindTests3(KDBX3Tests):
         hist = entry.history
         self.assertIsInstance(hist, list)
         self.assertEqual(len(hist), 4)
+        self.assertEqual(len(set(hist)), 4)
+        self.assertNotEqual(hist[0], hist[1])
 
     def test_history_path(self):
         for title in ["root_entry", "subentry"]:
@@ -469,6 +471,7 @@ class EntryTests3(KDBX3Tests):
 
     def test_references(self):
         original_entry = self.kp.find_entries(title='foobar_entry', first=True)
+        original_entry_duplicate = self.kp.find_entries(title='foobar_entry', first=True)
         clone1 = self.kp.find_entries(title='foobar_entry - Clone', first=True)
         clone2 = self.kp.find_entries(title='foobar_entry - Clone of clone', first=True)
         prefixed = self.kp.find_entries(title='foobar_entry - Clone with prefix and suffix', first=True)
@@ -478,6 +481,10 @@ class EntryTests3(KDBX3Tests):
         self.assertEqual(original_entry.ref('username'), clone1.username)
         self.assertEqual(prefixed.deref('username'), 'domain\\{}2'.format(original_entry.username))
         self.assertEqual(prefixed.deref('password'), 'A{}BC'.format(original_entry.password))
+        self.assertEqual(original_entry, original_entry_duplicate)
+        self.assertEqual(hash(original_entry), hash(original_entry_duplicate))
+        self.assertNotEqual(original_entry, clone1)
+        self.assertNotEqual(clone1, clone2)
 
     def test_set_and_get_fields(self):
         time = datetime.now().replace(microsecond=0)

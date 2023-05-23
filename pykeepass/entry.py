@@ -385,6 +385,7 @@ class HistoryEntry(Entry):
         pathstr = super().__str__()
         return 'HistoryEntry: {}'.format(pathstr)
 
-    def __eq__(self, other):
-        # all history items share the same uuid, so examine xml directly
-        return self._element == other._element
+    def __hash__(self):
+        # All history items share the same UUID with themselves and their
+        # parent, so consider the mtime also
+        return hash((self.uuid, self.mtime))

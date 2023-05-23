@@ -166,11 +166,13 @@ class BaseElement(object):
     def __repr__(self):
         return self.__str__()
 
+    def __hash__(self):
+        return hash((self.uuid,))
+
     def __eq__(self, other):
-        if hasattr(other, 'uuid'):
-            return self.uuid == other.uuid
-        else:
-            return False
+        if isinstance(other, BaseElement):
+            return hash(self) == hash(other)
+        return NotImplemented
 
     def touch(self, modify=False):
         """
