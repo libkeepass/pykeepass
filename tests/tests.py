@@ -960,6 +960,11 @@ class BugRegressionTests3(KDBX3Tests):
 
         self.assertEqual(results, results2)
 
+    def test_issue344(self):
+        # accessing expiry_time throws exception when None
+
+        e = self.kp.find_entries(title='none_date', first=True)
+        self.assertEqual(e.expiry_time, None)
 
 class EntryFindTests4(KDBX4Tests, EntryFindTests3):
     pass

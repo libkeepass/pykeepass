@@ -1,4 +1,10 @@
-4.0.4 -
+4.0.5 -
+------------------
+- fixed #344 - AttributeError when accessing Times with None value
+- use __hash__ when evaluating equality
+- use mtime/uuid for HistoryEntry hashing
+
+4.0.4 - 2023-05-23
 ------------------
 - fixed #314 - correctly handle binaries with no data
 - fixed #265 - check for keepass signature
@@ -10,8 +16,8 @@
 
 4.0.3 - 2022-06-21
 ------------------
-- add otp support
-- add debug_setup() function
+- added otp support
+- added debug_setup() function
 
 4.0.2 - 2022-05-21
 ------------------

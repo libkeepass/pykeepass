@@ -93,7 +93,7 @@ class BaseElement(object):
         times = self._element.find('Times')
         if times is not None:
             prop = times.find(prop)
-            if prop is not None:
+            if prop is not None and prop.text is not None:
                 return self._kp._decode_time(prop.text)
 
     def _set_times_property(self, prop, value):
