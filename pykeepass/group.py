@@ -1,6 +1,3 @@
-# FIXME python2
-from __future__ import absolute_import, unicode_literals
-
 from lxml.builder import E
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement

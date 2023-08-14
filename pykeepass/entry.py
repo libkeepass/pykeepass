@@ -1,6 +1,3 @@
-# FIXME python2
-from __future__ import absolute_import, unicode_literals
-
 import logging
 from copy import deepcopy
 from datetime import datetime

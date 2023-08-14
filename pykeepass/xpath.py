@@ -1,6 +1,3 @@
-# FIXME python2
-from __future__ import unicode_literals
-
 attachment_xp = {
     False: {
         'id': '/Value[@Ref="{}"]/..',
