@@ -26,8 +26,6 @@ setup(
         "argon2_cffi",
         "pycryptodomex>=3.6.2",
         "lxml",
-        # FIXME python2
-        "future",
     ],
     include_package_data=True,
 )

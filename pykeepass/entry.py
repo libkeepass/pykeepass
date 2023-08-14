@@ -1,6 +1,5 @@
 # FIXME python2
 from __future__ import absolute_import, unicode_literals
-from future.utils import python_2_unicode_compatible
 
 import logging
 from copy import deepcopy
@@ -28,8 +27,7 @@ reserved_keys = [
     'otp'
 ]
 
-# FIXME python2
-@python_2_unicode_compatible
+
 class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
