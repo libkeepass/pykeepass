@@ -1,7 +1,3 @@
-# FIXME python2
-from __future__ import absolute_import, unicode_literals
-from future.utils import python_2_unicode_compatible
-
 from lxml.builder import E
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
@@ -10,8 +6,6 @@ import pykeepass.entry
 from pykeepass.baseelement import BaseElement
 
 
-# FIXME python2
-@python_2_unicode_compatible
 class Group(BaseElement):
 
     def __init__(self, name=None, element=None, icon=None, notes=None,

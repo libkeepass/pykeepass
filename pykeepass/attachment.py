@@ -1,15 +1,7 @@
-# FIXME python2
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import absolute_import
-from future.utils import python_2_unicode_compatible
-
 import pykeepass.entry
 
 from pykeepass.exceptions import BinaryError
 
-# FIXME python2
-@python_2_unicode_compatible
 class Attachment(object):
     def __init__(self, element=None, kp=None, id=None, filename=None):
         self._element = element

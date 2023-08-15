@@ -1,9 +1,4 @@
 # coding: utf-8
-
-# FIXME python2
-from __future__ import absolute_import, print_function, unicode_literals
-from future.utils import python_2_unicode_compatible
-
 import base64
 import logging
 import os
@@ -38,8 +33,6 @@ BLANK_DATABASE_LOCATION = os.path.join(os.path.dirname(os.path.realpath(__file__
 BLANK_DATABASE_PASSWORD = "password"
 
 
-# FIXME python2
-@python_2_unicode_compatible
 class PyKeePass(object):
     """Open a KeePass database
 
