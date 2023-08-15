@@ -33,7 +33,7 @@ BLANK_DATABASE_LOCATION = os.path.join(os.path.dirname(os.path.realpath(__file__
 BLANK_DATABASE_PASSWORD = "password"
 
 
-class PyKeePass(object):
+class PyKeePass():
     """Open a KeePass database
 
     Args:
