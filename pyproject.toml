@@ -1,0 +1,31 @@
+[project]
+name = "pykeepass"
+readme = "README.rst"
+description = "Python library to interact with keepass databases (supports KDBX3 and KDBX4)"
+authors = [
+    { name = "Philipp Schmitt", email = "philipp@schmitt.co" }
+]
+license = {text = "GPL-3.0"}
+keywords = ["valorant", "vault", "keepass"]
+dependencies = [
+    "python-dateutil",
+    # FIXME python2 - last version to support python2
+    "construct==2.10.68",
+    "argon2_cffi",
+    "pycryptodomex>=3.6.2",
+    "lxml",
+    # FIXME python2
+    "future",
+]
+dynamic = ["version"]
+
+
+[project.urls]
+Homepage = "https://github.com/libkeepass/pykeepass"
+
+[tool.setuptools.dynamic]
+version = {attr = "pykeepass.version.__version__"}
+
+[tool.setuptools]
+packages = ["pykeepass"]
+include-package-data = true
