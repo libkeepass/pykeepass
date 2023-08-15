@@ -119,6 +119,20 @@ class Entry(BaseElement):
             return results
 
     @property
+    def index(self):
+        group = self.group._element
+        children = group.getchildren()
+        first_index = self.group._first_entry
+        index = children.index(self._element)
+        return index - first_index
+
+    def move(self, new_index):
+        group = self.group._element
+        first_index = self.group._first_entry
+        group.remove(self._element)
+        group.insert(new_index+first_index, self._element)
+
+    @property
     def attachments(self):
         return self._kp.find_attachments(
             element=self,
