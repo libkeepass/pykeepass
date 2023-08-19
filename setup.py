@@ -21,13 +21,10 @@ setup(
     packages=find_packages(include=['pykeepass', 'pykeepass.*']),
     install_requires=[
         "python-dateutil",
-        # FIXME python2 - last version to support python2
-        "construct==2.10.68",
+        "construct",
         "argon2_cffi",
         "pycryptodomex>=3.6.2",
         "lxml",
-        # FIXME python2
-        "future",
     ],
     include_package_data=True,
 )

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import base64
 import struct
 import uuid
@@ -8,7 +6,7 @@ from lxml.builder import E
 from datetime import datetime
 
 
-class BaseElement(object):
+class BaseElement():
     """Entry and Group inherit from this class"""
 
     def __init__(self, element, kp=None, icon=None, expires=False,
