@@ -1,13 +1,11 @@
 import logging
 from copy import deepcopy
-from datetime import datetime
 
 from lxml.builder import E
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
 
 import pykeepass.attachment
-import pykeepass.group
 from pykeepass.baseelement import BaseElement
 
 logger = logging.getLogger(__name__)

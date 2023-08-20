@@ -10,7 +10,6 @@ import zlib
 
 from binascii import Error as BinasciiError
 from construct import Container, ChecksumError, CheckError
-from copy import deepcopy
 from dateutil import parser, tz
 from datetime import datetime, timedelta
 from lxml import etree

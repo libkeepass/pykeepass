@@ -1,5 +1,4 @@
 import base64
-import struct
 import uuid
 from lxml import etree
 from lxml.builder import E
