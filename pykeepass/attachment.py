@@ -1,6 +1,5 @@
-import pykeepass.entry
-
-from pykeepass.exceptions import BinaryError
+from . import entry
+from .exceptions import BinaryError
 
 class Attachment(object):
     def __init__(self, element=None, kp=None, id=None, filename=None):
@@ -32,7 +31,7 @@ class Attachment(object):
     def entry(self):
         """Entry: get entry this attachment is associated with"""
         ancestor = self._element.getparent()
-        return pykeepass.entry.Entry(element=ancestor, kp=self._kp)
+        return entry.Entry(element=ancestor, kp=self._kp)
 
     @property
     def binary(self):
