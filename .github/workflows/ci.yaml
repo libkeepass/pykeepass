@@ -4,7 +4,7 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   tests:
-    name: ${{ matrix.os }} / ${{ matrix.python_version }}
+    name: ${{ matrix.os }}-latest / ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: false
@@ -14,7 +14,7 @@ jobs:
           # - windows
           # - macos
         python-version:
-          - "3.6"
+          # - "3.6" # not supported in ubuntu-latest (22.04)
           - "3.7"
           - "3.8"
           - "3.9"
