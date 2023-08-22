@@ -1,4 +1,8 @@
-4.0.5 -
+4.0.6 - 2023-08-22
+------------------
+- fixed #350 - fixed all Python 2 deprecation FIXMEs (e.g. future, )
+
+4.0.5 - 2023-06-05
 ------------------
 - fixed #344 - AttributeError when accessing Times with None value
 - use __hash__ when evaluating equality
