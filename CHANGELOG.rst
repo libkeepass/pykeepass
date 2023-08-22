@@ -3,6 +3,7 @@
 - fixed #344 - AttributeError when accessing Times with None value
 - use __hash__ when evaluating equality
 - use mtime/uuid for HistoryEntry hashing
+- fixed #350 - fixed all Python 2 deprecation FIXMEs (e.g. future, )
 
 4.0.4 - 2023-05-23
 ------------------
