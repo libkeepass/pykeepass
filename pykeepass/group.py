@@ -2,8 +2,8 @@ from lxml.builder import E
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
 
-import pykeepass.entry
-from pykeepass.baseelement import BaseElement
+from .entry import Entry
+from .baseelement import BaseElement
 
 
 class Group(BaseElement):
@@ -55,7 +55,7 @@ class Group(BaseElement):
     @property
     def entries(self):
         """:obj:`list` of :obj:`Entry`: get list of entries in this group"""
-        return [pykeepass.entry.Entry(element=x, kp=self._kp) for x in self._element.findall('Entry')]
+        return [Entry(element=x, kp=self._kp) for x in self._element.findall('Entry')]
 
     @property
     def subgroups(self):

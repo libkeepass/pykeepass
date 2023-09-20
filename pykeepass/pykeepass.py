@@ -10,20 +10,18 @@ import zlib
 
 from binascii import Error as BinasciiError
 from construct import Container, ChecksumError, CheckError
-from copy import deepcopy
 from dateutil import parser, tz
 from datetime import datetime, timedelta
 from lxml import etree
 from lxml.builder import E
 from pathlib import Path
 
-from pykeepass.attachment import Attachment
-from pykeepass.entry import Entry
-from pykeepass.exceptions import *
-from pykeepass.group import Group
-from pykeepass.kdbx_parsing.kdbx import KDBX
-from pykeepass.kdbx_parsing.kdbx4 import kdf_uuids
-from pykeepass.xpath import attachment_xp, entry_xp, group_xp, path_xp
+from .attachment import Attachment
+from .entry import Entry
+from .exceptions import *
+from .group import Group
+from .kdbx_parsing import KDBX, kdf_uuids
+from .xpath import attachment_xp, entry_xp, group_xp, path_xp
 
 logger = logging.getLogger(__name__)
 

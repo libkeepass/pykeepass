@@ -1,14 +1,12 @@
 import logging
 from copy import deepcopy
-from datetime import datetime
 
 from lxml.builder import E
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
 
-import pykeepass.attachment
-import pykeepass.group
-from pykeepass.baseelement import BaseElement
+from . import attachment
+from .baseelement import BaseElement
 
 logger = logging.getLogger(__name__)
 reserved_keys = [
@@ -128,7 +126,7 @@ class Entry(BaseElement):
         )
         self._element.append(element)
 
-        return pykeepass.attachment.Attachment(element=element, kp=self._kp)
+        return attachment.Attachment(element=element, kp=self._kp)
 
     def delete_attachment(self, attachment):
         attachment.delete()
