@@ -45,6 +45,9 @@ class PyKeePass():
             database is assumed to have no keyfile
         transformed_key (:obj:`bytes`, optional): precomputed transformed
             key.
+        decrypt (:obj:`bool`, optional): whether to decrypt XML payload.
+            Set `False` to access outer header information without decrypting
+            database.
 
     Raises:
         CredentialsError: raised when password/keyfile or transformed key
@@ -59,13 +62,14 @@ class PyKeePass():
     """
 
     def __init__(self, filename, password=None, keyfile=None,
-                 transformed_key=None):
+                 transformed_key=None, decrypt=True):
 
         self.read(
             filename=filename,
             password=password,
             keyfile=keyfile,
-            transformed_key=transformed_key
+            transformed_key=transformed_key,
+            decrypt=decrypt
         )
 
     def __enter__(self):
@@ -76,7 +80,7 @@ class PyKeePass():
         pass
 
     def read(self, filename=None, password=None, keyfile=None,
-             transformed_key=None):
+             transformed_key=None, decrypt=True):
         """
         See class docstring.
 
@@ -96,14 +100,16 @@ class PyKeePass():
                     filename,
                     password=password,
                     keyfile=keyfile,
-                    transformed_key=transformed_key
+                    transformed_key=transformed_key,
+                    decrypt=decrypt
                 )
             else:
                 self.kdbx = KDBX.parse_file(
                     filename,
                     password=password,
                     keyfile=keyfile,
-                    transformed_key=transformed_key
+                    transformed_key=transformed_key,
+                    decrypt=decrypt
                 )
 
         except CheckError as e:
@@ -154,7 +160,8 @@ class PyKeePass():
                 filename,
                 password=self.password,
                 keyfile=self.keyfile,
-                transformed_key=transformed_key
+                transformed_key=transformed_key,
+                decrypt=True
             )
         else:
             # save to temporary file to prevent database clobbering
@@ -166,7 +173,8 @@ class PyKeePass():
                     filename_tmp,
                     password=self.password,
                     keyfile=self.keyfile,
-                    transformed_key=transformed_key
+                    transformed_key=transformed_key,
+                    decrypt=True
                 )
             except Exception as e:
                 os.remove(filename_tmp)
@@ -208,6 +216,17 @@ class PyKeePass():
         """bytes: transformed key used in database decryption.  May be cached
         and passed to `open` for faster database opening"""
         return self.kdbx.body.transformed_key
+
+    @property
+    def database_salt(self):
+       """bytes: salt of database kdf. This can be used for adding additional
+       credentials which are used in extension to current keyfile."""
+
+       if self.version == (3, 1):
+            return self.kdbx.header.value.dynamic_header.transform_seed.data
+
+       kdf_parameters = self.kdbx.header.value.dynamic_header.kdf_parameters.data.dict
+       return kdf_parameters['S'].value
 
     @property
     def tree(self):
