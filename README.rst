@@ -364,9 +364,9 @@ days after **credchange_date** that credential update is recommended
 
 Miscellaneous
 -------------
-**read** (filename=None, password=None, keyfile=None, transformed_key=None)
+**read** (filename=None, password=None, keyfile=None, transformed_key=None, decrypt=False)
 
-where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.  Alternatively, the derived key can be supplied directly through ``transformed_key``.
+where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.  Alternatively, the derived key can be supplied directly through ``transformed_key``. ``decrypt`` tells whether the file should be decrypted or not.
 
 Can raise ``CredentialsError``, ``HeaderChecksumError``, or ``PayloadChecksumError``.
 

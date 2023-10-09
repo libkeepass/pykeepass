@@ -8,7 +8,7 @@ import hmac
 from construct import (
     Byte, Bytes, Int32ul, RepeatUntil, GreedyBytes, Struct, this, Mapping,
     Switch, Flag, Prefixed, Int64ul, Int32sl, Int64sl, GreedyString, Padding,
-    Peek, Checksum, Computed, IfThenElse, Pointer, Tell
+    Peek, Checksum, Computed, IfThenElse, Pointer, Tell, If
 )
 from .common import (
     aes_kdf, Concatenated, AES256Payload, ChaCha20Payload, TwoFishPayload,
@@ -259,17 +259,21 @@ Body = Struct(
         this._.header.data,
         # exception=HeaderChecksumError,
     ),
-    "cred_check" / Checksum(
-        Bytes(32),
-        compute_header_hmac_hash,
-        this,
-        # exception=CredentialsError,
+    "cred_check" / If(this._._.decrypt,
+        Checksum(
+            Bytes(32),
+            compute_header_hmac_hash,
+            this,
+            # exception=CredentialsError,
+        )
     ),
-    "payload" / UnpackedPayload(
-        IfThenElse(
-            this._.header.value.dynamic_header.compression_flags.data.compression,
-            Decompressed(DecryptedPayload),
-            DecryptedPayload
+    "payload" / If(this._._.decrypt,
+        UnpackedPayload(
+            IfThenElse(
+                this._.header.value.dynamic_header.compression_flags.data.compression,
+                Decompressed(DecryptedPayload),
+                DecryptedPayload
+            )
         )
     )
 )

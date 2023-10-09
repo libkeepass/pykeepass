@@ -5,7 +5,7 @@ import hashlib
 from construct import (
     Byte, Bytes, Int16ul, Int32ul, Int64ul, RepeatUntil, GreedyBytes, Struct,
     this, Mapping, Switch, Prefixed, Padding, Checksum, Computed, IfThenElse,
-    Pointer, Tell, len_
+    Pointer, Tell, len_, If
 )
 from .common import (
     aes_kdf, AES256Payload, ChaCha20Payload, TwoFishPayload, Concatenated,
@@ -154,13 +154,15 @@ UnpackedPayload = Reparsed(
 Body = Struct(
     "transformed_key" / Computed(compute_transformed),
     "master_key" / Computed(compute_master),
-    "payload" / UnpackedPayload(
-        Switch(
-            this._.header.value.dynamic_header.cipher_id.data,
-            {'aes256': AES256Payload(GreedyBytes),
-             'chacha20': ChaCha20Payload(GreedyBytes),
-             'twofish': TwoFishPayload(GreedyBytes),
-             }
+    "payload" / If(this._._.decrypt,
+        UnpackedPayload(
+            Switch(
+                this._.header.value.dynamic_header.cipher_id.data,
+                {'aes256': AES256Payload(GreedyBytes),
+                 'chacha20': ChaCha20Payload(GreedyBytes),
+                 'twofish': TwoFishPayload(GreedyBytes),
+                 }
+            )
         )
     ),
 )
