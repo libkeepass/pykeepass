@@ -1230,6 +1230,29 @@ class KDBXTests(unittest.TestCase):
 
             self.assertEqual(kp.database_salt, salt)
 
+
+    def test_keyfile_as_bytes(self):
+
+        databases = [
+            'test4.kdbx',
+        ]
+        passwords = [
+            'password',
+        ]
+        keyfiles = [
+            base_dir + '/test4.key'
+        ]
+        for database, password, keyfile in zip(databases, passwords, keyfiles):
+            with open(keyfile, "rb") as fh:
+                buf = fh.read()
+
+            kp = PyKeePass(
+                os.path.join(base_dir, database),
+                password,
+                keyfile=buf
+            )
+
+
 if __name__ == '__main__':
     unittest.main()
 
