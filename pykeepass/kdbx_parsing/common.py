@@ -1,9 +1,10 @@
 from Cryptodome.Cipher import AES, ChaCha20, Salsa20
 from .twofish import Twofish
+from Cryptodome.Random import get_random_bytes
 from Cryptodome.Util import Padding as CryptoPadding
 import hashlib
 from construct import (
-    Adapter, BitStruct, BitsSwapped, Container, Flag, Padding, ListContainer, Mapping, GreedyBytes, Int32ul, Switch
+    Adapter, BitStruct, BitsSwapped, Bytes, Container, Flag, Padding, ListContainer, Mapping, GreedyBytes, Int32ul, Switch, stream_write
 )
 from lxml import etree
 from copy import deepcopy
@@ -18,6 +19,16 @@ from collections import OrderedDict
 import logging
 
 log = logging.getLogger(__name__)
+
+
+class RandomBytes(Bytes):
+    """Same as Bytes, but generate random bytes when building"""
+
+    def _build(self, obj, stream, context, path):
+        length = self.length(context) if callable(self.length) else self.length
+        data = get_random_bytes(length)
+        stream_write(stream, data, length, path)
+        return data
 
 
 class HeaderChecksumError(Exception):
@@ -167,7 +178,7 @@ def compute_master(context):
 
     # combine the transformed key with the header master seed to find the master_key
     master_key = hashlib.sha256(
-        context._.header.value.dynamic_header.master_seed.data +
+        context._.header.dynamic_header.master_seed.data +
         context.transformed_key).digest()
     return master_key
 
@@ -296,7 +307,7 @@ class DecryptedPayload(Adapter):
     def _decode(self, payload_data, con, path):
         cipher = self.get_cipher(
             con.master_key,
-            con._.header.value.dynamic_header.encryption_iv.data
+            con._.header.dynamic_header.encryption_iv.data
         )
         payload_data = cipher.decrypt(payload_data)
         # FIXME: Construct ugliness.  Fixes #244.  First 32 bytes of decrypted kdbx3 payload
@@ -316,7 +327,7 @@ class DecryptedPayload(Adapter):
         payload_data = self.pad(payload_data)
         cipher = self.get_cipher(
             con.master_key,
-            con._.header.value.dynamic_header.encryption_iv.data
+            con._.header.dynamic_header.encryption_iv.data
         )
         payload_data = cipher.encrypt(payload_data)
 

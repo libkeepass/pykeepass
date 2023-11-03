@@ -10,7 +10,7 @@ from construct import (
 from .common import (
     aes_kdf, AES256Payload, ChaCha20Payload, TwoFishPayload, Concatenated,
     DynamicDict, compute_key_composite, Decompressed, Reparsed,
-    compute_master, CompressionFlags, XML, CipherId, ProtectedStreamId, Unprotect
+    compute_master, CompressionFlags, XML, CipherId, ProtectedStreamId, Unprotect, RandomBytes
 )
 
 
@@ -33,8 +33,8 @@ def compute_transformed(context):
             keyfile=context._._.keyfile
         )
         transformed_key = aes_kdf(
-            context._.header.value.dynamic_header.transform_seed.data,
-            context._.header.value.dynamic_header.transform_rounds.data,
+            context._.header.dynamic_header.transform_seed.data,
+            context._.header.dynamic_header.transform_rounds.data,
             key_composite
         )
 
@@ -67,6 +67,7 @@ DynamicHeaderItem = Struct(
             {'compression_flags': CompressionFlags,
              'cipher_id': CipherId,
              'transform_rounds': Int64ul,
+             'master_seed': RandomBytes(32),
              'protected_stream_id': ProtectedStreamId
              },
             default=GreedyBytes
@@ -130,16 +131,16 @@ UnpackedPayload = Reparsed(
         # validate payload decryption
         "cred_check" / Checksum(
             Bytes(32),
-            lambda this: this._._.header.value.dynamic_header.stream_start_bytes.data,
+            lambda this: this._._.header.dynamic_header.stream_start_bytes.data,
             this,
             # exception=CredentialsError
         ),
         "xml" / Unprotect(
-            this._._.header.value.dynamic_header.protected_stream_id.data,
-            this._._.header.value.dynamic_header.protected_stream_key.data,
+            this._._.header.dynamic_header.protected_stream_id.data,
+            this._._.header.dynamic_header.protected_stream_key.data,
             XML(
                 IfThenElse(
-                    this._._.header.value.dynamic_header.compression_flags.data.compression,
+                    this._._.header.dynamic_header.compression_flags.data.compression,
                     Decompressed(Concatenated(PayloadBlocks)),
                     Concatenated(PayloadBlocks)
                 )
@@ -157,7 +158,7 @@ Body = Struct(
     "payload" / If(this._._.decrypt,
         UnpackedPayload(
             Switch(
-                this._.header.value.dynamic_header.cipher_id.data,
+                this._.header.dynamic_header.cipher_id.data,
                 {'aes256': AES256Payload(GreedyBytes),
                  'chacha20': ChaCha20Payload(GreedyBytes),
                  'twofish': TwoFishPayload(GreedyBytes),
