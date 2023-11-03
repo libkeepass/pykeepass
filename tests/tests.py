@@ -1397,6 +1397,31 @@ class KDBXTests(unittest.TestCase):
             self.assertEqual(kp.encryption_algorithm, enc_alg)
             self.assertEqual(kp.version, version)
 
+    def test_master_seed_differs(self):
+        databases = [
+            # 'test3.kdbx',
+            'test4.kdbx',
+        ]
+        keyfiles = [
+            # 'test3.key',
+            'test4.key',
+        ]
+        for database, keyfile in zip(databases, keyfiles):
+            path = os.path.join(base_dir, database)
+            keyfile = os.path.join(base_dir, keyfile)
+            kp = PyKeePass(path, password='password', keyfile=keyfile)
+            master_seed = kp.kdbx.header.dynamic_header.master_seed.data
+            vector_iv = kp.kdbx.header.dynamic_header.vector_iv.data
+            stream = BytesIO()
+            kp.save(stream)
+            stream.seek(0)
+            new_kp = PyKeePass(stream, password='password', keyfile=keyfile)
+            new_master_seed = new_kp.kdbx.header.dynamic_header.master_seed.data
+            new_vector_iv = new_kp.kdbx.header.dynamic_header.vector_iv.data
+
+            self.assertNotEqual(master_seed, new_master_seed)
+            self.assertNotEqual(vector_iv, new_vector_iv)
+
 if __name__ == '__main__':
     unittest.main()
 
