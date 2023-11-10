@@ -126,7 +126,7 @@ class Entry(BaseElement):
         index = children.index(self._element)
         return index - first_index
 
-    def move(self, new_index):
+    def reindex(self, new_index):
         group = self.group._element
         first_index = self.group._first_entry
         group.remove(self._element)
