@@ -614,6 +614,17 @@ class EntryTests3(KDBX3Tests):
         self.assertFalse(e.is_custom_property_protected('not-protected'))
         self.assertFalse(e.is_custom_property_protected('non-existent'))
 
+    def test_reindex(self):
+        e1 = self.kp.add_entry(self.kp.root_group, 'Test-Index1', 'user-index', 'pass')
+        e2 = self.kp.add_entry(self.kp.root_group, 'Test-Index2', 'user-index', 'pass')
+        e3 = self.kp.add_entry(self.kp.root_group, 'Test-Index3', 'user-index', 'pass')
+        e4 = self.kp.add_entry(self.kp.root_group, 'Test-Index4', 'user-index', 'pass')
+        e2.reindex(0)
+        e3.reindex(0)
+        e4.reindex(0)
+        entries = self.kp.find_entries(username="user-index")
+        self.assertEqual(entries, [e4,e3,e2,e1])
+
 
 class EntryHistoryTests3(KDBX3Tests):
 
