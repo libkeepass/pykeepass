@@ -120,6 +120,7 @@ class Entry(BaseElement):
 
     @property
     def index(self):
+        """int: get index of a entry within a group"""
         group = self.group._element
         children = group.getchildren()
         first_index = self.group._first_entry
@@ -127,6 +128,11 @@ class Entry(BaseElement):
         return index - first_index
 
     def reindex(self, new_index):
+        """Move entry to a new index within a group
+        
+        Args:
+            new_index (int): new index for the entry starting at 0
+        """
         group = self.group._element
         first_index = self.group._first_entry
         group.remove(self._element)
