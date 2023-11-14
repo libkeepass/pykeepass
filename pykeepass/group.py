@@ -35,6 +35,12 @@ class Group(BaseElement):
             self._element = element
 
     @property
+    def _first_entry(self):
+        children = self._element.getchildren()
+        first_element = next(e for e in children if e.tag == "Entry")
+        return children.index(first_element)
+
+    @property
     def name(self):
         """str: get or set group name"""
         return self._get_subelement_text('Name')
