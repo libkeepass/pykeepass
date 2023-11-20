@@ -26,7 +26,7 @@ class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
                  notes=None, otp=None, tags=None, expires=False, expiry_time=None,
-                 icon=None, autotype_sequence=None, autotype_enabled=True,
+                 icon=None, autotype_sequence=None, autotype_enabled=True, autotype_window=None,
                  element=None, kp=None):
 
         self._kp = kp
@@ -60,7 +60,11 @@ class Entry(BaseElement):
                 E.AutoType(
                     E.Enabled(str(autotype_enabled)),
                     E.DataTransferObfuscation('0'),
-                    E.DefaultSequence(str(autotype_sequence) if autotype_sequence else '')
+                    E.DefaultSequence(str(autotype_sequence) if autotype_sequence else ''),
+                    E.Association(
+                        E.Window(str(autotype_window) if autotype_window else ''),
+                        E.KeystrokeSequence('')
+                    )
                 )
             )
             # FIXME: include custom_properties in constructor
@@ -267,6 +271,18 @@ class Entry(BaseElement):
     @autotype_sequence.setter
     def autotype_sequence(self, value):
         self._element.find('AutoType/DefaultSequence').text = value
+
+    @property
+    def autotype_window(self):
+        """str: get or set [autotype target window filter](https://keepass.info/help/base/autotype.html#autowindows)"""
+        sequence = self._element.find('AutoType/Association/Window')
+        if sequence is None or sequence.text == '':
+            return None
+        return sequence.text
+
+    @autotype_window.setter
+    def autotype_window(self, value):
+        self._element.find('AutoType/Association/Window').text = value
 
     @property
     def is_a_history_entry(self):
