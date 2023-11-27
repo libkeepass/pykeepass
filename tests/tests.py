@@ -8,7 +8,6 @@ import uuid
 from datetime import datetime, timedelta
 
 from dateutil import tz
-from lxml.etree import Element
 from pathlib import Path
 
 from io import BytesIO
@@ -16,7 +15,6 @@ from io import BytesIO
 from pykeepass import PyKeePass, icons
 from pykeepass.entry import Entry
 from pykeepass.group import Group
-from pykeepass.kdbx_parsing import KDBX
 from pykeepass.exceptions import BinaryError, CredentialsError, HeaderChecksumError
 
 """
@@ -143,6 +141,11 @@ class EntryFindTests3(KDBX3Tests):
         results = self.kp.find_entries(autotype_sequence='{TAB}', regex=True)
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].autotype_sequence, '{USERNAME}{TAB}{PASSWORD}{ENTER}')
+
+    def test_find_entries_by_autotype_window(self):
+        results = self.kp.find_entries(autotype_window='test', regex=True, flags="i")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].autotype_window, 'TEST')
 
     def test_find_entries_by_autotype_enabled(self):
         results = self.kp.find_entries(autotype_enabled=True)
