@@ -33,32 +33,32 @@ Missing Tests:
   - expiry_time - get/set
 """
 
-base_dir = os.path.dirname(os.path.realpath(__file__))
+base_dir = Path(os.path.dirname(os.path.realpath(__file__)))
 logger = logging.getLogger("pykeepass")
 
 
 class KDBX3Tests(unittest.TestCase):
-    database = os.path.join(base_dir, 'test3.kdbx')
+    database = base_dir / 'test3.kdbx'
     password = 'password'
-    keyfile = os.path.join(base_dir, 'test3.key')
+    keyfile = base_dir / 'test3.key'
 
-    database_tmp = os.path.join(base_dir, 'test3_tmp.kdbx')
-    keyfile_tmp = os.path.join(base_dir, 'test3_tmp.key')
+    database_tmp = base_dir / 'test3_tmp.kdbx'
+    keyfile_tmp = base_dir / 'test3_tmp.key'
 
     # get some things ready before testing
     def setUp(self):
         shutil.copy(self.database, self.database_tmp)
         shutil.copy(self.keyfile, self.keyfile_tmp)
         self.kp = PyKeePass(
-            os.path.join(base_dir, self.database),
+            base_dir / self.database,
             password=self.password,
-            keyfile=os.path.join(base_dir, self.keyfile)
+            keyfile=base_dir / self.keyfile
         )
         # for tests which modify the database, use this
         self.kp_tmp = PyKeePass(
-            os.path.join(base_dir, self.database_tmp),
+            base_dir / self.database_tmp,
             password=self.password,
-            keyfile=os.path.join(base_dir, self.keyfile_tmp)
+            keyfile=base_dir / self.keyfile_tmp
         )
 
     def tearDown(self):
@@ -67,12 +67,12 @@ class KDBX3Tests(unittest.TestCase):
 
 
 class KDBX4Tests(KDBX3Tests):
-    database = os.path.join(base_dir, 'test4.kdbx')
+    database = base_dir / 'test4.kdbx'
     password = 'password'
-    keyfile = os.path.join(base_dir, 'test4.key')
+    keyfile = base_dir / 'test4.key'
 
-    database_tmp = os.path.join(base_dir, 'test4_tmp.kdbx')
-    keyfile_tmp = os.path.join(base_dir, 'test4_tmp.key')
+    database_tmp = base_dir / 'test4_tmp.kdbx'
+    keyfile_tmp = base_dir / 'test4_tmp.key'
 
 
 class EntryFindTests3(KDBX3Tests):
@@ -823,7 +823,7 @@ class PyKeePassTests3(KDBX3Tests):
 
     def test_set_credentials(self):
         self.kp_tmp.password = 'f00bar'
-        self.kp_tmp.keyfile = os.path.join(base_dir, 'change.key')
+        self.kp_tmp.keyfile = base_dir / 'change.key'
         self.kp_tmp.save()
         self.kp_tmp = PyKeePass(
             self.kp_tmp.filename,
@@ -990,7 +990,7 @@ class BugRegressionTests4(KDBX4Tests, BugRegressionTests3):
 
 class CtxManagerTests(unittest.TestCase):
     def test_ctx_manager(self):
-        with PyKeePass(os.path.join(base_dir, 'test4.kdbx'), password='password', keyfile=base_dir + '/test4.key') as kp:
+        with PyKeePass(base_dir / 'test4.kdbx', password='password', keyfile=base_dir / 'test4.key') as kp:
             results = kp.find_entries_by_username('foobar_user', first=True)
             self.assertEqual('foobar_user', results.username)
 
@@ -1000,40 +1000,43 @@ class KDBXTests(unittest.TestCase):
     def test_open_save(self):
         """try to open all databases, save them, then open the result"""
 
-        with open(os.path.join(base_dir, 'test3.kdbx'), 'rb') as file:
+        # for database stream open test
+        with open(base_dir / 'test3.kdbx', 'rb') as file:
             stream = BytesIO(file.read())
+        # for keyfile file descriptor test
+        keyfile_fd = open(base_dir / 'test4.key', 'rb')
 
         filenames_in = [
-            os.path.join(base_dir, 'test3.kdbx'),                 # KDBX v3
-            Path(base_dir).joinpath('test4.kdbx'),                # KDBX v4 (and test pathlib)
-            os.path.join(base_dir, 'test4_aes.kdbx'),             # KDBX v4 AES
-            os.path.join(base_dir, 'test4_aeskdf.kdbx'),          # KDBX v3 AESKDF
-            os.path.join(base_dir, 'test4_chacha20.kdbx'),        # KDBX v4 ChaCha
-            os.path.join(base_dir, 'test4_twofish.kdbx'),         # KDBX v4 Twofish
-            os.path.join(base_dir, 'test4_hex.kdbx'),             # legacy 64 byte hexadecimal keyfile
-            os.path.join(base_dir, 'test3_transformed.kdbx'),     # KDBX v3 transformed_key open
-            os.path.join(base_dir, 'test4_transformed.kdbx'),     # KDBX v4 transformed_key open
+            base_dir / 'test3.kdbx',                 # KDBX v3
+            base_dir / 'test4_aes.kdbx',             # KDBX v4 AES
+            base_dir / 'test4_aeskdf.kdbx',          # KDBX v3 AESKDF
+            base_dir / 'test4_chacha20.kdbx',        # KDBX v4 ChaCha
+            base_dir / 'test4_twofish.kdbx',         # KDBX v4 Twofish
+            base_dir / 'test4_hex.kdbx',             # legacy 64 byte hexadecimal keyfile
+            base_dir / 'test3_transformed.kdbx',     # KDBX v3 transformed_key open
+            base_dir / 'test4_transformed.kdbx',     # KDBX v4 transformed_key open
             stream,                                               # test stream opening
-            os.path.join(base_dir, 'test4_aes_uncompressed.kdbx'),# KDBX v4 AES uncompressed
-            os.path.join(base_dir, 'test4_twofish_uncompressed.kdbx'),# KDBX v4 Twofish uncompressed
-            os.path.join(base_dir, 'test4_chacha20_uncompressed.kdbx'),# KDBX v4 ChaCha uncompressed
-            os.path.join(base_dir, 'test4_argon2id.kdbx'),        # KDBX v4 Argon2id
+            base_dir / 'test4_aes_uncompressed.kdbx',# KDBX v4 AES uncompressed
+            base_dir / 'test4_twofish_uncompressed.kdbx',# KDBX v4 Twofish uncompressed
+            base_dir / 'test4_chacha20_uncompressed.kdbx',# KDBX v4 ChaCha uncompressed
+            base_dir / 'test4_argon2id.kdbx',        # KDBX v4 Argon2id
+            base_dir / 'test4.kdbx',        # KDBX v4 with keyfile file descriptor
         ]
         filenames_out = [
-            os.path.join(base_dir, 'test3.kdbx.out'),
-            Path(base_dir).joinpath('test4.kdbx.out'),
-            os.path.join(base_dir, 'test4_aes.kdbx.out'),
-            os.path.join(base_dir, 'test4_aeskdf.kdbx.out'),
-            os.path.join(base_dir, 'test4_chacha20.kdbx.out'),
-            os.path.join(base_dir, 'test4_twofish.kdbx.out'),
-            os.path.join(base_dir, 'test4_hex.kdbx.out'),
-            os.path.join(base_dir, 'test3_transformed.kdbx.out'),
-            os.path.join(base_dir, 'test4_transformed.kdbx.out'),
+            base_dir / 'test3.kdbx.out',
+            base_dir / 'test4_aes.kdbx.out',
+            base_dir / 'test4_aeskdf.kdbx.out',
+            base_dir / 'test4_chacha20.kdbx.out',
+            base_dir / 'test4_twofish.kdbx.out',
+            base_dir / 'test4_hex.kdbx.out',
+            base_dir / 'test3_transformed.kdbx.out',
+            base_dir / 'test4_transformed.kdbx.out',
             BytesIO(),
-            os.path.join(base_dir, 'test4_aes_uncompressed.kdbx.out'),
-            os.path.join(base_dir, 'test4_twofish_uncompressed.kdbx.out'),# KDBX v4 Twofish uncompressed
-            os.path.join(base_dir, 'test4_chacha20_uncompressed.kdbx.out'),# KDBX v4 ChaCha uncompressed
-            os.path.join(base_dir, 'test4_argon2id.kdbx.out'),
+            base_dir / 'test4_aes_uncompressed.kdbx.out',
+            base_dir / 'test4_twofish_uncompressed.kdbx.out',# KDBX v4 Twofish uncompressed
+            base_dir / 'test4_chacha20_uncompressed.kdbx.out',# KDBX v4 ChaCha uncompressed
+            base_dir / 'test4_argon2id.kdbx.out',
+            base_dir / 'test4.kdbx.out',        # KDBX v4 with keyfile file descriptor
         ]
         passwords = [
             'password',
@@ -1042,9 +1045,9 @@ class KDBXTests(unittest.TestCase):
             'password',
             'password',
             'password',
+            None,
+            None,
             'password',
-            None,
-            None,
             'password',
             'password',
             'password',
@@ -1058,7 +1061,6 @@ class KDBXTests(unittest.TestCase):
             None,
             None,
             None,
-            None,
             b'\xfb\xb1!\x0e0\x94\xd4\x868\xa5\x04\xe6T\x9b<\xf9+\xb8\x82EN\xbc\xbe\xbc\xc8\xd3\xbbf\xfb\xde\xff.',
             b'\x95\x0be\x9ca\x9e<\xe0\x07\x02\x7f\xc3\xd8\xa1\xa6&\x985\x8f!\xa6\x18k\x13\xa2\xd2\r=\xf3\xebd\xc5',
             None,
@@ -1066,26 +1068,26 @@ class KDBXTests(unittest.TestCase):
             None,
             None,
             None,
-        ]
+            None,
+ ]
         keyfiles = [
-            'test3.key',
-            Path('test4.key'),
-            'test4.key',
-            'test4.key',
-            'test4.key',
-            'test4.key',
-            'test4_hex.key',
+            base_dir / 'test3.key',
+            base_dir / 'test4.key',
+            base_dir / 'test4.key',
+            base_dir / 'test4.key',
+            base_dir / 'test4.key',
+            base_dir / 'test4_hex.key',
             None,
             None,
-            'test3.key',
+            base_dir / 'test3.key',
             None,
             None,
             None,
             None,
+            keyfile_fd
         ]
         encryption_algorithms = [
             'aes256',
-            'chacha20',
             'aes256',
             'aes256',
             'chacha20',
@@ -1098,10 +1100,10 @@ class KDBXTests(unittest.TestCase):
             'twofish',
             'chacha20',
             'aes256',
+            'chacha20',
         ]
         kdf_algorithms = [
             'aeskdf',
-            'argon2',
             'argon2',
             'aeskdf',
             'argon2',
@@ -1114,6 +1116,7 @@ class KDBXTests(unittest.TestCase):
             'argon2',
             'argon2',
             'argon2id',
+            'argon2',
         ]
         versions = [
             (3, 1),
@@ -1122,10 +1125,10 @@ class KDBXTests(unittest.TestCase):
             (4, 0),
             (4, 0),
             (4, 0),
-            (4, 0),
             (3, 1),
             (4, 0),
             (3, 1),
+            (4, 0),
             (4, 0),
             (4, 0),
             (4, 0),
@@ -1140,7 +1143,7 @@ class KDBXTests(unittest.TestCase):
             kp = PyKeePass(
                 filename_in,
                 password,
-                None if keyfile is None else os.path.join(base_dir, keyfile),
+                keyfile,
                 transformed_key=transformed_key
             )
             self.assertEqual(kp.encryption_algorithm, encryption_algorithm)
@@ -1159,13 +1162,14 @@ class KDBXTests(unittest.TestCase):
             kp = PyKeePass(
                 filename_out,
                 password,
-                None if keyfile is None else os.path.join(base_dir, keyfile),
+                keyfile,
                 transformed_key=transformed_key
             )
 
-        for filename in os.listdir(base_dir):
-            if filename.endswith('.out'):
-                os.remove(os.path.join(base_dir, filename))
+        for filename in base_dir.glob('*.out'):
+            os.remove(filename)
+
+        keyfile_fd.close()
 
 
     def test_open_error(self):
@@ -1201,13 +1205,15 @@ class KDBXTests(unittest.TestCase):
         for database, password, keyfile, error in zip(databases, passwords, keyfiles, errors):
             with self.assertRaises(error):
                 PyKeePass(
-                    os.path.join(base_dir, database),
+                    base_dir / database,
                     password,
-                    os.path.join(base_dir, keyfile)
+                    base_dir / keyfile
                 )
 
 
     def test_open_no_decrypt(self):
+        """Open database but do not decrypt payload.  Needed for reading header data for OTP tokens"""
+
 
         databases = [
             'test3.kdbx',
@@ -1229,29 +1235,6 @@ class KDBXTests(unittest.TestCase):
             )
 
             self.assertEqual(kp.database_salt, salt)
-
-
-    def test_keyfile_as_bytes(self):
-
-        databases = [
-            'test4.kdbx',
-        ]
-        passwords = [
-            'password',
-        ]
-        keyfiles = [
-            base_dir + '/test4.key'
-        ]
-        for database, password, keyfile in zip(databases, passwords, keyfiles):
-            with open(keyfile, "rb") as fh:
-                buf = fh.read()
-
-            kp = PyKeePass(
-                os.path.join(base_dir, database),
-                password,
-                keyfile=buf
-            )
-
 
 if __name__ == '__main__':
     unittest.main()

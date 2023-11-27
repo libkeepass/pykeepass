@@ -366,7 +366,7 @@ Miscellaneous
 -------------
 **read** (filename=None, password=None, keyfile=None, transformed_key=None, decrypt=False)
 
-where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.  Alternatively, the derived key can be supplied directly through ``transformed_key``. ``decrypt`` tells whether the file should be decrypted or not.
+where ``filename``, ``password``, and ``keyfile`` are strings (  ``filename`` and ``keyfile`` may also be file-like objects).  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.  Alternatively, the derived key can be supplied directly through ``transformed_key``.  ``decrypt`` tells whether the file should be decrypted or not.
 
 Can raise ``CredentialsError``, ``HeaderChecksumError``, or ``PayloadChecksumError``.
 
@@ -376,7 +376,7 @@ reload database from disk using previous credentials
 
 **save** (filename=None)
 
-where ``filename`` is the path of the file to save to.  If ``filename`` is not given, the path given in ``read`` will be used.
+where ``filename`` is the path of the file to save to (``filename`` may also be file-like object).  If ``filename`` is not given, the path given in ``read`` will be used.
 
 **password**
 

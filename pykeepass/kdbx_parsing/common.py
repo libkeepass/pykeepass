@@ -105,25 +105,6 @@ def aes_kdf(key, rounds, key_composite):
     return hashlib.sha256(transformed_key).digest()
 
 
-def load_keyfile_composite(key: bytes):
-    try:
-        int(key, 16)
-        is_hex = True
-    except ValueError:
-        is_hex = False
-    # if the length is 32 bytes we assume it is the key
-    if len(key) == 32:
-        keyfile_composite = key
-    # if the length is 64 bytes we assume the key is hex encoded
-    elif len(key) == 64 and is_hex:
-        keyfile_composite = codecs.decode(key, 'hex')
-    # anything else may be a file to hash for the key
-    else:
-        keyfile_composite = hashlib.sha256(key).digest()
-
-    return keyfile_composite
-
-
 def compute_key_composite(password=None, keyfile=None):
     """Compute composite key.
     Used in header verification and payload decryption."""
@@ -135,33 +116,44 @@ def compute_key_composite(password=None, keyfile=None):
         password_composite = b''
     # hash the keyfile
     if keyfile:
-        if isinstance(keyfile, bytes):
-            keyfile_composite = keyfile_composite = load_keyfile_composite(keyfile)
+        if hasattr(keyfile, "read"):
+            keyfile_bytes = keyfile.read()
         else:
-            # try to read XML keyfile
+            with open(keyfile, 'rb') as f:
+                keyfile_bytes = f.read()
+        # try to read XML keyfile
+        try:
+            tree = etree.fromstring(keyfile_bytes)
+            version = tree.find('Meta/Version').text
+            data_element = tree.find('Key/Data')
+            if version.startswith('1.0'):
+                keyfile_composite = base64.b64decode(data_element.text)
+            elif version.startswith('2.0'):
+                # read keyfile data and convert to bytes
+                keyfile_composite = bytes.fromhex(data_element.text.strip())
+                # validate bytes against hash
+                hash = bytes.fromhex(data_element.attrib['Hash'])
+                hash_computed = hashlib.sha256(keyfile_composite).digest()[:4]
+                assert hash == hash_computed, "Keyfile has invalid hash"
+        # otherwise, try to read plain keyfile
+        except (etree.XMLSyntaxError, UnicodeDecodeError):
             try:
-                with open(keyfile, 'r') as f:
-                    tree = etree.parse(f).getroot()
-                    version = tree.find('Meta/Version').text
-                    data_element = tree.find('Key/Data')
-                    if version.startswith('1.0'):
-                        keyfile_composite = base64.b64decode(data_element.text)
-                    elif version.startswith('2.0'):
-                        # read keyfile data and convert to bytes
-                        keyfile_composite = bytes.fromhex(data_element.text.strip())
-                        # validate bytes against hash
-                        hash = bytes.fromhex(data_element.attrib['Hash'])
-                        hash_computed = hashlib.sha256(keyfile_composite).digest()[:4]
-                        assert hash == hash_computed, "Keyfile has invalid hash"
-            # otherwise, try to read plain keyfile
-            except (etree.XMLSyntaxError, UnicodeDecodeError):
                 try:
-                    with open(keyfile, 'rb') as f:
-                        key = f.read()
-
-                        keyfile_composite = load_keyfile_composite(key)
-                except:
-                    raise IOError('Could not read keyfile')
+                    int(keyfile_bytes, 16)
+                    is_hex = True
+                except ValueError:
+                    is_hex = False
+                # if the length is 32 bytes we assume it is the key
+                if len(keyfile_bytes) == 32:
+                    keyfile_composite = keyfile_bytes
+                # if the length is 64 bytes we assume the key is hex encoded
+                elif len(keyfile_bytes) == 64 and is_hex:
+                    keyfile_composite = codecs.decode(keyfile_bytes, 'hex')
+                # anything else may be a file to hash for the key
+                else:
+                    keyfile_composite = hashlib.sha256(keyfile_bytes).digest()
+            except:
+                raise IOError('Could not read keyfile')
 
     else:
         keyfile_composite = b''
