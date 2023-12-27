@@ -1237,18 +1237,23 @@ class KDBXTests(unittest.TestCase):
             'invalid_password',
             'invalid_password',
         ]
-        salts = [
-            b'\x82\xef\xf1\x05\x13\xbcQ\xa7\x8aG\x04b\xc7^o(\xf2R[\xc0\x0f\xa4?\xaa\xf9 Gi\xcf\xaf6\x0f',
-            b'\x82\xb0\xab/Bbn\x93\x90\xe0\x02m\x82\xaa\x9a\x9a\xd1\xc0k\x95\xbb\xc5kn\xe3\xeb\xd6GHg<$'
+        enc_algs = [
+            'aes256',
+            'chacha20'
         ]
-        for database, password, salt in zip(databases, passwords, salts):
+        versions = [
+            (3, 1),
+            (4, 0),
+        ]
+        for database, password, enc_alg, version in zip(databases, passwords, enc_algs, versions):
             kp = PyKeePass(
                 os.path.join(base_dir, database),
                 password,
                 decrypt=False
             )
 
-            self.assertEqual(kp.database_salt, salt)
+            self.assertEqual(kp.encryption_algorithm, enc_alg)
+            self.assertEqual(kp.version, version)
 
 if __name__ == '__main__':
     unittest.main()

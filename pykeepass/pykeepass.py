@@ -379,8 +379,9 @@ class PyKeePass():
                 kwargs['uuid'] = base64.b64encode(kwargs['uuid'].bytes).decode('utf-8')
 
             # convert tags to semicolon separated string before building xpath
+            # FIXME: this isn't a reliable way to search tags.  e.g. searching ['tag1', 'tag2'] will match 'tag1tag2
             if 'tags' in kwargs.keys():
-                kwargs['tags'] = ';'.join(kwargs['tags'])
+                kwargs['tags'] = ' and '.join(f'contains(text(),"{t}")' for t in kwargs['tags'])
 
             # build xpath to filter results with specified attributes
             for key, value in kwargs.items():
