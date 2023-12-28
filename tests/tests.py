@@ -975,6 +975,7 @@ class BugRegressionTests3(KDBX3Tests):
         # accessing expiry_time throws exception when None
         # NOTE: KeepassXC likes to fill in empty expiry_time's on save
         # delete with e._element.xpath('Times/ExpiryTime')[0].text = None
+        # Consider moving this test to test4_nonedate.kdbx which is never touched by KeepassXC
 
         e = self.kp.find_entries(title='none_date', first=True)
         self.assertEqual(e.expiry_time, None)
