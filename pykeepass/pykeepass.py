@@ -247,13 +247,13 @@ class PyKeePass():
     def groups(self):
         """:obj:`list` of :obj:`Group`: list of all Group objects in database
         """
-        return self._xpath('//Group', cast=True)
+        return self.find_groups()
 
     @property
     def entries(self):
         """:obj:`list` of :obj:`Entry`: list of all Entry objects in database,
         excluding history"""
-        return self._xpath('//Entry', cast=True)
+        return self.find_entries()
 
     def xml(self):
         """Get XML part of database as string
@@ -284,8 +284,7 @@ class PyKeePass():
                 )
             )
 
-    def _xpath(self, xpath_str, tree=None, first=False, history=False,
-               cast=False, **kwargs):
+    def _xpath(self, xpath_str, tree=None, first=False, cast=False, **kwargs):
         """Look up elements in the XML payload and return corresponding object.
 
         Internal function which searches the payload lxml ElementTree for
@@ -300,8 +299,6 @@ class PyKeePass():
             first (bool): If True, function returns first result or None.  If
                 False, function returns list of matches or empty list.  Default
                 is False.
-            history (bool): If True, history entries are included in results.
-                Default is False.
             cast (bool): If True, matches are instead instantiated as
                 pykeepass Group, Entry, or Attachment objects.  An exception
                 is raised if a match cannot be cast.  Default is False.
@@ -319,18 +316,17 @@ class PyKeePass():
 
         res = []
         for e in elements:
-            if history or e.getparent().tag != 'History':
-                if cast:
-                    if e.tag == 'Entry':
-                        res.append(Entry(element=e, kp=self))
-                    elif e.tag == 'Group':
-                        res.append(Group(element=e, kp=self))
-                    elif e.tag == 'Binary' and e.getparent().tag == 'Entry':
-                        res.append(Attachment(element=e, kp=self))
-                    else:
-                        raise Exception('Could not cast element {}'.format(e))
+            if cast:
+                if e.tag == 'Entry':
+                    res.append(Entry(element=e, kp=self))
+                elif e.tag == 'Group':
+                    res.append(Group(element=e, kp=self))
+                elif e.tag == 'Binary' and e.getparent().tag == 'Entry':
+                    res.append(Attachment(element=e, kp=self))
                 else:
-                    res.append(e)
+                    raise Exception('Could not cast element {}'.format(e))
+            else:
+                res.append(e)
 
         # return first object in list or None
         if first:
@@ -343,6 +339,9 @@ class PyKeePass():
         """Internal function for converting a search into an XPath string"""
 
         xp = ''
+
+        if not history:
+            prefix += '[not(ancestor::History)]'
 
         if path is not None:
 
@@ -364,8 +363,7 @@ class PyKeePass():
             if tree is not None:
                 xp += '.'
 
-            if kwargs.keys():
-                xp += prefix
+            xp += prefix
 
             # handle searching custom string fields
             if 'string' in kwargs.keys():
@@ -394,7 +392,6 @@ class PyKeePass():
             xp,
             tree=tree._element if tree else None,
             first=first,
-            history=history,
             cast=True,
             **kwargs
         )
@@ -408,7 +405,7 @@ class PyKeePass():
         if recyclebin_group is None:
             return True
         uuid_str = base64.b64encode( entry_or_group.uuid.bytes).decode('utf-8')
-        elem = self._xpath('./UUID[text()="{}"]/..'.format(uuid_str), tree=recyclebin_group._element, first=True, history=False, cast=False)
+        elem = self._xpath('./UUID[text()="{}"]/..'.format(uuid_str), tree=recyclebin_group._element, first=True, cast=False)
         return elem is None
 
 

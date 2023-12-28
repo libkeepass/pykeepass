@@ -88,7 +88,7 @@ class Entry(BaseElement):
             (str or None): field value
         """
 
-        field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), first=True)
+        field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), history=True, first=True)
         if field is not None:
             return field.text
 
@@ -102,7 +102,7 @@ class Entry(BaseElement):
                 in other tools.  This property is ignored in PyKeePass and all
                 fields are decrypted immediately upon opening the database.
         """
-        field = self._xpath('String/Key[text()="{}"]/..'.format(key), first=True)
+        field = self._xpath('String/Key[text()="{}"]/..'.format(key), history=True, first=True)
         if field is not None:
             self._element.remove(field)
         self._element.append(E.String(E.Key(key), E.Value(value, Protected=str(protected))))
