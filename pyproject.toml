@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "pykeepass"
+version = "4.0.6"
+description = "Python library to interact with keepass databases (supports KDBX3 and KDBX4)"
+license = "GPL3"
+authors = ["Philipp Schmitt <philipp@schmitt.co>"]
+readme = "README.rst"
+homepage = "https://github.com/libkeepass/pykeepass"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+python-dateutil = "^2.8.2"
+construct = "^2.10.68"
+argon2-cffi = "^21.3.0"
+pycryptodomex = "^3.6.2"
+lxml = "^4.8.0"
+
+[tool.poetry.group.docs.dependencies]
+sphinx = "^3.2.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
