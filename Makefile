@@ -2,7 +2,7 @@ version := $(shell python -c "exec(open('pykeepass/version.py').read());print(__
 
 .PHONY: dist
 dist:
-	python setup.py sdist bdist_wheel
+	poetry build
 
 .PHONY: pypi
 pypi: dist
