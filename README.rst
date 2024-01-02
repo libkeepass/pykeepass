@@ -13,13 +13,13 @@ pykeepass
 
 .. image:: https://img.shields.io/badge/irc-%23pykeepass-brightgreen
    :target: https://webchat.freenode.net/?channels=pykeepass
-    
+
 This library allows you to write entries to a KeePass database.
 
 Come chat at `#pykeepass`_ on Freenode or `#pykeepass:matrix.org`_ on Matrix.
 
 .. _#pykeepass: irc://irc.freenode.net
-.. _#pykeepass\:matrix.org: https://matrix.to/#/%23pykeepass:matrix.org 
+.. _#pykeepass\:matrix.org: https://matrix.to/#/%23pykeepass:matrix.org
 
 Example
 -------
@@ -69,7 +69,7 @@ Finding Entries
 Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``otp``, ``autotype_window`` and ``autotype_sequence`` are strings, ``path`` is a list, ``string`` is a dict, ``autotype_enabled`` is a boolean, ``uuid`` is a ``uuid.UUID`` and ``tags`` is a list of strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
-.. _flags: https://www.w3.org/TR/xpath-functions/#flags 
+.. _flags: https://www.w3.org/TR/xpath-functions/#flags
 
 The ``path`` list is a full path to an entry (ex. ``['foobar_group', 'foobar_entry']``).  This implies ``first=True``.  All other arguments are ignored when this is given.  This is useful for handling user input.
 
@@ -123,7 +123,7 @@ Finding Groups
 where ``name`` and ``notes`` are strings, ``path`` is a list, ``uuid`` is a ``uuid.UUID``. This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
-.. _flags: https://www.w3.org/TR/xpath-functions/#flags 
+.. _flags: https://www.w3.org/TR/xpath-functions/#flags
 
 The ``path`` list is a full path to a group (ex. ``['foobar_group', 'sub_group']``).  This implies ``first=True``.  All other arguments are ignored when this is given.  This is useful for handling user input.
 
@@ -311,7 +311,7 @@ the entry that this attachment is attached to
    >>> a = e.add_attachment(binary_id, 'hello.txt')
    >>> a
    Attachment: 'hello.txt' -> 0
-     
+
    # access attachments
    >>> a
    Attachment: 'hello.txt' -> 0
@@ -418,7 +418,22 @@ pretty print database XML to file
 Tests and Debugging
 -------------------
 
-Run tests with :code:`python tests/tests.py` or :code:`python tests/tests.py SomeSpecificTest`
+Clone the repository
+
+:code:`git clone https://github.com/libkeepass/pykeepass.git`
+
+Go into the source code directory
+
+:code:`cd pykeepass`
+
+Install the package and it's dependencies into virtual environment
+
+:code:`poetry install`
+
+Run tests with
+:code:`poetry run python tests/tests.py`
+or for some specific test
+:code:`poetry run python tests/tests.py SomeSpecificTest`
 
 Enable debugging when doing tests in console:
 

@@ -1,12 +1,10 @@
-version := $(shell python -c "exec(open('pykeepass/version.py').read());print(__version__)")
-
 .PHONY: dist
 dist:
-	python setup.py sdist bdist_wheel
+	poetry build
 
 .PHONY: pypi
 pypi: dist
-	twine upload dist/pykeepass-$(version).tar.gz
+	twine upload --skip-existing dist/pykeepass-*
 
 .PHONY: docs
 docs:
