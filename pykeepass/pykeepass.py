@@ -5,13 +5,14 @@ import os
 import re
 import shutil
 import struct
+import time
 import uuid
 import zlib
 
 from binascii import Error as BinasciiError
 from construct import Container, ChecksumError, CheckError
-from dateutil import parser, tz
-from datetime import datetime, timedelta
+from dateutil import parser
+from datetime import datetime, timedelta, timezone
 from lxml import etree
 from lxml.builder import E
 from pathlib import Path
@@ -707,7 +708,7 @@ class PyKeePass():
     @password.setter
     def password(self, password):
         self._password = password
-        self.credchange_date = datetime.now()
+        self.credchange_date = datetime.now(timezone.utc)
 
     @property
     def keyfile(self):
@@ -717,7 +718,7 @@ class PyKeePass():
     @keyfile.setter
     def keyfile(self, keyfile):
         self._keyfile = keyfile
-        self.credchange_date = datetime.now()
+        self.credchange_date = datetime.now(timezone.utc)
 
     @property
     def credchange_required_days(self):
@@ -763,7 +764,7 @@ class PyKeePass():
         change_date = self.credchange_date
         if change_date is None or self.credchange_required_days == -1:
             return False
-        now_date = self._datetime_to_utc(datetime.now())
+        now_date = datetime.now(timezone.utc)
         return (now_date - change_date).days > self.credchange_required_days
 
     @property
@@ -772,17 +773,10 @@ class PyKeePass():
         change_date = self.credchange_date
         if change_date is None or self.credchange_recommended_days == -1:
             return False
-        now_date = self._datetime_to_utc(datetime.now())
+        now_date = datetime.now(timezone.utc)
         return (now_date - change_date).days > self.credchange_recommended_days
 
     # ---------- Datetime Functions ----------
-
-    def _datetime_to_utc(self, dt):
-        """Convert naive datetimes to UTC"""
-
-        if not dt.tzinfo:
-            dt = dt.replace(tzinfo=tz.gettz())
-        return dt.astimezone(tz.gettz('UTC'))
 
     def _encode_time(self, value):
         """bytestring or plaintext string: Convert datetime to base64 or plaintext string"""
@@ -790,12 +784,12 @@ class PyKeePass():
         if self.version >= (4, 0):
             diff_seconds = int(
                 (
-                    self._datetime_to_utc(value) -
+                    value -
                     datetime(
                         year=1,
                         month=1,
                         day=1,
-                        tzinfo=tz.gettz('UTC')
+                        tzinfo=timezone.utc
                     )
                 ).total_seconds()
             )
@@ -803,7 +797,7 @@ class PyKeePass():
                 struct.pack('<Q', diff_seconds)
             ).decode('utf-8')
         else:
-            return self._datetime_to_utc(value).isoformat()
+            return value.isoformat()
 
     def _decode_time(self, text):
         """datetime.datetime: Convert base64 time or plaintext time to datetime"""
@@ -812,7 +806,7 @@ class PyKeePass():
             # decode KDBX4 date from b64 format
             try:
                 return (
-                    datetime(year=1, month=1, day=1, tzinfo=tz.gettz('UTC')) +
+                    datetime(year=1, month=1, day=1, tzinfo=timezone.utc) +
                     timedelta(
                         seconds=struct.unpack('<Q', base64.b64decode(text))[0]
                     )
@@ -820,12 +814,12 @@ class PyKeePass():
             except BinasciiError:
                 return parser.parse(
                     text,
-                    tzinfos={'UTC': tz.gettz('UTC')}
+                    tzinfos={'UTC': timezone.utc}
                 )
         else:
             return parser.parse(
                 text,
-                tzinfos={'UTC': tz.gettz('UTC')}
+                tzinfos={'UTC': timezone.utc}
             )
 
 def create_database(
