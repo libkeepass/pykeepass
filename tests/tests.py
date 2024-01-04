@@ -280,6 +280,52 @@ class EntryFindTests3(KDBX3Tests):
         )
         self.assertRaises(Exception, entry)
 
+    # ---------- Timezone test -----------
+
+    def test_expiration_time_tz(self):
+        # The expiration date is compared in UTC
+        # setting expiration date with tz offset 6 hours should result in expired entry
+        unique_str = 'test_exptime_tz_1_'
+        expiry_time = datetime.now(timezone(offset=timedelta(hours=6))).replace(microsecond=0)
+        self.kp.add_entry(
+            self.kp.root_group,
+            unique_str + 'title',
+            unique_str + 'user',
+            unique_str + 'pass',
+            expiry_time=expiry_time
+        )
+        results = self.kp.find_entries_by_title(unique_str + 'title', first=True)
+        self.assertEqual(results.expired, True)
+        self.assertEqual(results.expiry_time, expiry_time.astimezone(timezone.utc))
+
+        # setting expiration date with UTC tz should result in expired entry
+        unique_str = 'test_exptime_tz_2_'
+        expiry_time = datetime.now(timezone.utc).replace(microsecond=0)
+        self.kp.add_entry(
+            self.kp.root_group,
+            unique_str + 'title',
+            unique_str + 'user',
+            unique_str + 'pass',
+            expiry_time=expiry_time
+        )
+        results = self.kp.find_entries_by_title(unique_str + 'title', first=True)
+        self.assertEqual(results.expired, True)
+        self.assertEqual(results.expiry_time, expiry_time.astimezone(timezone.utc))
+
+        # setting expiration date with tz offset -6 hours while adding 6 hours should result in valid entry
+        unique_str = 'test_exptime_tz_3_'
+        expiry_time = datetime.now(timezone(offset=timedelta(hours=-6))).replace(microsecond=0) + timedelta(hours=6)
+        self.kp.add_entry(
+            self.kp.root_group,
+            unique_str + 'title',
+            unique_str + 'user',
+            unique_str + 'pass',
+            expiry_time=expiry_time
+        )
+        results = self.kp.find_entries_by_title(unique_str + 'title', first=True)
+        self.assertEqual(results.expired, False)
+        self.assertEqual(results.expiry_time, expiry_time.astimezone(timezone.utc))
+
     # ---------- Entries representation -----------
 
     def test_print_entries(self):
