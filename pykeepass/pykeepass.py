@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 BLANK_DATABASE_FILENAME = "blank_database.kdbx"
 BLANK_DATABASE_LOCATION = os.path.join(os.path.dirname(os.path.realpath(__file__)), BLANK_DATABASE_FILENAME)
 BLANK_DATABASE_PASSWORD = "password"
-
+DT_ISOFORMAT = "%Y-%m-%dT%H:%M:%S%z"
 
 class PyKeePass():
     """Open a KeePass database
@@ -810,9 +810,9 @@ class PyKeePass():
                     )
                 )
             except BinasciiError:
-                return datetime.fromisoformat(text).astimezone(timezone.utc)
+                return datetime.strptime(text, DT_ISOFORMAT).astimezone(timezone.utc)
         else:
-            return datetime.fromisoformat(text).astimezone(timezone.utc)
+            return datetime.strptime(text, DT_ISOFORMAT).astimezone(timezone.utc)
 
 def create_database(
         filename, password=None, keyfile=None, transformed_key=None
