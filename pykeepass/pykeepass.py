@@ -5,13 +5,11 @@ import os
 import re
 import shutil
 import struct
-import time
 import uuid
 import zlib
 
 from binascii import Error as BinasciiError
 from construct import Container, ChecksumError, CheckError
-from dateutil import parser
 from datetime import datetime, timedelta, timezone
 from lxml import etree
 from lxml.builder import E
@@ -755,8 +753,8 @@ class PyKeePass():
 
     @credchange_date.setter
     def credchange_date(self, date):
-        time = self._xpath('/KeePassFile/Meta/MasterKeyChanged', first=True)
-        time.text = self._encode_time(date)
+        mk_time = self._xpath('/KeePassFile/Meta/MasterKeyChanged', first=True)
+        mk_time.text = self._encode_time(date)
 
     @property
     def credchange_required(self):
@@ -812,15 +810,9 @@ class PyKeePass():
                     )
                 )
             except BinasciiError:
-                return parser.parse(
-                    text,
-                    tzinfos={'UTC': timezone.utc}
-                )
+                return datetime.fromisoformat(text).astimezone(timezone.utc)
         else:
-            return parser.parse(
-                text,
-                tzinfos={'UTC': timezone.utc}
-            )
+            return datetime.fromisoformat(text).astimezone(timezone.utc)
 
 def create_database(
         filename, password=None, keyfile=None, transformed_key=None
