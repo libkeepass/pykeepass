@@ -19,7 +19,7 @@ class BaseElement():
             self._element.append(E.IconID(icon))
         current_time_str = self._kp._encode_time(datetime.now(timezone.utc))
         if expiry_time:
-            expiry_time_str = self._kp._encode_time(expiry_time)
+            expiry_time_str = self._kp._encode_time(expiry_time.astimezone(timezone.utc))
         else:
             expiry_time_str = current_time_str
 
