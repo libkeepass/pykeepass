@@ -9,7 +9,6 @@ from lxml import etree
 from copy import deepcopy
 import base64
 from binascii import Error as BinasciiError
-import unicodedata
 import zlib
 import re
 import codecs
@@ -206,7 +205,7 @@ class UnprotectedStream(Adapter):
                     result = cipher.decrypt(base64.b64decode(elem.text)).decode('utf-8')
                     # strip invalid XML characters - https://stackoverflow.com/questions/8733233
                     result = re.sub(
-                        u'[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+',
+                        '[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+',
                         '',
                         result
                     )

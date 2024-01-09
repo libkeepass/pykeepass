@@ -1,4 +1,3 @@
-# coding: utf-8
 import base64
 import logging
 import os
@@ -18,7 +17,7 @@ from pathlib import Path
 
 from .attachment import Attachment
 from .entry import Entry
-from .exceptions import *
+from .exceptions import BinaryError, CredentialsError, HeaderChecksumError, PayloadChecksumError, UnableToSendToRecycleBin
 from .group import Group
 from .kdbx_parsing import KDBX, kdf_uuids
 from .xpath import attachment_xp, entry_xp, group_xp, path_xp
@@ -31,7 +30,7 @@ BLANK_DATABASE_LOCATION = os.path.join(os.path.dirname(os.path.realpath(__file__
 BLANK_DATABASE_PASSWORD = "password"
 
 
-class PyKeePass():
+class PyKeePass:
     """Open a KeePass database
 
     Args:
@@ -366,24 +365,24 @@ class PyKeePass():
             xp += prefix
 
             # handle searching custom string fields
-            if 'string' in kwargs.keys():
+            if 'string' in kwargs:
                 for key, value in kwargs['string'].items():
                     xp += keys_xp[regex]['string'].format(key, value, flags=flags)
 
                 kwargs.pop('string')
 
             # convert uuid to base64 form before building xpath
-            if 'uuid' in kwargs.keys():
+            if 'uuid' in kwargs:
                 kwargs['uuid'] = base64.b64encode(kwargs['uuid'].bytes).decode('utf-8')
 
             # convert tags to semicolon separated string before building xpath
             # FIXME: this isn't a reliable way to search tags.  e.g. searching ['tag1', 'tag2'] will match 'tag1tag2
-            if 'tags' in kwargs.keys():
+            if 'tags' in kwargs:
                 kwargs['tags'] = ' and '.join(f'contains(text(),"{t}")' for t in kwargs['tags'])
 
             # build xpath to filter results with specified attributes
             for key, value in kwargs.items():
-                if key not in keys_xp[regex].keys():
+                if key not in keys_xp[regex]:
                     raise TypeError('Invalid keyword argument "{}"'.format(key))
                 if value is not None:
                     xp += keys_xp[regex][key].format(value, flags=flags)
@@ -602,10 +601,7 @@ class PyKeePass():
     def add_binary(self, data, compressed=True, protected=True):
         if self.version >= (4, 0):
             # add protected flag byte
-            if protected:
-                data = b'\x01' + data
-            else:
-                data = b'\x00' + data
+            data = b'\x01' + data if protected else b'\x00' + data
             # add binary element to inner header
             c = Container(type='binary', data=data)
             self.kdbx.body.payload.inner_header.binary.append(c)

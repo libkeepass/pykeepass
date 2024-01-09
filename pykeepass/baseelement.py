@@ -5,7 +5,7 @@ from lxml.builder import E
 from datetime import datetime
 
 
-class BaseElement():
+class BaseElement:
     """Entry and Group inherit from this class"""
 
     def __init__(self, element, kp=None, icon=None, expires=False,

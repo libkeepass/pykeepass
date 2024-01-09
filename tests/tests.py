@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import logging
 import os
 import shutil
@@ -244,10 +242,9 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual(results.url, unique_str + 'url')
         self.assertEqual(results.notes, unique_str + 'notes')
         self.assertEqual(len(results.tags), 6)
-        self.assertTrue(results.uuid != None)
+        self.assertTrue(results.uuid is not None)
         self.assertTrue(results.autotype_sequence is None)
         # convert naive datetime to utc
-        expiry_time_utc = expiry_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC'))
         self.assertEqual(results.icon, icons.KEY)
 
         sub_group = self.kp.add_group(self.kp.root_group, 'sub_group')
@@ -355,7 +352,7 @@ class GroupFindTests3(KDBX3Tests):
         results = self.kp.find_groups(path=['base_group', 'sub_group'], first=True)
         self.assertIsInstance(results, Group)
         self.assertEqual(results.name, sub_group.name)
-        self.assertTrue(results.uuid != None)
+        self.assertTrue(results.uuid is not None)
 
         self.kp.move_group(sub_group2, sub_group)
         results = self.kp.find_groups(path=['base_group', 'sub_group', 'sub_group2'], first=True)
