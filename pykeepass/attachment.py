@@ -1,6 +1,7 @@
 from . import entry
 from .exceptions import BinaryError
 
+
 class Attachment:
     def __init__(self, element=None, kp=None, id=None, filename=None):
         self._element = element

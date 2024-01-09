@@ -4,16 +4,15 @@ import shutil
 import unittest
 import uuid
 from datetime import datetime, timedelta
-
-from dateutil import tz
+from io import BytesIO
 from pathlib import Path
 
-from io import BytesIO
+from dateutil import tz
 
 from pykeepass import PyKeePass, icons
 from pykeepass.entry import Entry
-from pykeepass.group import Group
 from pykeepass.exceptions import BinaryError, CredentialsError, HeaderChecksumError
+from pykeepass.group import Group
 
 """
 Missing Tests:

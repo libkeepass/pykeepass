@@ -2,8 +2,8 @@ from lxml.builder import E
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
 
-from .entry import Entry
 from .baseelement import BaseElement
+from .entry import Entry
 
 
 class Group(BaseElement):

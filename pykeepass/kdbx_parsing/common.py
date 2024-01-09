@@ -1,20 +1,32 @@
-from Cryptodome.Cipher import AES, ChaCha20, Salsa20
-from .twofish import Twofish
-from Cryptodome.Util import Padding as CryptoPadding
-import hashlib
-from construct import (
-    Adapter, BitStruct, BitsSwapped, Container, Flag, Padding, ListContainer, Mapping, GreedyBytes, Int32ul, Switch
-)
-from lxml import etree
-from copy import deepcopy
 import base64
-from binascii import Error as BinasciiError
-import zlib
-import re
 import codecs
-from io import BytesIO
-from collections import OrderedDict
+import hashlib
 import logging
+import re
+import zlib
+from binascii import Error as BinasciiError
+from collections import OrderedDict
+from copy import deepcopy
+from io import BytesIO
+
+from construct import (
+    Adapter,
+    BitsSwapped,
+    BitStruct,
+    Container,
+    Flag,
+    GreedyBytes,
+    Int32ul,
+    ListContainer,
+    Mapping,
+    Padding,
+    Switch,
+)
+from Cryptodome.Cipher import AES, ChaCha20, Salsa20
+from Cryptodome.Util import Padding as CryptoPadding
+from lxml import etree
+
+from .twofish import Twofish
 
 log = logging.getLogger(__name__)
 

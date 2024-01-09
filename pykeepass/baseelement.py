@@ -1,8 +1,9 @@
 import base64
 import uuid
+from datetime import datetime
+
 from lxml import etree
 from lxml.builder import E
-from datetime import datetime
 
 
 class BaseElement:

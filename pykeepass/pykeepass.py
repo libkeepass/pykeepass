@@ -6,18 +6,24 @@ import shutil
 import struct
 import uuid
 import zlib
-
 from binascii import Error as BinasciiError
-from construct import Container, ChecksumError, CheckError
-from dateutil import parser, tz
 from datetime import datetime, timedelta
+from pathlib import Path
+
+from construct import CheckError, ChecksumError, Container
+from dateutil import parser, tz
 from lxml import etree
 from lxml.builder import E
-from pathlib import Path
 
 from .attachment import Attachment
 from .entry import Entry
-from .exceptions import BinaryError, CredentialsError, HeaderChecksumError, PayloadChecksumError, UnableToSendToRecycleBin
+from .exceptions import (
+    BinaryError,
+    CredentialsError,
+    HeaderChecksumError,
+    PayloadChecksumError,
+    UnableToSendToRecycleBin,
+)
 from .group import Group
 from .kdbx_parsing import KDBX, kdf_uuids
 from .xpath import attachment_xp, entry_xp, group_xp, path_xp
@@ -411,8 +417,10 @@ class PyKeePass:
     # ---------- Groups ----------
 
     from .deprecated import (
-        find_groups_by_name, find_groups_by_path, find_groups_by_uuid,
-        find_groups_by_notes
+        find_groups_by_name,
+        find_groups_by_notes,
+        find_groups_by_path,
+        find_groups_by_uuid,
     )
 
     def find_groups(self, recursive=True, path=None, group=None, **kwargs):
@@ -496,9 +504,14 @@ class PyKeePass:
 
 
     from .deprecated import (
-        find_entries_by_title, find_entries_by_username, find_entries_by_password,
-        find_entries_by_url, find_entries_by_path, find_entries_by_notes,
-        find_entries_by_string, find_entries_by_uuid
+        find_entries_by_notes,
+        find_entries_by_password,
+        find_entries_by_path,
+        find_entries_by_string,
+        find_entries_by_title,
+        find_entries_by_url,
+        find_entries_by_username,
+        find_entries_by_uuid,
     )
 
     def find_entries(self, recursive=True, path=None, group=None, **kwargs):
