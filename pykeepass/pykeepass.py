@@ -9,6 +9,8 @@ import uuid
 import zlib
 
 from binascii import Error as BinasciiError
+from io import BytesIO
+
 from construct import Container, ChecksumError, CheckError
 from datetime import datetime, timedelta, timezone
 from lxml import etree
@@ -16,6 +18,8 @@ from lxml.builder import E
 from pathlib import Path
 
 from .attachment import Attachment
+from .kdbx_parsing.common import populate_custom_data
+from .kdbx_parsing.factorinfo import FactorInfo
 from .entry import Entry
 from .exceptions import *
 from .group import Group
@@ -59,15 +63,27 @@ class PyKeePass():
     """
 
     def __init__(self, filename, password=None, keyfile=None,
-                 transformed_key=None, decrypt=True):
+                 transformed_key=None, decrypt=True,
+                 authentication_factors=None,
+                 factor_data=None):
+        if factor_data is None:
+            factor_data = {}
+        self._factor_data = factor_data
+
+        self._authentication_factors = authentication_factors
 
         self.read(
             filename=filename,
             password=password,
             keyfile=keyfile,
             transformed_key=transformed_key,
-            decrypt=decrypt
+            decrypt=decrypt,
+            factor_data=self._factor_data
         )
+
+        # Regenerate header after loading existing data
+        self.authentication_factors = authentication_factors
+
 
     def __enter__(self):
         return self
@@ -77,7 +93,7 @@ class PyKeePass():
         pass
 
     def read(self, filename=None, password=None, keyfile=None,
-             transformed_key=None, decrypt=True):
+             transformed_key=None, decrypt=True, factor_data=None):
         """
         See class docstring.
 
@@ -86,6 +102,12 @@ class PyKeePass():
         """
         self._password = password
         self._keyfile = keyfile
+        if self._factor_data is not None:
+            self._factor_data = factor_data
+            if password is not None and 'password' not in self._factor_data:
+                self._factor_data['password'] = password
+            if keyfile is not None and 'keyfile' not in self._factor_data:
+                self._factor_data['keyfile'] = keyfile
         if filename:
             self.filename = filename
         else:
@@ -98,7 +120,8 @@ class PyKeePass():
                     password=password,
                     keyfile=keyfile,
                     transformed_key=transformed_key,
-                    decrypt=decrypt
+                    decrypt=decrypt,
+                    factor_data=self._factor_data
                 )
             else:
                 self.kdbx = KDBX.parse_file(
@@ -106,7 +129,8 @@ class PyKeePass():
                     password=password,
                     keyfile=keyfile,
                     transformed_key=transformed_key,
-                    decrypt=decrypt
+                    decrypt=decrypt,
+                    factor_data=self._factor_data
                 )
 
         except CheckError as e:
@@ -135,7 +159,7 @@ class PyKeePass():
     def reload(self):
         """Reload current database using previous credentials """
 
-        self.read(self.filename, self.password, self.keyfile)
+        self.read(self.filename, self.password, self.keyfile, factor_data=self._factor_data)
 
     def save(self, filename=None, transformed_key=None):
         """Save current database object to disk.
@@ -151,6 +175,9 @@ class PyKeePass():
         if not filename:
             filename = self.filename
 
+        if hasattr(self.kdbx.header, 'data'):
+            del self.kdbx.header.data
+
         if hasattr(filename, "write"):
             KDBX.build_stream(
                 self.kdbx,
@@ -158,7 +185,9 @@ class PyKeePass():
                 password=self.password,
                 keyfile=self.keyfile,
                 transformed_key=transformed_key,
-                decrypt=True
+                decrypt=True,
+                factor_info=self.authentication_factors,
+                factor_data=self._factor_data
             )
         else:
             # save to temporary file to prevent database clobbering
@@ -171,7 +200,9 @@ class PyKeePass():
                     password=self.password,
                     keyfile=self.keyfile,
                     transformed_key=transformed_key,
-                    decrypt=True
+                    decrypt=True,
+                    factor_info=self.authentication_factors,
+                    factor_data=self._factor_data
                 )
             except Exception as e:
                 os.remove(filename_tmp)
@@ -207,6 +238,66 @@ class PyKeePass():
                 return 'argon2id'
             elif kdf_parameters['$UUID'].value == kdf_uuids['aeskdf']:
                 return 'aeskdf'
+
+    @property
+    def authentication_factors(self):
+        """dict: authentication factors used in computing derived key."""
+        if self.version != (4, 0):
+            return None
+
+        if self._authentication_factors is None:
+            if not hasattr(self.kdbx.header.value.dynamic_header, 'public_custom_data'):
+                return None
+
+            pcd = self.kdbx.header.value.dynamic_header.public_custom_data.data.dict
+            auth_factor_object = pcd.get("authentication_factors", None)
+            if auth_factor_object is None:
+                return None
+            xml_val = auth_factor_object.value
+            self._authentication_factors = FactorInfo.decode(xml_val)
+
+        return self._authentication_factors
+
+    @authentication_factors.setter
+    def authentication_factors(self, authentication_factors):
+        if authentication_factors is not None:
+            for group in authentication_factors.factor_groups:
+                for factor in group.factors:
+                    factor.generate_key_if_necessary({"factor_data": self._factor_data})
+
+        cur_pcd = getattr(self.kdbx.header.value.dynamic_header, 'public_custom_data', None)
+        if cur_pcd is None:
+            cur_dict = {}
+        else:
+            cur_dict = cur_pcd.data.dict
+
+        if authentication_factors is None:
+            if 'authentication_factors' in cur_dict:
+                del cur_dict['authentication_factors']
+        else:
+            cur_dict["authentication_factors"] = Container(
+                type=0x18,
+                key="authentication_factors",
+                value=authentication_factors.encode({"factor_data": self._factor_data}),
+                next_byte=0x00
+            )
+
+        populate_custom_data(self.kdbx, cur_dict)
+
+        # When updating a RawCopy object, we need to delete the "data" member so our changes to "value" have their
+        # byte representation regenerated
+        if hasattr(self.kdbx.header, 'data'):
+            del self.kdbx.header.data
+
+    @property
+    def factor_data(self):
+        return self._factor_data
+
+    @factor_data.setter
+    def factor_data(self, factor_data):
+        self._factor_data = factor_data
+        # Re-save authentication_factors to regenerate header if necessary
+        self.authentication_factors = self.authentication_factors
 
     @property
     def transformed_key(self):
@@ -823,8 +914,9 @@ class PyKeePass():
         else:
             return datetime.strptime(text, DT_ISOFORMAT).replace(tzinfo=timezone.utc)
 
+
 def create_database(
-        filename, password=None, keyfile=None, transformed_key=None
+        filename, password=None, keyfile=None, transformed_key=None, authentication_factors=None, factor_data=None
 ):
     """
     Create a new database at ``filename`` with supplied credentials.
@@ -838,6 +930,10 @@ def create_database(
             database is assumed to have no keyfile
         transformed_key (:obj:`bytes`, optional): precomputed transformed
             key.
+        authentication_factors (:obj:`FactorInfo`, optional): authentication
+            factors (such as a FIDO2 key) to use
+        factor_data (:obj:`dict`, optional): dictionary of parameters for
+            authentication factors. May replace password/keyfile
 
     Returns:
         PyKeePass
@@ -849,9 +945,12 @@ def create_database(
     keepass_instance.filename = filename
     keepass_instance.password = password
     keepass_instance.keyfile = keyfile
+    keepass_instance.authentication_factors = authentication_factors
+    keepass_instance._factor_data = factor_data
 
-    keepass_instance.save(transformed_key)
+    keepass_instance.save(transformed_key=transformed_key)
     return keepass_instance
+
 
 def debug_setup():
     """Convenience function to quickly enable debug messages"""
