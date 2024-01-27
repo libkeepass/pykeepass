@@ -1,12 +1,21 @@
-version := $(shell python -c "exec(open('pykeepass/version.py').read());print(__version__)")
+.ONESHELL:
+.SILENT:
+version := $(shell python -c "import tomllib;print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
 
 .PHONY: dist
 dist:
-	python setup.py sdist bdist_wheel
+	python -m build
 
-.PHONY: pypi
-pypi: dist
-	twine upload dist/pykeepass-$(version).tar.gz
+.PHONY: release
+release: dist
+	# check that changelog is updated
+	if ! grep ${version} CHANGELOG.rst
+	then
+		echo "Changelog doesn't seem to be updated! Quitting..."
+		exit 1
+	fi
+	twine upload dist/pykeepass-$(version)*
+	gh release create pykeepass-$(version) dist/pykeepass-$(version)*
 
 .PHONY: docs
 docs:
