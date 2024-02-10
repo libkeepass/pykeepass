@@ -10,7 +10,6 @@ authors = [
 license = {text = "GPL-3.0"}
 keywords = ["vault", "keepass"]
 dependencies = [
-    "python-dateutil>=2.7.0",
     "construct>=2.10.53",
     "argon2_cffi>=18.1.0",
     "pycryptodomex>=3.6.2",
