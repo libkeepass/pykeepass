@@ -226,9 +226,18 @@ class PyKeePass():
        return kdf_parameters['S'].value
 
     @property
+    def payload(self):
+        """Encrypted payload of keepass database"""
+        # check if payload is decrypted
+        if self.kdbx.body.payload is None:
+            raise ValueError("Database is not decrypted")
+        else:
+            return self.kdbx.body.payload
+
+    @property
     def tree(self):
         """lxml.etree._ElementTree: database XML payload"""
-        return self.kdbx.body.payload.xml
+        return self.payload.xml
 
     @property
     def root_group(self):
@@ -580,7 +589,7 @@ class PyKeePass():
     def binaries(self):
         if self.version >= (4, 0):
             # first byte is a prepended flag
-            binaries = [a.data[1:] for a in self.kdbx.body.payload.inner_header.binary]
+            binaries = [a.data[1:] for a in self.payload.inner_header.binary]
         else:
             binaries = []
             for elem in self._xpath('/KeePassFile/Meta/Binaries/Binary'):
@@ -607,7 +616,7 @@ class PyKeePass():
                 data = b'\x00' + data
             # add binary element to inner header
             c = Container(type='binary', data=data)
-            self.kdbx.body.payload.inner_header.binary.append(c)
+            self.payload.inner_header.binary.append(c)
         else:
             binaries = self._xpath(
                 '/KeePassFile/Meta/Binaries',
@@ -639,7 +648,7 @@ class PyKeePass():
         try:
             if self.version >= (4, 0):
                 # remove binary element from inner header
-                self.kdbx.body.payload.inner_header.binary.pop(id)
+                self.payload.inner_header.binary.pop(id)
             else:
                 # remove binary element from XML
                 binaries = self._xpath('/KeePassFile/Meta/Binaries', first=True)
