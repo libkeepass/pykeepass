@@ -3,11 +3,12 @@
 import logging
 import os
 import shutil
-import tempfile
 import unittest
 import uuid
 from datetime import datetime, timedelta, timezone
 
+# FIXME: remove dateutil dependency as per https://github.com/libkeepass/pykeepass/pull/371
+from dateutil import tz
 from pathlib import Path
 
 from io import BytesIO
@@ -891,12 +892,12 @@ class PyKeePassTests3(KDBX3Tests):
         self.assertEqual('foobar_user', results.username)
 
     def test_dump_xml(self):
-        self.test_dir = tempfile.mkdtemp()
-        self.dump_file = os.path.join(self.test_dir, 'db_dump.xml')
-        self.kp.dump_xml(self.dump_file)
-        with open(self.dump_file) as f:
+        dump_file = base_dir / 'db_dump.xml'
+        self.kp.dump_xml(dump_file)
+        with open(dump_file) as f:
             first_line = f.readline()
             self.assertEqual(first_line, '<?xml version=\'1.0\' encoding=\'utf-8\' standalone=\'yes\'?>\n')
+        dump_file.unlink()
 
     def test_credchange(self):
         """
