@@ -1,5 +1,6 @@
 [project]
 name = "pykeepass"
+version = "4.0.7"
 readme = "README.rst"
 description = "Python library to interact with keepass databases (supports KDBX3 and KDBX4)"
 authors = [

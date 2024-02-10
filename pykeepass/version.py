@@ -1,3 +1,4 @@
-__version__ = "4.0.6"
+import importlib.metadata
 
+__version__ = importlib.metadata.version('pykeepass')
 __all__= ["__version__"]
