@@ -1,6 +1,7 @@
 import base64
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
+
 
 from lxml import etree
 from lxml.builder import E
@@ -18,9 +19,9 @@ class BaseElement:
         )
         if icon:
             self._element.append(E.IconID(icon))
-        current_time_str = self._kp._encode_time(datetime.now())
+        current_time_str = self._kp._encode_time(datetime.now(timezone.utc))
         if expiry_time:
-            expiry_time_str = self._kp._encode_time(expiry_time)
+            expiry_time_str = self._kp._encode_time(expiry_time.astimezone(timezone.utc))
         else:
             expiry_time_str = current_time_str
 
@@ -117,8 +118,8 @@ class BaseElement:
     def expired(self):
         if self.expires:
             return (
-                self._kp._datetime_to_utc(datetime.utcnow()) >
-                self._kp._datetime_to_utc(self.expiry_time)
+                datetime.now(timezone.utc) >
+                self.expiry_time
             )
 
         return False
@@ -179,7 +180,7 @@ class BaseElement:
         Args:
             modify (bool): update access time as well a modification time
         """
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         self.atime = now
         if modify:
             self.mtime = now

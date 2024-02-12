@@ -3,7 +3,7 @@ import os
 import shutil
 import unittest
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
 
@@ -219,7 +219,7 @@ class EntryFindTests3(KDBX3Tests):
 
     def test_add_delete_move_entry(self):
         unique_str = 'test_add_entry_'
-        expiry_time = datetime.now()
+        expiry_time = datetime.now(timezone.utc)
         entry = self.kp.add_entry(
             self.kp.root_group,
             unique_str + 'title',
@@ -243,7 +243,6 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual(len(results.tags), 6)
         self.assertTrue(results.uuid is not None)
         self.assertTrue(results.autotype_sequence is None)
-        # convert naive datetime to utc
         self.assertEqual(results.icon, icons.KEY)
 
         sub_group = self.kp.add_group(self.kp.root_group, 'sub_group')
@@ -278,6 +277,52 @@ class EntryFindTests3(KDBX3Tests):
             icon=icons.KEY
         )
         self.assertRaises(Exception, entry)
+
+    # ---------- Timezone test -----------
+
+    def test_expiration_time_tz(self):
+        # The expiration date is compared in UTC
+        # setting expiration date with tz offset 6 hours should result in expired entry
+        unique_str = 'test_exptime_tz_1_'
+        expiry_time = datetime.now(timezone(offset=timedelta(hours=6))).replace(microsecond=0)
+        self.kp.add_entry(
+            self.kp.root_group,
+            unique_str + 'title',
+            unique_str + 'user',
+            unique_str + 'pass',
+            expiry_time=expiry_time
+        )
+        results = self.kp.find_entries_by_title(unique_str + 'title', first=True)
+        self.assertEqual(results.expired, True)
+        self.assertEqual(results.expiry_time, expiry_time.astimezone(timezone.utc))
+
+        # setting expiration date with UTC tz should result in expired entry
+        unique_str = 'test_exptime_tz_2_'
+        expiry_time = datetime.now(timezone.utc).replace(microsecond=0)
+        self.kp.add_entry(
+            self.kp.root_group,
+            unique_str + 'title',
+            unique_str + 'user',
+            unique_str + 'pass',
+            expiry_time=expiry_time
+        )
+        results = self.kp.find_entries_by_title(unique_str + 'title', first=True)
+        self.assertEqual(results.expired, True)
+        self.assertEqual(results.expiry_time, expiry_time.astimezone(timezone.utc))
+
+        # setting expiration date with tz offset -6 hours while adding 6 hours should result in valid entry
+        unique_str = 'test_exptime_tz_3_'
+        expiry_time = datetime.now(timezone(offset=timedelta(hours=-6))).replace(microsecond=0) + timedelta(hours=6)
+        self.kp.add_entry(
+            self.kp.root_group,
+            unique_str + 'title',
+            unique_str + 'user',
+            unique_str + 'pass',
+            expiry_time=expiry_time
+        )
+        results = self.kp.find_entries_by_title(unique_str + 'title', first=True)
+        self.assertEqual(results.expired, False)
+        self.assertEqual(results.expiry_time, expiry_time.astimezone(timezone.utc))
 
     # ---------- Entries representation -----------
 
@@ -429,7 +474,7 @@ class RecycleBinTests3(KDBX3Tests):
 class EntryTests3(KDBX3Tests):
 
     def test_fields(self):
-        time = datetime.now().replace(microsecond=0)
+        expiry_time = datetime.now(timezone.utc).replace(microsecond=0)
         entry = Entry(
             'title',
             'username',
@@ -439,7 +484,7 @@ class EntryTests3(KDBX3Tests):
             tags='tags',
             otp='otp',
             expires=True,
-            expiry_time=time,
+            expiry_time=expiry_time,
             icon=icons.KEY,
             kp=self.kp
         )
@@ -452,8 +497,7 @@ class EntryTests3(KDBX3Tests):
         self.assertEqual(entry.tags, ['tags'])
         self.assertEqual(entry.otp, 'otp')
         self.assertEqual(entry.expires, True)
-        self.assertEqual(entry.expiry_time,
-                         time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
+        self.assertEqual(entry.expiry_time, expiry_time)
         self.assertEqual(entry.icon, icons.KEY)
         self.assertEqual(entry.is_a_history_entry, False)
         self.assertEqual(
@@ -483,7 +527,7 @@ class EntryTests3(KDBX3Tests):
         self.assertNotEqual(clone1, clone2)
 
     def test_set_and_get_fields(self):
-        time = datetime.now().replace(microsecond=0)
+        time = datetime.now(timezone.utc).replace(microsecond=0)
         changed_time = time + timedelta(hours=9)
         changed_string = 'changed_'
         entry = Entry(
@@ -524,8 +568,7 @@ class EntryTests3(KDBX3Tests):
         self.assertEqual(entry.get_custom_property('foo'), None)
         # test time properties
         self.assertEqual(entry.expires, False)
-        self.assertEqual(entry.expiry_time,
-                         changed_time.replace(tzinfo=tz.gettz()).astimezone(tz.gettz('UTC')))
+        self.assertEqual(entry.expiry_time, changed_time)
 
         entry.tags = 'changed_tags'
         self.assertEqual(entry.tags, ['changed_tags'])
@@ -536,8 +579,8 @@ class EntryTests3(KDBX3Tests):
 
     def test_expired_datetime_offset(self):
         """Test for https://github.com/pschmitt/pykeepass/issues/115"""
-        future_time = datetime.now() + timedelta(days=1)
-        past_time = datetime.now() - timedelta(days=1)
+        future_time = datetime.now(timezone.utc) + timedelta(days=1)
+        past_time = datetime.now(timezone.utc) - timedelta(days=1)
         entry = Entry(
             'title',
             'username',
@@ -691,7 +734,7 @@ class EntryHistoryTests3(KDBX3Tests):
 
         # change the active entries to test integrity of the history items
         backup = {}
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         for entry in res1:
             backup[entry.uuid] = {"atime": entry.atime, "mtime": entry.mtime, "ctime": entry.ctime}
             entry.title = changed + 'title'
@@ -859,8 +902,8 @@ class PyKeePassTests3(KDBX3Tests):
 
         required_days = 5
         recommended_days = 5
-        unexpired_date = datetime.now() - timedelta(days=1)
-        expired_date = datetime.now() - timedelta(days=10)
+        unexpired_date = datetime.now(timezone.utc) - timedelta(days=1)
+        expired_date = datetime.now(timezone.utc) - timedelta(days=10)
 
         self.kp.credchange_required_days = required_days
         self.kp.credchange_recommended_days = recommended_days

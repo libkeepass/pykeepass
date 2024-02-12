@@ -7,10 +7,11 @@ import struct
 import uuid
 import zlib
 from binascii import Error as BinasciiError
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from construct import CheckError, ChecksumError, Container
+from construct import Container, ChecksumError, CheckError
+
 from dateutil import parser, tz
 from lxml import etree
 from lxml.builder import E
@@ -34,7 +35,7 @@ logger = logging.getLogger(__name__)
 BLANK_DATABASE_FILENAME = "blank_database.kdbx"
 BLANK_DATABASE_LOCATION = os.path.join(os.path.dirname(os.path.realpath(__file__)), BLANK_DATABASE_FILENAME)
 BLANK_DATABASE_PASSWORD = "password"
-
+DT_ISOFORMAT = "%Y-%m-%dT%H:%M:%S%fZ"
 
 class PyKeePass:
     """Open a KeePass database
@@ -232,9 +233,18 @@ class PyKeePass:
        return kdf_parameters['S'].value
 
     @property
+    def payload(self):
+        """Encrypted payload of keepass database"""
+        # check if payload is decrypted
+        if self.kdbx.body.payload is None:
+            raise ValueError("Database is not decrypted")
+        else:
+            return self.kdbx.body.payload
+
+    @property
     def tree(self):
         """lxml.etree._ElementTree: database XML payload"""
-        return self.kdbx.body.payload.xml
+        return self.payload.xml
 
     @property
     def root_group(self):
@@ -593,7 +603,7 @@ class PyKeePass:
     def binaries(self):
         if self.version >= (4, 0):
             # first byte is a prepended flag
-            binaries = [a.data[1:] for a in self.kdbx.body.payload.inner_header.binary]
+            binaries = [a.data[1:] for a in self.payload.inner_header.binary]
         else:
             binaries = []
             for elem in self._xpath('/KeePassFile/Meta/Binaries/Binary'):
@@ -617,7 +627,7 @@ class PyKeePass:
             data = b'\x01' + data if protected else b'\x00' + data
             # add binary element to inner header
             c = Container(type='binary', data=data)
-            self.kdbx.body.payload.inner_header.binary.append(c)
+            self.payload.inner_header.binary.append(c)
         else:
             binaries = self._xpath(
                 '/KeePassFile/Meta/Binaries',
@@ -649,7 +659,7 @@ class PyKeePass:
         try:
             if self.version >= (4, 0):
                 # remove binary element from inner header
-                self.kdbx.body.payload.inner_header.binary.pop(id)
+                self.payload.inner_header.binary.pop(id)
             else:
                 # remove binary element from XML
                 binaries = self._xpath('/KeePassFile/Meta/Binaries', first=True)
@@ -716,7 +726,7 @@ class PyKeePass:
     @password.setter
     def password(self, password):
         self._password = password
-        self.credchange_date = datetime.now()
+        self.credchange_date = datetime.now(timezone.utc)
 
     @property
     def keyfile(self):
@@ -726,7 +736,7 @@ class PyKeePass:
     @keyfile.setter
     def keyfile(self, keyfile):
         self._keyfile = keyfile
-        self.credchange_date = datetime.now()
+        self.credchange_date = datetime.now(timezone.utc)
 
     @property
     def credchange_required_days(self):
@@ -763,8 +773,8 @@ class PyKeePass:
 
     @credchange_date.setter
     def credchange_date(self, date):
-        time = self._xpath('/KeePassFile/Meta/MasterKeyChanged', first=True)
-        time.text = self._encode_time(date)
+        mk_time = self._xpath('/KeePassFile/Meta/MasterKeyChanged', first=True)
+        mk_time.text = self._encode_time(date)
 
     @property
     def credchange_required(self):
@@ -772,7 +782,7 @@ class PyKeePass:
         change_date = self.credchange_date
         if change_date is None or self.credchange_required_days == -1:
             return False
-        now_date = self._datetime_to_utc(datetime.now())
+        now_date = datetime.now(timezone.utc)
         return (now_date - change_date).days > self.credchange_required_days
 
     @property
@@ -781,17 +791,10 @@ class PyKeePass:
         change_date = self.credchange_date
         if change_date is None or self.credchange_recommended_days == -1:
             return False
-        now_date = self._datetime_to_utc(datetime.now())
+        now_date = datetime.now(timezone.utc)
         return (now_date - change_date).days > self.credchange_recommended_days
 
     # ---------- Datetime Functions ----------
-
-    def _datetime_to_utc(self, dt):
-        """Convert naive datetimes to UTC"""
-
-        if not dt.tzinfo:
-            dt = dt.replace(tzinfo=tz.gettz())
-        return dt.astimezone(tz.gettz('UTC'))
 
     def _encode_time(self, value):
         """bytestring or plaintext string: Convert datetime to base64 or plaintext string"""
@@ -799,12 +802,12 @@ class PyKeePass:
         if self.version >= (4, 0):
             diff_seconds = int(
                 (
-                    self._datetime_to_utc(value) -
+                    value -
                     datetime(
                         year=1,
                         month=1,
                         day=1,
-                        tzinfo=tz.gettz('UTC')
+                        tzinfo=timezone.utc
                     )
                 ).total_seconds()
             )
@@ -812,7 +815,7 @@ class PyKeePass:
                 struct.pack('<Q', diff_seconds)
             ).decode('utf-8')
         else:
-            return self._datetime_to_utc(value).isoformat()
+            return value.strftime(DT_ISOFORMAT)
 
     def _decode_time(self, text):
         """datetime.datetime: Convert base64 time or plaintext time to datetime"""
@@ -821,21 +824,15 @@ class PyKeePass:
             # decode KDBX4 date from b64 format
             try:
                 return (
-                    datetime(year=1, month=1, day=1, tzinfo=tz.gettz('UTC')) +
+                    datetime(year=1, month=1, day=1, tzinfo=timezone.utc) +
                     timedelta(
                         seconds=struct.unpack('<Q', base64.b64decode(text))[0]
                     )
                 )
             except BinasciiError:
-                return parser.parse(
-                    text,
-                    tzinfos={'UTC': tz.gettz('UTC')}
-                )
+                return datetime.strptime(text, DT_ISOFORMAT).replace(tzinfo=timezone.utc)
         else:
-            return parser.parse(
-                text,
-                tzinfos={'UTC': tz.gettz('UTC')}
-            )
+            return datetime.strptime(text, DT_ISOFORMAT).replace(tzinfo=timezone.utc)
 
 def create_database(
         filename, password=None, keyfile=None, transformed_key=None
