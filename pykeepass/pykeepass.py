@@ -12,7 +12,6 @@ from pathlib import Path
 
 from construct import Container, ChecksumError, CheckError
 
-from dateutil import parser, tz
 from lxml import etree
 from lxml.builder import E
 
