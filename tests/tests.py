@@ -7,8 +7,6 @@ from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
 
-from dateutil import tz
-
 from pykeepass import PyKeePass, icons
 from pykeepass.entry import Entry
 from pykeepass.exceptions import BinaryError, CredentialsError, HeaderChecksumError
