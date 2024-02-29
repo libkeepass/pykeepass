@@ -1239,6 +1239,8 @@ class KDBXTests(unittest.TestCase):
             'test3.kdbx',
             'test4.kdbx',
             'test4.kdbx',
+            'test4.kdbx',
+            'test4.kdbx',
             'test3.key',
         ]
         passwords = [
@@ -1247,15 +1249,20 @@ class KDBXTests(unittest.TestCase):
             'invalid',
             'password',
             'password',
+            'password',
+            'password',
         ]
         keyfiles = [
             'test3.key',
             'test4.key',
             'test4.key',
-            'test3.key',
+            'test_invalidversion.key',
+            'test.svg',
             'test3.key',
         ]
         errors = [
+            CredentialsError,
+            CredentialsError,
             CredentialsError,
             CredentialsError,
             CredentialsError,

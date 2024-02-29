@@ -135,8 +135,10 @@ def compute_key_composite(password=None, keyfile=None):
                 hash = bytes.fromhex(data_element.attrib['Hash'])
                 hash_computed = hashlib.sha256(keyfile_composite).digest()[:4]
                 assert hash == hash_computed, "Keyfile has invalid hash"
+            else:
+                raise AttributeError("Invalid version in keyfile")
         # otherwise, try to read plain keyfile
-        except (etree.XMLSyntaxError, UnicodeDecodeError):
+        except (etree.XMLSyntaxError, UnicodeDecodeError, AttributeError):
             try:
                 try:
                     int(keyfile_bytes, 16)
