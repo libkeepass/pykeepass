@@ -151,9 +151,13 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual(len(results), len(self.kp.entries) - 1)
 
     def test_find_entries_by_otp(self):
-        results = self.kp.find_entries(otp='otpsecret', regex=True, flags='i')
+        results = self.kp.find_entries(otp='nonmatch', regex=True, flags='i')
+        self.assertEqual(len(results), 0)
+        results = self.kp.find_entries(otp='OTPSECRETT', regex=True)
         self.assertEqual(len(results), 1)
         self.assertEqual('foobar_entry', results[0].title)
+        import pyotp
+        self.assertEqual(len(pyotp.parse_uri(results[0].otp).now()), 6)
 
     def test_find_entries(self):
         results = self.kp.find_entries(title='Root_entry', regex=True)
