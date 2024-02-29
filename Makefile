@@ -8,7 +8,7 @@ dist:
 	python -m build
 
 .PHONY: release
-release: tests dist
+release: lock dist
 	# check that changelog is updated
 	if ! grep ${version} CHANGELOG.rst
 	then
