@@ -27,6 +27,9 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 
+[project.optional-dependencies]
+test = ["pyotp"]
+
 [project.urls]
 Homepage = "https://github.com/libkeepass/pykeepass"
 Repository = "https://github.com/libkeepass/pykeepass"
