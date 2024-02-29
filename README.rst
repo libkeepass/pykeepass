@@ -463,13 +463,11 @@ pretty print database XML to file
 TOTP
 -------
 
-``` python
-# find an entry which has otp attribute
->>> e = kp.find_entries(otp='.*', regex=True, first=True)
->>> import pyotp
->>> pyotp.parse_uri(e.otp).now()
-799270
-```
+   # find an entry which has otp attribute
+   >>> e = kp.find_entries(otp='.*', regex=True, first=True)
+   >>> import pyotp
+   >>> pyotp.parse_uri(e.otp).now()
+   799270
 
 
 Tests and Debugging
