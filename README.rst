@@ -171,8 +171,8 @@ a flattened list of all groups in the database
    Group: "/"
 
 
-Entry Functions
----------------
+Entry Functions and Properties
+------------------------------
 **add_entry** (destination_group, title, username, password, url=None, notes=None, tags=None, expiry_time=None, icon=None, force_creation=False)
 
 **delete_entry** (entry)
@@ -182,6 +182,18 @@ Entry Functions
 move a group to the recycle bin.  The recycle bin is created if it does not exit.  ``entry`` must be an empty Entry.
 
 **move_entry** (entry, destination_group)
+
+**atime**
+
+access time
+
+**ctime**
+
+creation time
+
+**mtime**
+
+modification time
 
 where ``destination_group`` is a ``Group`` instance.  ``entry`` is an ``Entry`` instance. ``title``, ``username``, ``password``, ``url``, ``notes``, ``tags``, ``icon`` are strings. ``expiry_time`` is a ``datetime`` instance.
 
@@ -210,8 +222,15 @@ If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is no
    # save the database
    >>> kp.save()
 
-Group Functions
----------------
+   # change creation time
+   >>> from datetime import datetime, timezone
+   >>> entry.ctime = datetime(2023, 1, 1, tzinfo=timezone.utc)
+
+   # update modification or access time
+   >>> entry.touch(modify=True)
+
+Group Functions and Properties
+------------------------------
 **add_group** (destination_group, group_name, icon=None, notes=None)
 
 **delete_group** (group)
@@ -225,6 +244,18 @@ move a group to the recycle bin.  The recycle bin is created if it does not exit
 delete all entries and subgroups of a group.  ``group`` is an instance of ``Group``.
 
 **move_group** (group, destination_group)
+
+**atime**
+
+access time
+
+**ctime**
+
+creation time
+
+**mtime**
+
+modification time
 
 ``destination_group`` and ``group`` are instances of ``Group``.  ``group_name`` is a string
 
@@ -248,6 +279,13 @@ delete all entries and subgroups of a group.  ``group`` is an instance of ``Grou
 
    # save the database
    >>> kp.save()
+
+   # change creation time
+   >>> from datetime import datetime, timezone
+   >>> group.ctime = datetime(2023, 1, 1, tzinfo=timezone.utc)
+
+   # update modification or access time
+   >>> group.touch(modify=True)
 
 Attachments
 -----------

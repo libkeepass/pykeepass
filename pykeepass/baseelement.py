@@ -132,6 +132,7 @@ class BaseElement():
 
     @property
     def ctime(self):
+        """(datetime.datetime): Creation time."""
         return self._get_times_property('CreationTime')
 
     @ctime.setter
@@ -140,6 +141,7 @@ class BaseElement():
 
     @property
     def atime(self):
+        """(datetime.datetime): Access time. Update with touch()"""
         return self._get_times_property('LastAccessTime')
 
     @atime.setter
@@ -148,6 +150,7 @@ class BaseElement():
 
     @property
     def mtime(self):
+        """(datetime.datetime): Access time. Update with touch(modify=True)"""
         return self._get_times_property('LastModificationTime')
 
     @mtime.setter
