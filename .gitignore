@@ -9,3 +9,4 @@ Pipfile.lock
 *.kdbx
 *.kdbx.out
 .idea
+.venv*
