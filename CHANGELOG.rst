@@ -1,3 +1,12 @@
+4.0.7 - 2024-02-29
+------------------
+- fixed #359 - PyKeePass has `decrypt` kwarg for accessing header info
+- merged PR#347 - added Entry.index and Entry.move for moving entries
+- merged PR#367 - added Entry.autotype_window setter
+- merged PR#364 - allow filename/keyfile to be file-like objects
+- merged PR#371 - drop dateutil dependency
+- merged PR#348 - switch to pyproject.toml
+
 4.0.6 - 2023-08-22
 ------------------
 - fixed #350 - fixed all Python 2 deprecation FIXMEs (e.g. future, )
