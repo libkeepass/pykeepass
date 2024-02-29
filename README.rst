@@ -463,6 +463,12 @@ pretty print database XML to file
 TOTP
 -------
 
+**Entry.otp**
+
+TOTP URI which can be passed to an OTP library to generate codes
+
+.. code:: python
+
    # find an entry which has otp attribute
    >>> e = kp.find_entries(otp='.*', regex=True, first=True)
    >>> import pyotp
