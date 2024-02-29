@@ -15,7 +15,7 @@ release: lock dist
 		echo "Changelog doesn't seem to be updated! Quitting..."
 		exit 1
 	fi
-	twine upload dist/pykeepass-$(version)*
+	twine upload -u __token__ dist/pykeepass-$(version)*
 	gh release create pykeepass-$(version) dist/pykeepass-$(version)*
 
 .PHONY: lock
