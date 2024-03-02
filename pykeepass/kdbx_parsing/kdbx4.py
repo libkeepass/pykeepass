@@ -12,7 +12,7 @@ from construct import (
 )
 from .common import (
     aes_kdf, Concatenated, AES256Payload, ChaCha20Payload, TwoFishPayload,
-    DynamicDict, compute_key_composite, Reparsed, Decompressed,
+    DynamicDict, RandomBytes, compute_key_composite, Reparsed, Decompressed,
     compute_master, CompressionFlags, XML, CipherId, ProtectedStreamId, Unprotect
 )
 
@@ -34,7 +34,7 @@ def compute_transformed(context):
         password=context._._.password,
         keyfile=context._._.keyfile
     )
-    kdf_parameters = context._.header.value.dynamic_header.kdf_parameters.data.dict
+    kdf_parameters = context._.header.dynamic_header.kdf_parameters.data.dict
 
     if context._._.transformed_key is not None:
         transformed_key = context._._.transformed_key
@@ -73,12 +73,12 @@ def compute_header_hmac_hash(context):
         hashlib.sha512(
             b'\xff' * 8 +
             hashlib.sha512(
-                context._.header.value.dynamic_header.master_seed.data +
+                context._.header.dynamic_header.master_seed.data +
                 context.transformed_key +
                 b'\x01'
             ).digest()
         ).digest(),
-        context._.header.data,
+        context._.header._data,
         hashlib.sha256
     ).digest()
 
@@ -140,6 +140,8 @@ DynamicHeaderItem = Struct(
             this.id,
             {'compression_flags': CompressionFlags,
              'kdf_parameters': VariantDictionary,
+             'master_seed': RandomBytes(32),
+             'encryption_iv': RandomBytes(12),
              'cipher_id': CipherId
              },
             default=GreedyBytes
@@ -165,7 +167,7 @@ def compute_payload_block_hash(this):
         hashlib.sha512(
             struct.pack('<Q', this._index) +
             hashlib.sha512(
-                this._._.header.value.dynamic_header.master_seed.data +
+                this._._.header.dynamic_header.master_seed.data +
                 this._.transformed_key + b'\x01'
             ).digest()
         ).digest(),
@@ -200,7 +202,7 @@ EncryptedPayload = Concatenated(RepeatUntil(
 ))
 
 DecryptedPayload = Switch(
-    this._.header.value.dynamic_header.cipher_id.data,
+    this._.header.dynamic_header.cipher_id.data,
     {'aes256': AES256Payload(EncryptedPayload),
      'chacha20': ChaCha20Payload(EncryptedPayload),
      'twofish': TwoFishPayload(EncryptedPayload)
@@ -256,7 +258,7 @@ Body = Struct(
     "sha256" / Checksum(
         Bytes(32),
         lambda data: hashlib.sha256(data).digest(),
-        this._.header.data,
+        this._.header._data,
         # exception=HeaderChecksumError,
     ),
     "cred_check" / If(this._._.decrypt,
@@ -270,7 +272,7 @@ Body = Struct(
     "payload" / If(this._._.decrypt,
         UnpackedPayload(
             IfThenElse(
-                this._.header.value.dynamic_header.compression_flags.data.compression,
+                this._.header.dynamic_header.compression_flags.data.compression,
                 Decompressed(DecryptedPayload),
                 DecryptedPayload
             )
