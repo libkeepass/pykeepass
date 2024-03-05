@@ -37,7 +37,7 @@ Issues = "https://github.com/libkeepass/pykeepass/issues"
 Changelog = "https://github.com/libkeepass/pykeepass/blob/master/CHANGELOG.rst"
 
 [tool.setuptools]
-packages = ["pykeepass"]
+packages = ["pykeepass", "pykeepass.kdbx_parsing"]
 include-package-data = true
 
 [build-system]
