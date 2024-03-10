@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 BLANK_DATABASE_FILENAME = "blank_database.kdbx"
 BLANK_DATABASE_LOCATION = os.path.join(os.path.dirname(os.path.realpath(__file__)), BLANK_DATABASE_FILENAME)
 BLANK_DATABASE_PASSWORD = "password"
-DT_ISOFORMAT = "%Y-%m-%dT%H:%M:%S%fZ"
 
 class PyKeePass():
     """Open a KeePass database
@@ -804,7 +803,7 @@ class PyKeePass():
                 struct.pack('<Q', diff_seconds)
             ).decode('utf-8')
         else:
-            return value.strftime(DT_ISOFORMAT)
+            return value.isoformat()
 
     def _decode_time(self, text):
         """datetime.datetime: Convert base64 time or plaintext time to datetime"""
@@ -819,9 +818,9 @@ class PyKeePass():
                     )
                 )
             except BinasciiError:
-                return datetime.strptime(text, DT_ISOFORMAT).replace(tzinfo=timezone.utc)
+                return datetime.fromisoformat(text.replace('Z','+00:00')).replace(tzinfo=timezone.utc)
         else:
-            return datetime.strptime(text, DT_ISOFORMAT).replace(tzinfo=timezone.utc)
+            return datetime.fromisoformat(text.replace('Z','+00:00')).replace(tzinfo=timezone.utc)
 
 def create_database(
         filename, password=None, keyfile=None, transformed_key=None
