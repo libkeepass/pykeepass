@@ -54,7 +54,7 @@ class Entry(BaseElement):
                 )
             if tags:
                 self._element.append(
-                    E.Tags(';'.join(tags) if type(tags) is list else tags)
+                    E.Tags(';'.join(tags) if isinstance(tags, list) else tags)
                 )
             self._element.append(
                 E.AutoType(
@@ -221,7 +221,7 @@ class Entry(BaseElement):
     @tags.setter
     def tags(self, value, sep=';'):
         # Accept both str or list
-        v = sep.join(value if type(value) is list else [value])
+        v = sep.join(value if isinstance(value, list) else [value])
         return self._set_subelement_text('Tags', v)
 
     @property
@@ -403,7 +403,7 @@ class Entry(BaseElement):
 
     def __str__(self):
         # filter out NoneTypes and join into string
-        pathstr = '/'.join('' if p==None else p for p in self.path)
+        pathstr = '/'.join('' if p is None else p for p in self.path)
         return 'Entry: "{} ({})"'.format(pathstr, self.username)
 
 

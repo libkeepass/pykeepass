@@ -1,11 +1,13 @@
 import base64
 import uuid
-from lxml import etree
-from lxml.builder import E
 from datetime import datetime, timezone
 
 
-class BaseElement():
+from lxml import etree
+from lxml.builder import E
+
+
+class BaseElement:
     """Entry and Group inherit from this class"""
 
     def __init__(self, element, kp=None, icon=None, expires=False,

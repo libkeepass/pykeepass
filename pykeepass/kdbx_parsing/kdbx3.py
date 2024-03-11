@@ -2,17 +2,47 @@
 # keepass decrypt experimentation
 
 import hashlib
+
 from construct import (
-    Byte, Bytes, Int16ul, Int32ul, Int64ul, RepeatUntil, GreedyBytes, Struct,
-    this, Mapping, Switch, Prefixed, Padding, Checksum, Computed, IfThenElse,
-    Pointer, Tell, len_, If
-)
-from .common import (
-    aes_kdf, AES256Payload, ChaCha20Payload, TwoFishPayload, Concatenated,
-    DynamicDict, compute_key_composite, Decompressed, Reparsed,
-    compute_master, CompressionFlags, XML, CipherId, ProtectedStreamId, Unprotect
+    Byte,
+    Bytes,
+    Checksum,
+    Computed,
+    GreedyBytes,
+    If,
+    IfThenElse,
+    Int16ul,
+    Int32ul,
+    Int64ul,
+    Mapping,
+    Padding,
+    Pointer,
+    Prefixed,
+    RepeatUntil,
+    Struct,
+    Switch,
+    Tell,
+    len_,
+    this,
 )
 
+from .common import (
+    XML,
+    AES256Payload,
+    ChaCha20Payload,
+    CipherId,
+    CompressionFlags,
+    Concatenated,
+    Decompressed,
+    DynamicDict,
+    ProtectedStreamId,
+    Reparsed,
+    TwoFishPayload,
+    Unprotect,
+    aes_kdf,
+    compute_key_composite,
+    compute_master,
+)
 
 # -------------------- Key Derivation --------------------
 
