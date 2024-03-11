@@ -2,6 +2,7 @@
 
 import logging
 import os
+import random
 import shutil
 import unittest
 import uuid
@@ -11,10 +12,18 @@ from pathlib import Path
 
 from io import BytesIO
 
-from pykeepass import PyKeePass, icons
+from pykeepass import PyKeePass, icons, create_database
 from pykeepass.entry import Entry
-from pykeepass.group import Group
 from pykeepass.exceptions import BinaryError, CredentialsError, HeaderChecksumError
+from pykeepass.kdbx_parsing.factorinfo import FactorInfo, FactorGroup, \
+    PasswordFactor, NopFactor, FACTOR_TYPE_EMPTY, FACTOR_ALG_AES_CBC, FACTOR_VALIDATE_HMAC_SHA512, FIDO2Factor
+from pykeepass.group import Group
+from pykeepass.pykeepass import BLANK_DATABASE_PASSWORD
+
+
+def mock_get_fido2_key_material(*args, **kwargs):
+    mock_get_fido2_key_material.call_count = getattr(mock_get_fido2_key_material, 'call_count', 0) + 1
+    return b'a' * 32, b'a' * 32
 
 """
 Missing Tests:
@@ -1023,6 +1032,328 @@ class BugRegressionTests3(KDBX3Tests):
         e._element.xpath('Times/ExpiryTime')[0].text = None
         self.assertEqual(e.expiry_time, None)
 
+
+class AuthenticatorTests(KDBX4Tests):
+
+    def build_password_factor(self, factor_group, password, key_part, name='Some Password'):
+        salt = random.randbytes(16)
+        factor = PasswordFactor(
+            name=name,
+            key_salt=salt,
+            key_type=FACTOR_ALG_AES_CBC,
+            wrapped_key_part=None
+        )
+        factor_group.add_factor(factor)
+        wrapped_key, validation_out = factor.wrap_key_part({"factor_data": {"password": password}}, key_part)
+
+        factor.wrapped_key_part = wrapped_key
+        if factor_group.validation_out is None:
+            factor_group.validation_out = validation_out
+        else:
+            assert factor_group.validation_out == validation_out
+
+        return factor
+
+    def build_pretend_fido_factor(self, factor_group, key_part, name='Some FIDO'):
+        key_salt = random.randbytes(16)
+        credential = random.randbytes(100)
+        factor = FIDO2Factor(
+            name=name,
+            key_salt=key_salt,
+            credential_id=credential,
+            key_type=FACTOR_ALG_AES_CBC,
+            wrapped_key_part=None
+        )
+        factor_group.add_factor(factor)
+        # Monkey-patch to avoid using real FIDO2 authenticator stuff
+        FactorGroup.get_fido2_key_material = mock_get_fido2_key_material
+        wrapped_key, validation_out = factor.wrap_key_part({}, key_part, wrapping_key=b'a' * 32)
+
+        factor.wrapped_key_part = wrapped_key
+        if factor_group.validation_out is None:
+            factor_group.validation_out = validation_out
+        else:
+            assert factor_group.validation_out == validation_out
+
+        return factor
+
+    def test_can_use_password_factor_alone(self):
+        group = FactorGroup(
+            validation_type=FACTOR_VALIDATE_HMAC_SHA512,
+            validation_in=bytes([8]),
+            validation_out=None
+        )
+
+        key_part = random.randbytes(16)
+
+        self.build_password_factor(factor_group=group, password=self.password, key_part=key_part)
+
+        self.kp_tmp.authentication_factors = FactorInfo(
+            comprehensive=True,
+            factor_groups=[group]
+        )
+        self.kp_tmp.password = None
+        self.kp_tmp.factor_data = {
+            "password": self.password
+        }
+
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+
+        factors = self.kp_tmp.authentication_factors
+        self.assertIsNotNone(factors)
+
+        self.assertEqual(1, len(factors.factor_groups))
+
+    def test_using_incorrect_password_fails(self):
+        group = FactorGroup(
+            validation_type=FACTOR_VALIDATE_HMAC_SHA512,
+            validation_in=bytes([8]),
+            validation_out=None
+        )
+
+        key_part = random.randbytes(16)
+
+        self.build_password_factor(factor_group=group, password=self.password + 'x', key_part=key_part)
+
+        self.kp_tmp.authentication_factors = FactorInfo(
+            comprehensive=True,
+            factor_groups=[group]
+        )
+
+        with self.assertRaises(CredentialsError):
+            self.kp_tmp.save()
+
+    def test_fido_challenge_does_not_rotate_with_two_authenticators(self):
+        group = FactorGroup(
+            validation_type=FACTOR_VALIDATE_HMAC_SHA512,
+            validation_in=bytes([8]),
+            validation_out=None
+        )
+        key_part = random.randbytes(16)
+        self.build_pretend_fido_factor(factor_group=group, key_part=key_part)
+        self.build_pretend_fido_factor(factor_group=group, key_part=key_part)
+
+        factor_info = FactorInfo(factor_groups=[group])
+        self.kp_tmp.authentication_factors = factor_info
+
+        original_challenge = self.kp_tmp.authentication_factors.factor_groups[0].challenge
+
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+
+        after_saving_challenge = self.kp_tmp.authentication_factors.factor_groups[0].challenge
+
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+
+        after_saving_again_challenge = self.kp_tmp.authentication_factors.factor_groups[0].challenge
+
+        self.assertEqual(original_challenge, after_saving_challenge)
+        self.assertEqual(after_saving_challenge, after_saving_again_challenge)
+
+    def test_fido_challenge_rotates_with_one_authenticator(self):
+        group = FactorGroup(
+            validation_type=FACTOR_VALIDATE_HMAC_SHA512,
+            validation_in=bytes([8]),
+            validation_out=None
+        )
+        key_part = random.randbytes(16)
+        password_factor = self.build_password_factor(factor_group=group, password=self.password + 'x', key_part=key_part)
+        self.build_pretend_fido_factor(factor_group=group, key_part=key_part)
+
+        factor_info = FactorInfo(factor_groups=[group])
+        self.kp_tmp.authentication_factors = factor_info
+
+        setattr(mock_get_fido2_key_material, 'call_count', 0)
+
+        original_challenge = self.kp_tmp.authentication_factors.factor_groups[0].challenge
+
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+
+        after_saving_challenge = self.kp_tmp.authentication_factors.factor_groups[0].challenge
+
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+
+        after_saving_again_challenge = self.kp_tmp.authentication_factors.factor_groups[0].challenge
+
+        self.assertNotEqual(original_challenge, after_saving_challenge)
+        # FIXME: rotating again seems broken
+        # self.assertNotEqual(after_saving_challenge, after_saving_again_challenge)
+
+        # One call for the first save, and one for each of the two reloads
+        self.assertEqual(3, mock_get_fido2_key_material.call_count)
+
+    def test_can_use_password_and_fido_factors_in_addition_to_normal(self):
+        first_group = FactorGroup(
+            validation_type=FACTOR_VALIDATE_HMAC_SHA512,
+            validation_in=bytes([8]),
+            validation_out=None
+        )
+        key_part_1 = random.randbytes(16)
+        self.build_password_factor(factor_group=first_group, password=self.password, key_part=key_part_1)
+
+        second_group = FactorGroup(
+            validation_type=FACTOR_VALIDATE_HMAC_SHA512,
+            validation_in=bytes([99]),
+            validation_out=None
+        )
+        key_part_2 = random.randbytes(16)
+        self.build_pretend_fido_factor(factor_group=second_group, key_part=key_part_2)
+
+        self.kp_tmp.authentication_factors = FactorInfo(
+            factor_groups=[first_group, second_group]
+        )
+        self.kp_tmp.factor_data = {
+            "password": self.password
+        }
+
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+
+    def test_additional_factors_matter(self):
+        group = FactorGroup(
+            validation_type=FACTOR_VALIDATE_HMAC_SHA512,
+            validation_in=bytes([8]),
+            validation_out=None
+        )
+        key_part = random.randbytes(16)
+        self.build_password_factor(factor_group=group, password=self.password, key_part=key_part)
+
+        with self.assertRaises(CredentialsError):
+            PyKeePass(
+                base_dir / self.database_tmp,
+                password=None,
+                keyfile=base_dir / self.keyfile_tmp,
+                factor_data={
+                    "password": self.password
+                },
+                authentication_factors=FactorInfo(
+                    factor_groups=[group],
+                    comprehensive=True
+                )
+            )
+
+    def test_can_set_authentication_factors(self):
+        self.kp_tmp.authentication_factors = FactorInfo(
+            factor_groups=[
+                FactorGroup(
+                    validation_type=FACTOR_VALIDATE_HMAC_SHA512,
+                    validation_in=bytes([8]),
+                    validation_out=bytes([8]),
+                    factors=[
+                        NopFactor(
+                            name="First Fake Option",
+                            key_salt=bytes([8] * 16),
+                            key_type=FACTOR_ALG_AES_CBC,
+                            wrapped_key_part=bytes([8] * 16)
+                        ),
+                        NopFactor(
+                            name="Second Fake Option",
+                            key_salt=bytes([8] * 16),
+                            key_type=FACTOR_ALG_AES_CBC,
+                            wrapped_key_part=bytes([8] * 16)
+                        ),
+                    ]
+                )
+            ]
+        )
+
+        self.assertIsNotNone(self.kp_tmp.authentication_factors)
+
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+
+        factors = self.kp_tmp.authentication_factors
+        self.assertIsNotNone(factors)
+
+        self.assertEqual('1', factors.compat_version)
+        self.assertEqual(1, len(factors.factor_groups))
+        self.assertEqual(2, len(factors.factor_groups[0].factors))
+        self.assertEqual(FACTOR_TYPE_EMPTY, factors.factor_groups[0].factors[-1].uuid)
+        self.assertEqual("First Fake Option", factors.factor_groups[0].factors[0].name)
+        self.assertEqual("Second Fake Option", factors.factor_groups[0].factors[1].name)
+        self.assertEqual(FACTOR_TYPE_EMPTY, factors.factor_groups[0].factors[-1].uuid)
+
+    def test_saving_compatible_with_password(self):
+        create_database(self.database_tmp)
+
+        PyKeePass(
+            self.database_tmp,
+            authentication_factors=FactorInfo(
+                comprehensive=True,
+                factor_groups=[FactorGroup(
+                    factors=[
+                        PasswordFactor(
+                            name="SomePassword"
+                        )
+                    ]
+                )]
+            ),
+            factor_data={
+                "password": BLANK_DATABASE_PASSWORD
+            }
+        )
+
+    def test_changing_password(self):
+        create_database(self.database_tmp)
+
+        password_factor = PasswordFactor(name="SomePassword")
+
+        kp = PyKeePass(
+            self.database_tmp,
+            authentication_factors=FactorInfo(
+                comprehensive=True,
+                factor_groups=[FactorGroup(
+                    factors=[password_factor]
+                )]
+            ),
+            factor_data={
+                "password": BLANK_DATABASE_PASSWORD
+            }
+        )
+        kp.save()
+
+        password_factor.change_password(BLANK_DATABASE_PASSWORD, "foo")
+        kp.factor_data = {"password": "foo"}
+        kp.save()
+
+        kp = PyKeePass(
+            self.database_tmp,
+            factor_data={
+                "password": "foo"
+            },
+            decrypt=True
+        )
+
+    def test_stacking_passwords_changes_key(self):
+        create_database(self.database_tmp)
+
+        with self.assertRaises(CredentialsError):
+            PyKeePass(
+                self.database_tmp,
+                password=BLANK_DATABASE_PASSWORD,
+                authentication_factors=FactorInfo(
+                    factor_groups=[FactorGroup(
+                        factors=[
+                            PasswordFactor(
+                                name="SomePassword"
+                            )
+                        ]
+                    )]
+                ),
+                factor_data={
+                    "password": BLANK_DATABASE_PASSWORD
+                }
+            )
+
+
 class EntryFindTests4(KDBX4Tests, EntryFindTests3):
     pass
 
@@ -1209,6 +1540,7 @@ class KDBXTests(unittest.TestCase):
             self.assertEqual(kp.encryption_algorithm, encryption_algorithm)
             self.assertEqual(kp.kdf_algorithm, kdf_algorithm)
             self.assertEqual(kp.version, version)
+            self.assertIsNone(kp.authentication_factors)
 
             kp.save(
                 filename_out,

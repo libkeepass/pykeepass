@@ -475,6 +475,57 @@ TOTP URI which can be passed to an OTP library to generate codes
    >>> pyotp.parse_uri(e.otp).now()
    799270
 
+multifactor authentication
+--------------------------
+
+PyKeePass supports securing a database using an arbitrary combination of "authentication factors".
+A single factor could be something like a password, a file, or a hardware authenticator.
+
+Factors are arranged into "factor groups". In order to open the database, *one* factor from
+each group must be provided.
+
+Example using a single FIDO2 authenticator to unlock a database:
+
+.. code:: python
+
+    # Import things
+    >>> from pykeepass import PyKeePass, FactorInfo, FactorGroup, FIDO2Factor, create_database
+    # Create new DB
+    >>> db = create_database()
+    # Create a FIDO2 factor
+    >>> fido2_factor = FIDO2Factor(name="MyCoolFIDO")
+    # Create a single factor group with that one factor in it
+    >>> group = FactorGroup(factors=[fido2_factor])
+    # Set PIN to use for the FIDO2 credential
+    >>> factor_data = {"fido2_pin": "my_pin"}
+    # Declare the one factor group is the only contributor to the database composite key
+    >>> factor_info = FactorInfo(comprehensive=True, factor_groups=[group])
+    # Save database
+    >>> db.factor_data = factor_data
+    >>> db.authentication_factors = factor_info
+    >>> db.save()
+    # Reopen database easily later - factor_info is stored inside it
+    >>> kp = PyKeePass(filename, factor_data=factor_data)
+
+Example using a password *and* one of two different keyfiles (the password will always be required):
+
+.. code:: python
+
+    >>> from pykeepass import PyKeePass, FactorInfo, FactorGroup, PasswordFactor, KeyFileFactor, create_database
+    # Password factor
+    >>> password_factor = PasswordFactor(name="MyCoolPassword")
+    # Keyfile factor
+    >>> kf_factor_1 = KeyFileFactor(name="First KF")
+    >>> kf_factor_2 = KeyFileFactor(name="Second KF")
+    # First factor group, password only
+    >>> group_1 = FactorGroup(factors=[password_factor])
+    # Second factor group, either of two key files
+    >>> group_2 = FactorGroup(factors=[kf_factor_1, kf_factor_2])
+    >>> factor_data = {"password": "my_pass", "keyfile": {"First KF": "/kf1", "Second KF": "/kf2"}}
+    >>> factor_info = FactorInfo(comprehensive=True, factor_groups=[group_1, group_2])
+
+It's okay to mix factors of different types within a group.
+
 
 Tests and Debugging
 -------------------
