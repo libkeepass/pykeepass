@@ -528,6 +528,20 @@ class EntryTests3(KDBX3Tests):
         self.assertNotEqual(original_entry, clone1)
         self.assertNotEqual(clone1, clone2)
 
+    def test_broken_reference(self):
+        # TODO: move the entry into test databases
+        broken_entry_title = 'broken reference'
+        self.kp.add_entry(
+            self.kp.root_group,
+            title=broken_entry_title,
+            username='{REF:U@I:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA}',
+            password='{REF:P@I:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA}',
+        )
+        broken_entry = self.kp.find_entries(title=broken_entry_title, first=True)
+        self.assertEqual(broken_entry.deref('username'), None)
+        self.assertEqual(broken_entry.deref('password'), None)
+        self.kp.delete_entry(broken_entry)
+
     def test_set_and_get_fields(self):
         time = datetime.now(timezone.utc).replace(microsecond=0)
         changed_time = time + timedelta(hours=9)
