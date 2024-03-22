@@ -710,6 +710,8 @@ class PyKeePass:
             if search_in == 'uuid':
                 search_value = uuid.UUID(search_value)
             ref_entry = self.find_entries(first=True, **{search_in: search_value})
+            if ref_entry is None:
+                return None
             value = value.replace(ref, getattr(ref_entry, wanted_field))
         return self.deref(value)
 
