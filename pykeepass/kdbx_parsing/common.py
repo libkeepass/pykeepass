@@ -1,13 +1,13 @@
 import base64
 import codecs
 import hashlib
+import io
 import logging
 import re
 import zlib
 from binascii import Error as BinasciiError
 from collections import OrderedDict
 from copy import deepcopy
-from io import BytesIO
 
 from construct import (
     Adapter,
@@ -127,7 +127,13 @@ def compute_key_composite(password=None, keyfile=None):
         password_composite = b''
     # hash the keyfile
     if keyfile:
-        if hasattr(keyfile, "read"):
+        if (
+            isinstance(keyfile, io.BufferedIOBase)
+            or isinstance(keyfile, io.TextIOBase)
+            or isinstance(keyfile, io.RawIOBase)
+        ):
+            if keyfile.seekable():
+                keyfile.seek(0)
             keyfile_bytes = keyfile.read()
         else:
             with open(keyfile, 'rb') as f:
@@ -194,7 +200,7 @@ class XML(Adapter):
 
     def _decode(self, data, con, path):
         parser = etree.XMLParser(remove_blank_text=True)
-        return etree.parse(BytesIO(data), parser)
+        return etree.parse(io.BytesIO(data), parser)
 
     def _encode(self, tree, con, path):
         return etree.tostring(tree)
