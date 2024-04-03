@@ -268,6 +268,43 @@ class PyKeePass:
         excluding history"""
         return self.find_entries()
 
+    @property
+    def database_name(self):
+        """Name of database"""
+        elem = self._xpath('/KeePassFile/Meta/DatabaseName', first=True)
+        return elem.text
+
+    @database_name.setter
+    def database_name(self, name):
+        item = self._xpath('/KeePassFile/Meta/DatabaseName', first=True)
+        item.text = str(name)
+
+    @property
+    def database_description(self):
+        """Description of the database"""
+        elem = self._xpath('/KeePassFile/Meta/DatabaseDescription', first=True)
+        return elem.text
+
+    @database_description.setter
+    def database_description(self, name):
+        item = self._xpath('/KeePassFile/Meta/DatabaseDescription', first=True)
+        item.text = str(name)
+
+    @property
+    def default_username(self):
+        """Default Username
+
+        Returns:
+            user name or None if not set.
+        """
+        elem = self._xpath('/KeePassFile/Meta/DefaultUserName', first=True)
+        return elem.text
+
+    @default_username.setter
+    def default_username(self, name):
+        item = self._xpath('/KeePassFile/Meta/DefaultUserName', first=True)
+        item.text = str(name)
+
     def xml(self):
         """Get XML part of database as string
 
