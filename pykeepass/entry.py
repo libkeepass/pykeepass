@@ -98,9 +98,11 @@ class Entry(BaseElement):
         Args:
             key (str): name of field
             value (str): value of field
-            protected (bool): mark whether the field should be protected in memory
-                in other tools.  This property is ignored in PyKeePass and all
-                fields are decrypted immediately upon opening the database.
+            protected (bool or None): mark whether the field should be protected in memory
+                in other tools.  If None, value is either copied from existing field or field
+                is created with protected property unset.
+
+        Note: pykeepass does not support memory protection
         """
         field = self._xpath('String/Key[text()="{}"]/..'.format(key), history=True, first=True)
 
