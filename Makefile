@@ -16,7 +16,7 @@ release: lock dist
 		exit 1
 	fi
 	twine upload -u __token__ dist/pykeepass-$(version)*
-	gh release create pykeepass-$(version) dist/pykeepass-$(version)*
+	gh release create --latest --verify-tag v$(version) dist/pykeepass-$(version)*
 
 .PHONY: lock
 lock:
