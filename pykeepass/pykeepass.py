@@ -687,7 +687,7 @@ class PyKeePass:
             ref (str): KeePass reference string to another field
 
         Returns:
-            str or uuid.UUID
+            str, uuid.UUID or None if no match found
 
         [fieldref]: https://keepass.info/help/base/fieldrefs.html
         """
