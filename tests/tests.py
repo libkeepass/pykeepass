@@ -875,6 +875,20 @@ class AttachmentTests3(KDBX3Tests):
 
 
 class PyKeePassTests3(KDBX3Tests):
+    def test_consecutives_saves_with_stream(self):
+        # https://github.com/libkeepass/pykeepass/pull/388
+        self.setUp()
+
+        with open(base_dir / self.keyfile_tmp, 'rb') as f:
+            keyfile = BytesIO(f.read())
+
+        for _i in range(5):
+            with PyKeePass(
+                base_dir / self.database_tmp,
+                password=self.password,
+                keyfile=keyfile,
+            ) as kp:
+                kp.save()
 
     def test_set_credentials(self):
         self.kp_tmp.password = 'f00bar'
