@@ -1047,6 +1047,38 @@ class BugRegressionTests3(KDBX3Tests):
         e._element.xpath('Times/ExpiryTime')[0].text = None
         self.assertEqual(e.expiry_time, None)
 
+    def test_issue376(self):
+        # Setting the properties of an entry should not change the Protected
+        # property
+        subgroup = self.kp.root_group
+        e = self.kp.add_entry(subgroup, 'banana_entry', 'user', 'pass')
+
+        self.assertEqual(e._is_property_protected('Password'), True)
+        self.assertEqual(e._is_property_protected('Title'), False)
+        self.assertEqual(e.otp, None)
+        self.assertEqual(e._is_property_protected('otp'), False)
+
+        e.title = 'pineapple'
+        e.password = 'pizza'
+        e.otp = 'aa'
+
+        self.assertEqual(e._is_property_protected('Password'), True)
+        self.assertEqual(e._is_property_protected('Title'), False)
+        self.assertEqual(e._is_property_protected('otp'), True)
+
+        # Using protected=None should not change the current status
+        e._set_string_field('XYZ', '1', protected=None)
+        self.assertEqual(e._is_property_protected('XYZ'), False)
+
+        e._set_string_field('XYZ', '1', protected=True)
+        self.assertEqual(e._is_property_protected('XYZ'), True)
+
+        e._set_string_field('XYZ', '1', protected=None)
+        self.assertEqual(e._is_property_protected('XYZ'), True)
+
+        e._set_string_field('XYZ', '1', protected=False)
+        self.assertEqual(e._is_property_protected('XYZ'), False)
+
 class EntryFindTests4(KDBX4Tests, EntryFindTests3):
     pass
 
