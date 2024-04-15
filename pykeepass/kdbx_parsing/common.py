@@ -1,20 +1,32 @@
-from Cryptodome.Cipher import AES, ChaCha20, Salsa20
-from .twofish import Twofish
-from Cryptodome.Util import Padding as CryptoPadding
-import hashlib
-from construct import (
-    Adapter, BitStruct, BitsSwapped, Container, Flag, Padding, ListContainer, Mapping, GreedyBytes, Int32ul, Switch
-)
-from lxml import etree
-from copy import deepcopy
 import base64
-from binascii import Error as BinasciiError
-import zlib
-import re
 import codecs
-from io import BytesIO
-from collections import OrderedDict
+import hashlib
+import io
 import logging
+import re
+import zlib
+from binascii import Error as BinasciiError
+from collections import OrderedDict
+from copy import deepcopy
+
+from construct import (
+    Adapter,
+    BitsSwapped,
+    BitStruct,
+    Container,
+    Flag,
+    GreedyBytes,
+    Int32ul,
+    ListContainer,
+    Mapping,
+    Padding,
+    Switch,
+)
+from Cryptodome.Cipher import AES, ChaCha20, Salsa20
+from Cryptodome.Util import Padding as CryptoPadding
+from lxml import etree
+
+from .twofish import Twofish
 
 log = logging.getLogger(__name__)
 
@@ -107,6 +119,8 @@ def aes_kdf(key, rounds, key_composite):
 def compute_keyfile_part_of_composite(keyfile):
     """Compute just a keyfile's contribution to a database composite key."""
     if hasattr(keyfile, "read"):
+        if hasattr(keyfile, "seekable") and keyfile.seekable():
+            keyfile.seek(0)
         keyfile_bytes = keyfile.read()
     else:
         with open(keyfile, 'rb') as f:
@@ -202,7 +216,11 @@ def populate_custom_data(kdbx, d):
         if "public_custom_data" in kdbx.header.value.dynamic_header:
             del kdbx.header.value.dynamic_header["public_custom_data"]
 
-    kdbx.header.value.dynamic_header.move_to_end("end")
+    # Beyond Python 3.7, construct makes the base class of a Container be `dict` instead of `OrderedDict`
+    # So emulate move_to_end by removing and re-inserting the element
+    end_el = kdbx.header.value.dynamic_header["end"]
+    del kdbx.header.value.dynamic_header["end"]
+    kdbx.header.value.dynamic_header["end"] = end_el
 
 
 # -------------------- XML Processing --------------------
@@ -213,7 +231,7 @@ class XML(Adapter):
 
     def _decode(self, data, con, path):
         parser = etree.XMLParser(remove_blank_text=True)
-        return etree.parse(BytesIO(data), parser)
+        return etree.parse(io.BytesIO(data), parser)
 
     def _encode(self, tree, con, path):
         return etree.tostring(tree)
@@ -238,7 +256,7 @@ class UnprotectedStream(Adapter):
                     result = cipher.decrypt(base64.b64decode(elem.text)).decode('utf-8')
                     # strip invalid XML characters - https://stackoverflow.com/questions/8733233
                     result = re.sub(
-                        u'[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+',
+                        '[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+',
                         '',
                         result
                     )

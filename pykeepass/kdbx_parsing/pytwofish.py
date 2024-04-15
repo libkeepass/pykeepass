@@ -138,6 +138,7 @@ class Twofish:
 
 import struct
 
+
 def rotr32(x, n):
     return (x >> n) | ((x << (32 - n)) & 0xFFFFFFFF)
 

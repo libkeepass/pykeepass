@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import logging
 import os
 import random
@@ -7,17 +5,15 @@ import shutil
 import unittest
 import uuid
 from datetime import datetime, timedelta, timezone
-
-from pathlib import Path
-
 from io import BytesIO
+from pathlib import Path
 
 from pykeepass import PyKeePass, icons, create_database
 from pykeepass.entry import Entry
 from pykeepass.exceptions import BinaryError, CredentialsError, HeaderChecksumError
+from pykeepass.group import Group
 from pykeepass.kdbx_parsing.factorinfo import FactorInfo, FactorGroup, \
     PasswordFactor, NopFactor, FACTOR_TYPE_EMPTY, FACTOR_ALG_AES_CBC, FACTOR_VALIDATE_HMAC_SHA512, FIDO2Factor
-from pykeepass.group import Group
 from pykeepass.pykeepass import BLANK_DATABASE_PASSWORD
 
 
@@ -256,7 +252,7 @@ class EntryFindTests3(KDBX3Tests):
         self.assertEqual(results.url, unique_str + 'url')
         self.assertEqual(results.notes, unique_str + 'notes')
         self.assertEqual(len(results.tags), 6)
-        self.assertTrue(results.uuid != None)
+        self.assertTrue(results.uuid is not None)
         self.assertTrue(results.autotype_sequence is None)
         self.assertEqual(results.icon, icons.KEY)
 
@@ -411,7 +407,7 @@ class GroupFindTests3(KDBX3Tests):
         results = self.kp.find_groups(path=['base_group', 'sub_group'], first=True)
         self.assertIsInstance(results, Group)
         self.assertEqual(results.name, sub_group.name)
-        self.assertTrue(results.uuid != None)
+        self.assertTrue(results.uuid is not None)
 
         self.kp.move_group(sub_group2, sub_group)
         results = self.kp.find_groups(path=['base_group', 'sub_group', 'sub_group2'], first=True)
@@ -540,6 +536,20 @@ class EntryTests3(KDBX3Tests):
         self.assertEqual(hash(original_entry), hash(original_entry_duplicate))
         self.assertNotEqual(original_entry, clone1)
         self.assertNotEqual(clone1, clone2)
+
+    def test_broken_reference(self):
+        # TODO: move the entry into test databases
+        broken_entry_title = 'broken reference'
+        self.kp.add_entry(
+            self.kp.root_group,
+            title=broken_entry_title,
+            username='{REF:U@I:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA}',
+            password='{REF:P@I:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA}',
+        )
+        broken_entry = self.kp.find_entries(title=broken_entry_title, first=True)
+        self.assertEqual(broken_entry.deref('username'), None)
+        self.assertEqual(broken_entry.deref('password'), None)
+        self.kp.delete_entry(broken_entry)
 
     def test_set_and_get_fields(self):
         time = datetime.now(timezone.utc).replace(microsecond=0)
@@ -888,6 +898,20 @@ class AttachmentTests3(KDBX3Tests):
 
 
 class PyKeePassTests3(KDBX3Tests):
+    def test_consecutives_saves_with_stream(self):
+        # https://github.com/libkeepass/pykeepass/pull/388
+        self.setUp()
+
+        with open(base_dir / self.keyfile_tmp, 'rb') as f:
+            keyfile = BytesIO(f.read())
+
+        for _i in range(5):
+            with PyKeePass(
+                base_dir / self.database_tmp,
+                password=self.password,
+                keyfile=keyfile,
+            ) as kp:
+                kp.save()
 
     def test_set_credentials(self):
         self.kp_tmp.password = 'f00bar'
@@ -1031,6 +1055,38 @@ class BugRegressionTests3(KDBX3Tests):
         e = self.kp_tmp.find_entries(title='none_date', first=True)
         e._element.xpath('Times/ExpiryTime')[0].text = None
         self.assertEqual(e.expiry_time, None)
+
+    def test_issue376(self):
+        # Setting the properties of an entry should not change the Protected
+        # property
+        subgroup = self.kp.root_group
+        e = self.kp.add_entry(subgroup, 'banana_entry', 'user', 'pass')
+
+        self.assertEqual(e._is_property_protected('Password'), True)
+        self.assertEqual(e._is_property_protected('Title'), False)
+        self.assertEqual(e.otp, None)
+        self.assertEqual(e._is_property_protected('otp'), False)
+
+        e.title = 'pineapple'
+        e.password = 'pizza'
+        e.otp = 'aa'
+
+        self.assertEqual(e._is_property_protected('Password'), True)
+        self.assertEqual(e._is_property_protected('Title'), False)
+        self.assertEqual(e._is_property_protected('otp'), True)
+
+        # Using protected=None should not change the current status
+        e._set_string_field('XYZ', '1', protected=None)
+        self.assertEqual(e._is_property_protected('XYZ'), False)
+
+        e._set_string_field('XYZ', '1', protected=True)
+        self.assertEqual(e._is_property_protected('XYZ'), True)
+
+        e._set_string_field('XYZ', '1', protected=None)
+        self.assertEqual(e._is_property_protected('XYZ'), True)
+
+        e._set_string_field('XYZ', '1', protected=False)
+        self.assertEqual(e._is_property_protected('XYZ'), False)
 
 
 class AuthenticatorTests(KDBX4Tests):

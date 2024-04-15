@@ -2,8 +2,8 @@ from lxml.builder import E
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
 
-from .entry import Entry
 from .baseelement import BaseElement
+from .entry import Entry
 
 
 class Group(BaseElement):
@@ -93,7 +93,7 @@ class Group(BaseElement):
         Args:
             entries (:obj:`Entry` or :obj:`list` of :obj:`Entry`)
         """
-        if type(entries) is list:
+        if isinstance(entries, list):
             for e in entries:
                 self._element.append(e._element)
         else:
@@ -101,5 +101,5 @@ class Group(BaseElement):
 
     def __str__(self):
         # filter out NoneTypes and join into string
-        pathstr = '/'.join('' if p==None else p for p in self.path)
+        pathstr = '/'.join('' if p is None else p for p in self.path)
         return 'Group: "{}"'.format(pathstr)

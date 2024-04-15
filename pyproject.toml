@@ -20,7 +20,6 @@ classifiers = [
     "Topic :: Security",
     "Topic :: Software Development :: Libraries",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -38,7 +37,7 @@ Issues = "https://github.com/libkeepass/pykeepass/issues"
 Changelog = "https://github.com/libkeepass/pykeepass/blob/master/CHANGELOG.rst"
 
 [tool.setuptools]
-packages = ["pykeepass"]
+packages = ["pykeepass", "pykeepass.kdbx_parsing"]
 include-package-data = true
 
 [build-system]

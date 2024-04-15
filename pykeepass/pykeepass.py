@@ -1,4 +1,3 @@
-# coding: utf-8
 import base64
 import logging
 import os
@@ -7,21 +6,27 @@ import shutil
 import struct
 import uuid
 import zlib
-
 from binascii import Error as BinasciiError
 from io import BytesIO
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from construct import Container, ChecksumError, CheckError
-from datetime import datetime, timedelta, timezone
+
 from lxml import etree
 from lxml.builder import E
-from pathlib import Path
 
 from .attachment import Attachment
 from .kdbx_parsing.common import populate_custom_data
 from .kdbx_parsing.factorinfo import FactorInfo
 from .entry import Entry
-from .exceptions import *
+from .exceptions import (
+    BinaryError,
+    CredentialsError,
+    HeaderChecksumError,
+    PayloadChecksumError,
+    UnableToSendToRecycleBin,
+)
 from .group import Group
 from .kdbx_parsing import KDBX, kdf_uuids
 from .xpath import attachment_xp, entry_xp, group_xp, path_xp
@@ -32,9 +37,9 @@ logger = logging.getLogger(__name__)
 BLANK_DATABASE_FILENAME = "blank_database.kdbx"
 BLANK_DATABASE_LOCATION = os.path.join(os.path.dirname(os.path.realpath(__file__)), BLANK_DATABASE_FILENAME)
 BLANK_DATABASE_PASSWORD = "password"
-DT_ISOFORMAT = "%Y-%m-%dT%H:%M:%S%fZ"
 
-class PyKeePass():
+
+class PyKeePass:
     """Open a KeePass database
 
     Args:
@@ -465,24 +470,24 @@ class PyKeePass():
             xp += prefix
 
             # handle searching custom string fields
-            if 'string' in kwargs.keys():
+            if 'string' in kwargs:
                 for key, value in kwargs['string'].items():
                     xp += keys_xp[regex]['string'].format(key, value, flags=flags)
 
                 kwargs.pop('string')
 
             # convert uuid to base64 form before building xpath
-            if 'uuid' in kwargs.keys():
+            if 'uuid' in kwargs:
                 kwargs['uuid'] = base64.b64encode(kwargs['uuid'].bytes).decode('utf-8')
 
             # convert tags to semicolon separated string before building xpath
             # FIXME: this isn't a reliable way to search tags.  e.g. searching ['tag1', 'tag2'] will match 'tag1tag2
-            if 'tags' in kwargs.keys():
+            if 'tags' in kwargs:
                 kwargs['tags'] = ' and '.join(f'contains(text(),"{t}")' for t in kwargs['tags'])
 
             # build xpath to filter results with specified attributes
             for key, value in kwargs.items():
-                if key not in keys_xp[regex].keys():
+                if key not in keys_xp[regex]:
                     raise TypeError('Invalid keyword argument "{}"'.format(key))
                 if value is not None:
                     xp += keys_xp[regex][key].format(value, flags=flags)
@@ -511,8 +516,10 @@ class PyKeePass():
     # ---------- Groups ----------
 
     from .deprecated import (
-        find_groups_by_name, find_groups_by_path, find_groups_by_uuid,
-        find_groups_by_notes
+        find_groups_by_name,
+        find_groups_by_notes,
+        find_groups_by_path,
+        find_groups_by_uuid,
     )
 
     def find_groups(self, recursive=True, path=None, group=None, **kwargs):
@@ -596,9 +603,14 @@ class PyKeePass():
 
 
     from .deprecated import (
-        find_entries_by_title, find_entries_by_username, find_entries_by_password,
-        find_entries_by_url, find_entries_by_path, find_entries_by_notes,
-        find_entries_by_string, find_entries_by_uuid
+        find_entries_by_notes,
+        find_entries_by_password,
+        find_entries_by_path,
+        find_entries_by_string,
+        find_entries_by_title,
+        find_entries_by_url,
+        find_entries_by_username,
+        find_entries_by_uuid,
     )
 
     def find_entries(self, recursive=True, path=None, group=None, **kwargs):
@@ -701,10 +713,7 @@ class PyKeePass():
     def add_binary(self, data, compressed=True, protected=True):
         if self.version >= (4, 0):
             # add protected flag byte
-            if protected:
-                data = b'\x01' + data
-            else:
-                data = b'\x00' + data
+            data = b'\x01' + data if protected else b'\x00' + data
             # add binary element to inner header
             c = Container(type='binary', data=data)
             self.payload.inner_header.binary.append(c)
@@ -769,7 +778,7 @@ class PyKeePass():
             ref (str): KeePass reference string to another field
 
         Returns:
-            str or uuid.UUID
+            str, uuid.UUID or None if no match found
 
         [fieldref]: https://keepass.info/help/base/fieldrefs.html
         """
@@ -792,6 +801,8 @@ class PyKeePass():
             if search_in == 'uuid':
                 search_value = uuid.UUID(search_value)
             ref_entry = self.find_entries(first=True, **{search_in: search_value})
+            if ref_entry is None:
+                return None
             value = value.replace(ref, getattr(ref_entry, wanted_field))
         return self.deref(value)
 
@@ -895,7 +906,7 @@ class PyKeePass():
                 struct.pack('<Q', diff_seconds)
             ).decode('utf-8')
         else:
-            return value.strftime(DT_ISOFORMAT)
+            return value.isoformat()
 
     def _decode_time(self, text):
         """datetime.datetime: Convert base64 time or plaintext time to datetime"""
@@ -910,9 +921,9 @@ class PyKeePass():
                     )
                 )
             except BinasciiError:
-                return datetime.strptime(text, DT_ISOFORMAT).replace(tzinfo=timezone.utc)
+                return datetime.fromisoformat(text.replace('Z','+00:00')).replace(tzinfo=timezone.utc)
         else:
-            return datetime.strptime(text, DT_ISOFORMAT).replace(tzinfo=timezone.utc)
+            return datetime.fromisoformat(text.replace('Z','+00:00')).replace(tzinfo=timezone.utc)
 
 
 def create_database(
