@@ -1110,8 +1110,39 @@ class CtxManagerTests(unittest.TestCase):
             results = kp.find_entries_by_username('foobar_user', first=True)
             self.assertEqual('foobar_user', results.username)
 
+class PyKeePassTests3(KDBX3Tests):
+    """Tests on PyKeePass class that don't involve attachments or finding entries/groups"""
+
+    def test_database_info(self):
+        """Test database properties"""
+
+        # Test name
+        self.assertEqual(self.kp_tmp.database_name, None)
+        self.kp_tmp.database_name = "Test Name"
+        self.assertEqual(self.kp_tmp.database_name, "Test Name")
+
+        # Test Description
+        self.assertEqual(self.kp_tmp.database_description, None)
+        self.kp_tmp.database_description = "Test Description"
+        self.assertEqual(self.kp_tmp.database_description, "Test Description")
+
+        # Test Default User Name
+        self.assertEqual(self.kp_tmp.default_username, None)
+        self.kp_tmp.default_username = "Test User"
+        self.assertEqual(self.kp_tmp.default_username, "Test User")
+
+        self.kp_tmp.save()
+        self.kp_tmp.reload()
+
+        self.assertEqual(self.kp_tmp.database_name, "Test Name")
+        self.assertEqual(self.kp_tmp.database_description, "Test Description")
+        self.assertEqual(self.kp_tmp.default_username, "Test User")
+
+class PyKeePassTests4(KDBX4Tests, PyKeePassTests3):
+    pass
 
 class KDBXTests(unittest.TestCase):
+    """Tests on KDBX parsing"""
 
     def test_open_save(self):
         """try to open all databases, save them, then open the result"""
@@ -1363,63 +1394,6 @@ class KDBXTests(unittest.TestCase):
 
             self.assertEqual(kp.encryption_algorithm, enc_alg)
             self.assertEqual(kp.version, version)
-
-    def test_database_info(self):
-        """Test database properties"""
-
-
-        databases = [
-            'test3.kdbx',
-            'test4.kdbx',
-        ]
-        passwords = [
-            'password',
-            'password',
-        ]
-        keyfiles = [
-            base_dir / 'test3.key',
-            base_dir / 'test4.key',
-        ]
-        filenames_out = [
-            base_dir / 'test3.kdbx.out',
-            base_dir / 'test4_aes.kdbx.out',
-        ]
-
-        for database, password, keyfile, filename_out in zip(databases, passwords, keyfiles, filenames_out):
-            kp = PyKeePass(
-                os.path.join(base_dir, database),
-                password,
-                keyfile
-            )
-
-            # Test name
-            self.assertEqual(kp.database_name, None)
-            kp.database_name = "Test Name"
-            self.assertEqual(kp.database_name, "Test Name")
-
-            # Test Description
-            self.assertEqual(kp.database_description, None)
-            kp.database_description = "Test Description"
-            self.assertEqual(kp.database_description, "Test Description")
-
-            # Test Default User Name
-            self.assertEqual(kp.default_username, None)
-            kp.default_username = "Test User"
-            self.assertEqual(kp.default_username, "Test User")
-
-            kp.save(filename_out)
-            kp = PyKeePass(
-                filename_out,
-                password,
-                keyfile
-            )
-
-            self.assertEqual(kp.database_name, "Test Name")
-            self.assertEqual(kp.database_description, "Test Description")
-            self.assertEqual(kp.default_username, "Test User")
-
-    for filename in base_dir.glob('*.out'):
-        os.remove(filename)
 
 if __name__ == '__main__':
     unittest.main()
