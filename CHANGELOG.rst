@@ -1,3 +1,7 @@
+ - 2024-05-17
+------------------
+- merged PR#389 - add PyKeePass.database_name and database_description
+
 4.0.7 - 2024-02-29
 ------------------
 - fixed #359 - PyKeePass has `decrypt` kwarg for accessing header info
