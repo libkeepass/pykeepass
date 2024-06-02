@@ -592,6 +592,8 @@ class EntryTests3(KDBX3Tests):
         self.assertEqual(entry.tags, ['changed', 'tags'])
         entry.tags = ['changed', 'again', 'tags']
         self.assertEqual(entry.tags, ['changed', 'again', 'tags'])
+        entry.tags = []
+        self.assertEqual(entry.tags, [])
 
     def test_expired_datetime_offset(self):
         """Test for https://github.com/pschmitt/pykeepass/issues/115"""

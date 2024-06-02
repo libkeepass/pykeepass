@@ -234,7 +234,7 @@ class Entry(BaseElement):
     def tags(self):
         """str: get or set entry tags"""
         val = self._get_subelement_text('Tags')
-        return val.replace(',', ';').split(';') if val else val
+        return val.replace(',', ';').split(';') if val else []
 
     @tags.setter
     def tags(self, value, sep=';'):
