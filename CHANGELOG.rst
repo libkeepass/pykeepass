@@ -1,6 +1,8 @@
- - 2024-05-17
+4.1.0 -
 ------------------
 - merged PR#389 - add PyKeePass.database_name and database_description
+- merged PR#392, fixed #390 - fix pkg_resources dependency issue
+- fixed #391 - Entry.tags returns empty list instead of None
 
 4.0.7 - 2024-02-29
 ------------------
