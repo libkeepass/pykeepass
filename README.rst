@@ -19,7 +19,15 @@ This library allows you to write entries to a KeePass database.
 Come chat at `#pykeepass`_ on Freenode or `#pykeepass:matrix.org`_ on Matrix.
 
 .. _#pykeepass: irc://irc.freenode.net
-.. _#pykeepass\:matrix.org: https://matrix.to/#/%23pykeepass:matrix.org 
+.. _#pykeepass\:matrix.org: https://matrix.to/#/%23pykeepass:matrix.org
+
+Installation
+------------
+
+.. code::
+
+   sudo apt install python3-lxml
+   pip install pykeepass
 
 Example
 -------
@@ -66,7 +74,7 @@ Finding Entries
 
 **find_entries** (title=None, username=None, password=None, url=None, notes=None, otp=None, path=None, uuid=None, tags=None, string=None, group=None, recursive=True, regex=False, flags=None, history=False, first=False)
 
-Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``otp``, and ``autotype_sequence`` are strings, ``path`` is a list, ``string`` is a dict, ``autotype_enabled`` is a boolean, ``uuid`` is a ``uuid.UUID`` and ``tags`` is a list of strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
+Returns entries which match all provided parameters, where ``title``, ``username``, ``password``, ``url``, ``notes``, ``otp``, ``autotype_window`` and ``autotype_sequence`` are strings, ``path`` is a list, ``string`` is a dict, ``autotype_enabled`` is a boolean, ``uuid`` is a ``uuid.UUID`` and ``tags`` is a list of strings.  This function has optional ``regex`` boolean and ``flags`` string arguments, which means to interpret search strings as `XSLT style`_ regular expressions with `flags`_.
 
 .. _XSLT style: https://www.xml.com/pub/a/2003/06/04/tr.html
 .. _flags: https://www.w3.org/TR/xpath-functions/#flags 
@@ -163,8 +171,8 @@ a flattened list of all groups in the database
    Group: "/"
 
 
-Entry Functions
----------------
+Entry Functions and Properties
+------------------------------
 **add_entry** (destination_group, title, username, password, url=None, notes=None, tags=None, expiry_time=None, icon=None, force_creation=False)
 
 **delete_entry** (entry)
@@ -174,6 +182,18 @@ Entry Functions
 move a group to the recycle bin.  The recycle bin is created if it does not exit.  ``entry`` must be an empty Entry.
 
 **move_entry** (entry, destination_group)
+
+**atime**
+
+access time
+
+**ctime**
+
+creation time
+
+**mtime**
+
+modification time
 
 where ``destination_group`` is a ``Group`` instance.  ``entry`` is an ``Entry`` instance. ``title``, ``username``, ``password``, ``url``, ``notes``, ``tags``, ``icon`` are strings. ``expiry_time`` is a ``datetime`` instance.
 
@@ -202,8 +222,15 @@ If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is no
    # save the database
    >>> kp.save()
 
-Group Functions
----------------
+   # change creation time
+   >>> from datetime import datetime, timezone
+   >>> entry.ctime = datetime(2023, 1, 1, tzinfo=timezone.utc)
+
+   # update modification or access time
+   >>> entry.touch(modify=True)
+
+Group Functions and Properties
+------------------------------
 **add_group** (destination_group, group_name, icon=None, notes=None)
 
 **delete_group** (group)
@@ -217,6 +244,18 @@ move a group to the recycle bin.  The recycle bin is created if it does not exit
 delete all entries and subgroups of a group.  ``group`` is an instance of ``Group``.
 
 **move_group** (group, destination_group)
+
+**atime**
+
+access time
+
+**ctime**
+
+creation time
+
+**mtime**
+
+modification time
 
 ``destination_group`` and ``group`` are instances of ``Group``.  ``group_name`` is a string
 
@@ -240,6 +279,13 @@ delete all entries and subgroups of a group.  ``group`` is an instance of ``Grou
 
    # save the database
    >>> kp.save()
+
+   # change creation time
+   >>> from datetime import datetime, timezone
+   >>> group.ctime = datetime(2023, 1, 1, tzinfo=timezone.utc)
+
+   # update modification or access time
+   >>> group.touch(modify=True)
 
 Attachments
 -----------
@@ -364,9 +410,9 @@ days after **credchange_date** that credential update is recommended
 
 Miscellaneous
 -------------
-**read** (filename=None, password=None, keyfile=None, transformed_key=None)
+**read** (filename=None, password=None, keyfile=None, transformed_key=None, decrypt=False)
 
-where ``filename``, ``password``, and ``keyfile`` are strings.  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.  Alternatively, the derived key can be supplied directly through ``transformed_key``.
+where ``filename``, ``password``, and ``keyfile`` are strings (  ``filename`` and ``keyfile`` may also be file-like objects).  ``filename`` is the path to the database, ``password`` is the master password string, and ``keyfile`` is the path to the database keyfile.  At least one of ``password`` and ``keyfile`` is required.  Alternatively, the derived key can be supplied directly through ``transformed_key``.  ``decrypt`` tells whether the file should be decrypted or not.
 
 Can raise ``CredentialsError``, ``HeaderChecksumError``, or ``PayloadChecksumError``.
 
@@ -376,7 +422,7 @@ reload database from disk using previous credentials
 
 **save** (filename=None)
 
-where ``filename`` is the path of the file to save to.  If ``filename`` is not given, the path given in ``read`` will be used.
+where ``filename`` is the path of the file to save to (``filename`` may also be file-like object).  If ``filename`` is not given, the path given in ``read`` will be used.
 
 **password**
 
@@ -413,6 +459,21 @@ get database XML data as string
 **dump_xml** (filename)
 
 pretty print database XML to file
+
+TOTP
+-------
+
+**Entry.otp**
+
+TOTP URI which can be passed to an OTP library to generate codes
+
+.. code:: python
+
+   # find an entry which has otp attribute
+   >>> e = kp.find_entries(otp='.*', regex=True, first=True)
+   >>> import pyotp
+   >>> pyotp.parse_uri(e.otp).now()
+   799270
 
 
 Tests and Debugging

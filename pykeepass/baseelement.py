@@ -1,12 +1,13 @@
 import base64
-import struct
 import uuid
+from datetime import datetime, timezone
+
+
 from lxml import etree
 from lxml.builder import E
-from datetime import datetime
 
 
-class BaseElement():
+class BaseElement:
     """Entry and Group inherit from this class"""
 
     def __init__(self, element, kp=None, icon=None, expires=False,
@@ -18,9 +19,9 @@ class BaseElement():
         )
         if icon:
             self._element.append(E.IconID(icon))
-        current_time_str = self._kp._encode_time(datetime.now())
+        current_time_str = self._kp._encode_time(datetime.now(timezone.utc))
         if expiry_time:
-            expiry_time_str = self._kp._encode_time(expiry_time)
+            expiry_time_str = self._kp._encode_time(expiry_time.astimezone(timezone.utc))
         else:
             expiry_time_str = current_time_str
 
@@ -117,8 +118,8 @@ class BaseElement():
     def expired(self):
         if self.expires:
             return (
-                self._kp._datetime_to_utc(datetime.utcnow()) >
-                self._kp._datetime_to_utc(self.expiry_time)
+                datetime.now(timezone.utc) >
+                self.expiry_time
             )
 
         return False
@@ -133,6 +134,7 @@ class BaseElement():
 
     @property
     def ctime(self):
+        """(datetime.datetime): Creation time."""
         return self._get_times_property('CreationTime')
 
     @ctime.setter
@@ -141,6 +143,7 @@ class BaseElement():
 
     @property
     def atime(self):
+        """(datetime.datetime): Access time. Update with touch()"""
         return self._get_times_property('LastAccessTime')
 
     @atime.setter
@@ -149,6 +152,7 @@ class BaseElement():
 
     @property
     def mtime(self):
+        """(datetime.datetime): Access time. Update with touch(modify=True)"""
         return self._get_times_property('LastModificationTime')
 
     @mtime.setter
@@ -179,7 +183,7 @@ class BaseElement():
         Args:
             modify (bool): update access time as well a modification time
         """
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         self.atime = now
         if modify:
             self.mtime = now

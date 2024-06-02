@@ -4,6 +4,9 @@ dist/
 *.egg-info/
 build/
 *.xml
+Pipfile
 Pipfile.lock
 *.kdbx
 *.kdbx.out
+.idea
+.venv*

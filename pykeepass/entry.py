@@ -1,14 +1,12 @@
 import logging
 from copy import deepcopy
-from datetime import datetime
 
 from lxml.builder import E
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
 
-import pykeepass.attachment
-import pykeepass.group
-from pykeepass.baseelement import BaseElement
+from . import attachment
+from .baseelement import BaseElement
 
 logger = logging.getLogger(__name__)
 reserved_keys = [
@@ -28,7 +26,7 @@ class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
                  notes=None, otp=None, tags=None, expires=False, expiry_time=None,
-                 icon=None, autotype_sequence=None, autotype_enabled=True,
+                 icon=None, autotype_sequence=None, autotype_enabled=True, autotype_window=None,
                  element=None, kp=None):
 
         self._kp = kp
@@ -56,13 +54,17 @@ class Entry(BaseElement):
                 )
             if tags:
                 self._element.append(
-                    E.Tags(';'.join(tags) if type(tags) is list else tags)
+                    E.Tags(';'.join(tags) if isinstance(tags, list) else tags)
                 )
             self._element.append(
                 E.AutoType(
                     E.Enabled(str(autotype_enabled)),
                     E.DataTransferObfuscation('0'),
-                    E.DefaultSequence(str(autotype_sequence) if autotype_sequence else '')
+                    E.DefaultSequence(str(autotype_sequence) if autotype_sequence else ''),
+                    E.Association(
+                        E.Window(str(autotype_window) if autotype_window else ''),
+                        E.KeystrokeSequence('')
+                    )
                 )
             )
             # FIXME: include custom_properties in constructor
@@ -86,24 +88,39 @@ class Entry(BaseElement):
             (str or None): field value
         """
 
-        field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), first=True)
+        field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), history=True, first=True)
         if field is not None:
             return field.text
 
-    def _set_string_field(self, key, value, protected=True):
+    def _set_string_field(self, key, value, protected=None):
         """Create or overwrite a string field in an Entry
 
         Args:
             key (str): name of field
             value (str): value of field
-            protected (bool): mark whether the field should be protected in memory
-                in other tools.  This property is ignored in PyKeePass and all
-                fields are decrypted immediately upon opening the database.
+            protected (bool or None): mark whether the field should be protected in memory
+                in other tools.  If None, value is either copied from existing field or field
+                is created with protected property unset.
+
+        Note: pykeepass does not support memory protection
         """
-        field = self._xpath('String/Key[text()="{}"]/..'.format(key), first=True)
+        field = self._xpath('String/Key[text()="{}"]/..'.format(key), history=True, first=True)
+
+        protected_str = None
+        if protected is None:
+            protected_field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), first=True)
+            if protected_field is not None:
+                protected_str = protected_field.attrib.get("Protected")
+        else:
+            protected_str = str(protected)
+
         if field is not None:
             self._element.remove(field)
-        self._element.append(E.String(E.Key(key), E.Value(value, Protected=str(protected))))
+
+        if protected_str is None:
+            self._element.append(E.String(E.Key(key), E.Value(value)))
+        else:
+            self._element.append(E.String(E.Key(key), E.Value(value, Protected=protected_str)))
 
     def _get_string_field_keys(self, exclude_reserved=False):
         results = [x.find('Key').text for x in self._element.findall('String')]
@@ -111,6 +128,26 @@ class Entry(BaseElement):
             return [x for x in results if x not in reserved_keys]
         else:
             return results
+
+    @property
+    def index(self):
+        """int: get index of a entry within a group"""
+        group = self.group._element
+        children = group.getchildren()
+        first_index = self.group._first_entry
+        index = children.index(self._element)
+        return index - first_index
+
+    def reindex(self, new_index):
+        """Move entry to a new index within a group
+        
+        Args:
+            new_index (int): new index for the entry starting at 0
+        """
+        group = self.group._element
+        first_index = self.group._first_entry
+        group.remove(self._element)
+        group.insert(new_index+first_index, self._element)
 
     @property
     def attachments(self):
@@ -128,7 +165,7 @@ class Entry(BaseElement):
         )
         self._element.append(element)
 
-        return pykeepass.attachment.Attachment(element=element, kp=self._kp)
+        return attachment.Attachment(element=element, kp=self._kp)
 
     def delete_attachment(self, attachment):
         attachment.delete()
@@ -161,7 +198,10 @@ class Entry(BaseElement):
 
     @password.setter
     def password(self, value):
-        return self._set_string_field('Password', value)
+        if self.password:
+            return self._set_string_field('Password', value)
+        else:
+            return self._set_string_field('Password', value, True)
 
     @property
     def url(self):
@@ -194,12 +234,12 @@ class Entry(BaseElement):
     def tags(self):
         """str: get or set entry tags"""
         val = self._get_subelement_text('Tags')
-        return val.replace(',', ';').split(';') if val else val
+        return val.replace(',', ';').split(';') if val else []
 
     @tags.setter
     def tags(self, value, sep=';'):
         # Accept both str or list
-        v = sep.join(value if type(value) is list else [value])
+        v = sep.join(value if isinstance(value, list) else [value])
         return self._set_subelement_text('Tags', v)
 
     @property
@@ -209,7 +249,10 @@ class Entry(BaseElement):
 
     @otp.setter
     def otp(self, value):
-        return self._set_string_field('otp', value)
+        if self.otp:
+            return self._set_string_field('otp', value)
+        else:
+            return self._set_string_field('otp', value, True)
 
     @property
     def history(self):
@@ -249,6 +292,18 @@ class Entry(BaseElement):
     @autotype_sequence.setter
     def autotype_sequence(self, value):
         self._element.find('AutoType/DefaultSequence').text = value
+
+    @property
+    def autotype_window(self):
+        """str: get or set [autotype target window filter](https://keepass.info/help/base/autotype.html#autowindows)"""
+        sequence = self._element.find('AutoType/Association/Window')
+        if sequence is None or sequence.text == '':
+            return None
+        return sequence.text
+
+    @autotype_window.setter
+    def autotype_window(self, value):
+        self._element.find('AutoType/Association/Window').text = value
 
     @property
     def is_a_history_entry(self):
@@ -304,6 +359,10 @@ class Entry(BaseElement):
 
         """
         assert key not in reserved_keys, '{} is a reserved key'.format(key)
+        return self._is_property_protected(key)
+
+    def _is_property_protected(self, key):
+        """Whether a property is protected."""
         field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), first=True)
         if field is not None:
             return field.attrib.get("Protected", "False") == "True"
@@ -369,7 +428,7 @@ class Entry(BaseElement):
 
     def __str__(self):
         # filter out NoneTypes and join into string
-        pathstr = '/'.join('' if p==None else p for p in self.path)
+        pathstr = '/'.join('' if p is None else p for p in self.path)
         return 'Entry: "{} ({})"'.format(pathstr, self.username)
 
 

@@ -2,8 +2,8 @@ from lxml.builder import E
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
 
-import pykeepass.entry
-from pykeepass.baseelement import BaseElement
+from .baseelement import BaseElement
+from .entry import Entry
 
 
 class Group(BaseElement):
@@ -35,6 +35,12 @@ class Group(BaseElement):
             self._element = element
 
     @property
+    def _first_entry(self):
+        children = self._element.getchildren()
+        first_element = next(e for e in children if e.tag == "Entry")
+        return children.index(first_element)
+
+    @property
     def name(self):
         """str: get or set group name"""
         return self._get_subelement_text('Name')
@@ -55,7 +61,7 @@ class Group(BaseElement):
     @property
     def entries(self):
         """:obj:`list` of :obj:`Entry`: get list of entries in this group"""
-        return [pykeepass.entry.Entry(element=x, kp=self._kp) for x in self._element.findall('Entry')]
+        return [Entry(element=x, kp=self._kp) for x in self._element.findall('Entry')]
 
     @property
     def subgroups(self):
@@ -87,7 +93,7 @@ class Group(BaseElement):
         Args:
             entries (:obj:`Entry` or :obj:`list` of :obj:`Entry`)
         """
-        if type(entries) is list:
+        if isinstance(entries, list):
             for e in entries:
                 self._element.append(e._element)
         else:
@@ -95,5 +101,5 @@ class Group(BaseElement):
 
     def __str__(self):
         # filter out NoneTypes and join into string
-        pathstr = '/'.join('' if p==None else p for p in self.path)
+        pathstr = '/'.join('' if p is None else p for p in self.path)
         return 'Group: "{}"'.format(pathstr)
