@@ -4,11 +4,24 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   tests:
-    runs-on: ubuntu-20.04
+    name: ${{ matrix.os }}-latest / ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}-latest
     strategy:
-      matrix:
-        python-version: [3.7, 3.8, 3.9, "3.10", "3.11"]
       fail-fast: false
+      matrix:
+        os:
+          - ubuntu
+          # - windows
+          # - macos
+        python-version:
+          # - "3.6" # not supported in ubuntu-latest (22.04)
+          - "3.7"
+          - "3.8"
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
+      
     steps:
       - uses: actions/checkout@v4
 
@@ -16,6 +29,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
+          allow-prereleases: true
 
       - name: Install dependencies
         run: |
