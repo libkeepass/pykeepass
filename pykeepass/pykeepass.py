@@ -278,7 +278,7 @@ class PyKeePass:
             self.tree,
             pretty_print=True,
             standalone=True,
-            encoding='unicode'
+            encoding='utf-8'
         )
 
     def dump_xml(self, filename):
@@ -288,14 +288,7 @@ class PyKeePass:
             filename (str): path to output file
         """
         with open(filename, 'wb') as f:
-            f.write(
-                etree.tostring(
-                    self.tree,
-                    pretty_print=True,
-                    standalone=True,
-                    encoding='utf-8'
-                )
-            )
+            f.write(self.xml())
 
     def _xpath(self, xpath_str, tree=None, first=False, cast=False, **kwargs):
         """Look up elements in the XML payload and return corresponding object.
