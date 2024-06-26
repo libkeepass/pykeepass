@@ -1,8 +1,10 @@
-4.1.0 -
+4.1.0 - 2024-06-26
 ------------------
 - merged PR#389 - add PyKeePass.database_name and database_description
 - merged PR#392, fixed #390 - fix pkg_resources dependency issue
 - fixed #391 - Entry.tags returns empty list instead of None
+- fixed #395 - set 'encoding' attribute when exporting as XML
+- fixed #383 - parse datetimes using isoformat instead of strptime
 
 4.0.7 - 2024-02-29
 ------------------
