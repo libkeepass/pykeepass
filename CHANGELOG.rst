@@ -1,3 +1,8 @@
+4.0.8 - 2024-04-09
+------------------
+- fixed #395 - set 'encoding' attribute when exporting as XML
+- fixed #383 - drop
+
 4.0.7 - 2024-02-29
 ------------------
 - fixed #359 - PyKeePass has `decrypt` kwarg for accessing header info
