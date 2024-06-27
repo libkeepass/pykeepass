@@ -116,7 +116,54 @@ def aes_kdf(key, rounds, key_composite):
     return hashlib.sha256(transformed_key).digest()
 
 
-def compute_key_composite(password=None, keyfile=None):
+def compute_keyfile_part_of_composite(keyfile):
+    """Compute just a keyfile's contribution to a database composite key."""
+    if hasattr(keyfile, "read"):
+        if hasattr(keyfile, "seekable") and keyfile.seekable():
+            keyfile.seek(0)
+        keyfile_bytes = keyfile.read()
+    else:
+        with open(keyfile, 'rb') as f:
+            keyfile_bytes = f.read()
+    # try to read XML keyfile
+    try:
+        tree = etree.fromstring(keyfile_bytes)
+        version = tree.find('Meta/Version').text
+        data_element = tree.find('Key/Data')
+        if version.startswith('1.0'):
+            return base64.b64decode(data_element.text)
+        elif version.startswith('2.0'):
+            # read keyfile data and convert to bytes
+            keyfile_composite = bytes.fromhex(data_element.text.strip())
+            # validate bytes against hash
+            hash = bytes.fromhex(data_element.attrib['Hash'])
+            hash_computed = hashlib.sha256(keyfile_composite).digest()[:4]
+            assert hash == hash_computed, "Keyfile has invalid hash"
+            return keyfile_composite
+        else:
+            raise AttributeError("Invalid version in keyfile")
+    # otherwise, try to read plain keyfile
+    except (etree.XMLSyntaxError, UnicodeDecodeError, AttributeError):
+        try:
+            try:
+                int(keyfile_bytes, 16)
+                is_hex = True
+            except ValueError:
+                is_hex = False
+            # if the length is 32 bytes we assume it is the key
+            if len(keyfile_bytes) == 32:
+                return keyfile_bytes
+            # if the length is 64 bytes we assume the key is hex encoded
+            elif len(keyfile_bytes) == 64 and is_hex:
+                return codecs.decode(keyfile_bytes, 'hex')
+            # anything else may be a file to hash for the key
+            else:
+                return hashlib.sha256(keyfile_bytes).digest()
+        except:
+            raise IOError('Could not read keyfile')
+
+
+def compute_key_composite(password=None, keyfile=None, additional_parts=None):
     """Compute composite key.
     Used in header verification and payload decryption."""
 
@@ -126,55 +173,15 @@ def compute_key_composite(password=None, keyfile=None):
     else:
         password_composite = b''
     # hash the keyfile
-    if keyfile:
-        if hasattr(keyfile, "read"):
-            if hasattr(keyfile, "seekable") and keyfile.seekable():
-                keyfile.seek(0)
-            keyfile_bytes = keyfile.read()
-        else:
-            with open(keyfile, 'rb') as f:
-                keyfile_bytes = f.read()
-        # try to read XML keyfile
-        try:
-            tree = etree.fromstring(keyfile_bytes)
-            version = tree.find('Meta/Version').text
-            data_element = tree.find('Key/Data')
-            if version.startswith('1.0'):
-                keyfile_composite = base64.b64decode(data_element.text)
-            elif version.startswith('2.0'):
-                # read keyfile data and convert to bytes
-                keyfile_composite = bytes.fromhex(data_element.text.strip())
-                # validate bytes against hash
-                hash = bytes.fromhex(data_element.attrib['Hash'])
-                hash_computed = hashlib.sha256(keyfile_composite).digest()[:4]
-                assert hash == hash_computed, "Keyfile has invalid hash"
-            else:
-                raise AttributeError("Invalid version in keyfile")
-        # otherwise, try to read plain keyfile
-        except (etree.XMLSyntaxError, UnicodeDecodeError, AttributeError):
-            try:
-                try:
-                    int(keyfile_bytes, 16)
-                    is_hex = True
-                except ValueError:
-                    is_hex = False
-                # if the length is 32 bytes we assume it is the key
-                if len(keyfile_bytes) == 32:
-                    keyfile_composite = keyfile_bytes
-                # if the length is 64 bytes we assume the key is hex encoded
-                elif len(keyfile_bytes) == 64 and is_hex:
-                    keyfile_composite = codecs.decode(keyfile_bytes, 'hex')
-                # anything else may be a file to hash for the key
-                else:
-                    keyfile_composite = hashlib.sha256(keyfile_bytes).digest()
-            except:
-                raise IOError('Could not read keyfile')
+    keyfile_composite = compute_keyfile_part_of_composite(keyfile) if keyfile else b''
 
-    else:
-        keyfile_composite = b''
+    # create composite key from password, keyfile, and other composites
+    overall_composite = password_composite + keyfile_composite
+    if additional_parts is not None:
+        for part in additional_parts:
+            overall_composite += part
 
-    # create composite key from password and keyfile composites
-    return hashlib.sha256(password_composite + keyfile_composite).digest()
+    return hashlib.sha256(overall_composite).digest()
 
 
 def compute_master(context):
@@ -186,6 +193,34 @@ def compute_master(context):
         context._.header.value.dynamic_header.master_seed.data +
         context.transformed_key).digest()
     return master_key
+
+
+def populate_custom_data(kdbx, d):
+    if len(d.keys()) > 0:
+        vd = Container(
+            version=b'\x00\x01',
+            dict=d,
+        )
+        kdbx.header.value.dynamic_header.update(
+            {
+                "public_custom_data":
+                    Container(
+                        id='public_custom_data',
+                        data=vd,
+                        next_byte=0xFF,
+                    )
+            }
+        )
+    else:
+        # Removing header entirely
+        if "public_custom_data" in kdbx.header.value.dynamic_header:
+            del kdbx.header.value.dynamic_header["public_custom_data"]
+
+    # Beyond Python 3.7, construct makes the base class of a Container be `dict` instead of `OrderedDict`
+    # So emulate move_to_end by removing and re-inserting the element
+    end_el = kdbx.header.value.dynamic_header["end"]
+    del kdbx.header.value.dynamic_header["end"]
+    kdbx.header.value.dynamic_header["end"] = end_el
 
 
 # -------------------- XML Processing --------------------
