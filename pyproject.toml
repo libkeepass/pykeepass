@@ -1,6 +1,8 @@
 [project]
 name = "pykeepass"
-version = "4.1.0-post2"
+# setuptools normalizes semver '-' to '.'
+# avoid using hyphens: 1.2.3.post1
+version = "4.1.0.post1"
 readme = "README.rst"
 description = "Python library to interact with keepass databases (supports KDBX3 and KDBX4)"
 authors = [
