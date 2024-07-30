@@ -34,6 +34,7 @@ lock:
 tag:
 	# tag git commit
 	git add requirements.txt
+	git add pyproject.toml
 	git add CHANGELOG.rst
 	git commit -m "bump version"
 	git tag -a v$(version) -m "version $(version)"
