@@ -38,7 +38,7 @@ tag:
 	git add CHANGELOG.rst
 	git commit -m "bump version"
 	git tag -a v$(version) -m "version $(version)"
-
+	git push --tags
 
 .PHONY: docs
 docs:
