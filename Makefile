@@ -11,14 +11,16 @@ dist:
 release: lock dist
 	# check that changelog is updated.  only look at first 3 parts of semver
 	version=$(version)
-	stripped=$$(echo $${version} | cut -d . -f -3)
+	stripped=$$(echo $${version} | cut -d . -f -3 | cut -d '-' -f 1)
 	if ! grep $${stripped} CHANGELOG.rst
 	then
 		echo "Changelog doesn't seem to be updated! Quitting..."
 		exit 1
 	fi
+	# generate release notes from changelog
+	awk "/---/{next}; /^$${stripped}/{next}; {print} ; /^$$/{exit}" CHANGELOG.rst > TMPNOTES
+	gh release create --latest --verify-tag v$(version) dist/pykeepass-$(version)* -F TMPNOTES
 	twine upload -u __token__ dist/pykeepass-$(version)*
-	gh release create --latest --verify-tag v$(version) dist/pykeepass-$(version)*
 
 .PHONY: lock
 lock:
@@ -36,9 +38,10 @@ tag:
 	git add requirements.txt
 	git add pyproject.toml
 	git add CHANGELOG.rst
-	git commit -m "bump version"
+	git commit -m "bump version" --allow-empty
 	git tag -a v$(version) -m "version $(version)"
 	git push --tags
+	git push
 
 .PHONY: docs
 docs:
