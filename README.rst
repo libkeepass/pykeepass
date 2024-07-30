@@ -16,9 +16,8 @@ pykeepass
     
 This library allows you to write entries to a KeePass database.
 
-Come chat at `#pykeepass`_ on Freenode or `#pykeepass:matrix.org`_ on Matrix.
+Come chat at `#pykeepass:matrix.org`_ on Matrix.
 
-.. _#pykeepass: irc://irc.freenode.net
 .. _#pykeepass\:matrix.org: https://matrix.to/#/%23pykeepass:matrix.org
 
 Installation
