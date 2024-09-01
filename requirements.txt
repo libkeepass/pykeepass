@@ -1,6 +1,6 @@
 argon2-cffi==23.1.0
 argon2-cffi-bindings==21.2.0
-cffi==1.16.0
+cffi==1.17.0
 construct==2.10.70
 lxml==5.2.2
 pycparser==2.22
