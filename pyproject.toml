@@ -12,6 +12,7 @@ authors = [
 license = {text = "GPL-3.0"}
 keywords = ["vault", "keepass"]
 dependencies = [
+    "pyotp>=2.9.0",
     "setuptools; python_version<'3.8'",
     "construct>=2.10.53",
     "argon2_cffi>=18.1.0",
