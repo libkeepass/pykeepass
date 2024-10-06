@@ -28,9 +28,10 @@ entry_xp = {
         'url': '/String/Key[text()="URL"]/../Value[text()="{}"]/../..',
         'notes': '/String/Key[text()="Notes"]/../Value[text()="{}"]/../..',
         'uuid': '/UUID[text()="{}"]/..',
-        'tags': '/Tags[text()="{}"]/..',
+        'tags': '/Tags[{}]/..',
         'string': '/String/Key[text()="{}"]/../Value[text()="{}"]/../..',
         'autotype_sequence': '/AutoType/DefaultSequence[text()="{}"]/../..',
+        'autotype_window': '/AutoType/Association/Window[text()="{}"]/../../..',
         'autotype_enabled': '/AutoType/Enabled[text()="{}"]/../..',
         'otp': '/String/Key[text()="otp"]/../Value[text()="{}"]/../..',
     },
@@ -41,9 +42,10 @@ entry_xp = {
         'url': '/String/Key[text()="URL"]/../Value[re:test(text(), "{}", "{flags}")]/../..',
         'notes': '/String/Key[text()="Notes"]/../Value[re:test(text(), "{}", "{flags}")]/../..',
         'uuid': '/UUID[re:test(text(), "{}", "{flags}")]/..',
-        'tags': '/Tags[re:test(text(), "{}", "{flags}")]/..',
+        'tags': '/Tags[{}]/..', # no regular expression support for tags
         'string': '/String/Key[text()="{}"]/../Value[re:test(text(), "{}", "{flags}")]/../..',
         'autotype_sequence': '/AutoType/DefaultSequence[re:test(text(), "{}", "{flags}")]/../..',
+        'autotype_window': '/AutoType/Association/Window[re:test(text(), "{}", "{flags}")]/../../..',
         'autotype_enabled': '/AutoType/Enabled[re:test(text(), "{}", "{flags}")]/../..',
         'otp': '/String/Key[text()="otp"]/../Value[re:test(text(), "{}", "{flags}")]/../..',
     }

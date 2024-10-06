@@ -1,5 +1,9 @@
-lxml==4.8.0
-pycryptodomex==3.14.1
-construct==2.10.68
-argon2-cffi==21.3.0
-python-dateutil==2.8.2
+argon2-cffi==23.1.0
+argon2-cffi-bindings==21.2.0
+cffi==1.16.0
+construct==2.10.70
+lxml==5.2.2
+pycparser==2.22
+pycryptodomex==3.20.0
+pykeepass @ file:///home/evan/resources/pykeepass
+pyotp==2.9.0

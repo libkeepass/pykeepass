@@ -1,21 +1,55 @@
 # Evan Widloski - 2018-04-11
 # keepass decrypt experimentation
 
-import struct
 import hashlib
-import argon2
 import hmac
+import struct
+
+import argon2
 from construct import (
-    Byte, Bytes, Int32ul, RepeatUntil, GreedyBytes, Struct, this, Mapping,
-    Switch, Flag, Prefixed, Int64ul, Int32sl, Int64sl, GreedyString, Padding,
-    Peek, Checksum, Computed, IfThenElse, Pointer, Tell, If
-)
-from .common import (
-    aes_kdf, Concatenated, AES256Payload, ChaCha20Payload, TwoFishPayload,
-    DynamicDict, RandomBytes, compute_key_composite, Reparsed, Decompressed,
-    compute_master, CompressionFlags, XML, CipherId, ProtectedStreamId, Unprotect
+    Byte,
+    Bytes,
+    Checksum,
+    Computed,
+    Flag,
+    GreedyBytes,
+    GreedyString,
+    If,
+    IfThenElse,
+    Int32sl,
+    Int32ul,
+    Int64sl,
+    Int64ul,
+    Mapping,
+    Padding,
+    Peek,
+    Pointer,
+    Prefixed,
+    RepeatUntil,
+    Struct,
+    Switch,
+    Tell,
+    this,
 )
 
+from .common import (
+    XML,
+    AES256Payload,
+    ChaCha20Payload,
+    CipherId,
+    CompressionFlags,
+    Concatenated,
+    Decompressed,
+    DynamicDict,
+    ProtectedStreamId,
+    RandomBytes,
+    Reparsed,
+    TwoFishPayload,
+    Unprotect,
+    aes_kdf,
+    compute_key_composite,
+    compute_master,
+)
 
 # -------------------- Key Derivation --------------------
 

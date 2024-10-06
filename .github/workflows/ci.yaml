@@ -4,25 +4,40 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   tests:
-    runs-on: ubuntu-20.04
+    name: ${{ matrix.os }}-latest / ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}-latest
     strategy:
-      matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, "3.10", "3.11"]
       fail-fast: false
+      matrix:
+        os:
+          - ubuntu
+          # - windows
+          # - macos
+        python-version:
+          # - "3.6" # not supported in ubuntu-latest (22.04)
+          - "3.7"
+          - "3.8"
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
+      
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
+          allow-prereleases: true
 
       - name: Install dependencies
         run: |
           sudo apt update
           sudo apt-get install -y libxml2-dev libxmlsec1-dev
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install .[test]
 
       - name: Run tests
         run: |

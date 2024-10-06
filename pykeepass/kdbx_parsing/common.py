@@ -1,22 +1,35 @@
+import base64
+import codecs
+import hashlib
+import io
+import logging
+import re
+import zlib
+from binascii import Error as BinasciiError
+from collections import OrderedDict
+from copy import deepcopy
+
+from construct import (
+    Adapter,
+    BitsSwapped,
+    BitStruct,
+    Bytes,
+    Container,
+    Flag,
+    GreedyBytes,
+    Int32ul,
+    ListContainer,
+    Mapping,
+    Padding,
+    Switch,
+    stream_write,
+)
 from Cryptodome.Cipher import AES, ChaCha20, Salsa20
-from .twofish import Twofish
 from Cryptodome.Random import get_random_bytes
 from Cryptodome.Util import Padding as CryptoPadding
-import hashlib
-from construct import (
-    Adapter, BitStruct, BitsSwapped, Bytes, Container, Flag, Padding, ListContainer, Mapping, GreedyBytes, Int32ul, Switch, stream_write
-)
 from lxml import etree
-from copy import deepcopy
-import base64
-from binascii import Error as BinasciiError
-import unicodedata
-import zlib
-import re
-import codecs
-from io import BytesIO
-from collections import OrderedDict
-import logging
+
+from .twofish import Twofish
 
 log = logging.getLogger(__name__)
 
@@ -127,41 +140,46 @@ def compute_key_composite(password=None, keyfile=None):
         password_composite = b''
     # hash the keyfile
     if keyfile:
+        if hasattr(keyfile, "read"):
+            if hasattr(keyfile, "seekable") and keyfile.seekable():
+                keyfile.seek(0)
+            keyfile_bytes = keyfile.read()
+        else:
+            with open(keyfile, 'rb') as f:
+                keyfile_bytes = f.read()
         # try to read XML keyfile
         try:
-            with open(keyfile, 'r') as f:
-                tree = etree.parse(f).getroot()
-                version = tree.find('Meta/Version').text
-                data_element = tree.find('Key/Data')
-                if version.startswith('1.0'):
-                    keyfile_composite = base64.b64decode(data_element.text)
-                elif version.startswith('2.0'):
-                    # read keyfile data and convert to bytes
-                    keyfile_composite = bytes.fromhex(data_element.text.strip())
-                    # validate bytes against hash
-                    hash = bytes.fromhex(data_element.attrib['Hash'])
-                    hash_computed = hashlib.sha256(keyfile_composite).digest()[:4]
-                    assert hash == hash_computed, "Keyfile has invalid hash"
+            tree = etree.fromstring(keyfile_bytes)
+            version = tree.find('Meta/Version').text
+            data_element = tree.find('Key/Data')
+            if version.startswith('1.0'):
+                keyfile_composite = base64.b64decode(data_element.text)
+            elif version.startswith('2.0'):
+                # read keyfile data and convert to bytes
+                keyfile_composite = bytes.fromhex(data_element.text.strip())
+                # validate bytes against hash
+                hash = bytes.fromhex(data_element.attrib['Hash'])
+                hash_computed = hashlib.sha256(keyfile_composite).digest()[:4]
+                assert hash == hash_computed, "Keyfile has invalid hash"
+            else:
+                raise AttributeError("Invalid version in keyfile")
         # otherwise, try to read plain keyfile
-        except (etree.XMLSyntaxError, UnicodeDecodeError):
+        except (etree.XMLSyntaxError, UnicodeDecodeError, AttributeError):
             try:
-                with open(keyfile, 'rb') as f:
-                    key = f.read()
-
-                    try:
-                        int(key, 16)
-                        is_hex = True
-                    except ValueError:
-                        is_hex = False
-                    # if the length is 32 bytes we assume it is the key
-                    if len(key) == 32:
-                        keyfile_composite = key
-                    # if the length is 64 bytes we assume the key is hex encoded
-                    elif len(key) == 64 and is_hex:
-                        keyfile_composite = codecs.decode(key, 'hex')
-                    # anything else may be a file to hash for the key
-                    else:
-                        keyfile_composite = hashlib.sha256(key).digest()
+                try:
+                    int(keyfile_bytes, 16)
+                    is_hex = True
+                except ValueError:
+                    is_hex = False
+                # if the length is 32 bytes we assume it is the key
+                if len(keyfile_bytes) == 32:
+                    keyfile_composite = keyfile_bytes
+                # if the length is 64 bytes we assume the key is hex encoded
+                elif len(keyfile_bytes) == 64 and is_hex:
+                    keyfile_composite = codecs.decode(keyfile_bytes, 'hex')
+                # anything else may be a file to hash for the key
+                else:
+                    keyfile_composite = hashlib.sha256(keyfile_bytes).digest()
             except:
                 raise IOError('Could not read keyfile')
 
@@ -191,7 +209,7 @@ class XML(Adapter):
 
     def _decode(self, data, con, path):
         parser = etree.XMLParser(remove_blank_text=True)
-        return etree.parse(BytesIO(data), parser)
+        return etree.parse(io.BytesIO(data), parser)
 
     def _encode(self, tree, con, path):
         return etree.tostring(tree)
@@ -216,7 +234,7 @@ class UnprotectedStream(Adapter):
                     result = cipher.decrypt(base64.b64decode(elem.text)).decode('utf-8')
                     # strip invalid XML characters - https://stackoverflow.com/questions/8733233
                     result = re.sub(
-                        u'[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+',
+                        '[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+',
                         '',
                         result
                     )

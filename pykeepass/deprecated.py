@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-
-
 # ---------- Find functions ---------------
 # Use find_entries()/find_groups() instead
 

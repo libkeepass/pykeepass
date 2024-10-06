@@ -1,3 +1,20 @@
+4.1.0 - 2024-06-26
+------------------
+- merged #389 - add PyKeePass.database_name and database_description
+- merged #392, fixed #390 - fix pkg_resources dependency issue
+- fixed #391 - Entry.tags returns empty list instead of None
+- fixed #395 - set 'encoding' attribute when exporting as XML
+- fixed #383 - parse datetimes using isoformat instead of strptime
+
+4.0.7 - 2024-02-29
+------------------
+- fixed #359 - PyKeePass has `decrypt` kwarg for accessing header info
+- merged #347 - added Entry.index and Entry.move for moving entries
+- merged #367 - added Entry.autotype_window setter
+- merged #364 - allow filename/keyfile to be file-like objects
+- merged #371 - drop dateutil dependency
+- merged #348 - switch to pyproject.toml
+
 4.0.6 - 2023-08-22
 ------------------
 - fixed #350 - fixed all Python 2 deprecation FIXMEs (e.g. future, )

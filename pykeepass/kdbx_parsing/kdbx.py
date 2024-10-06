@@ -1,8 +1,12 @@
-from construct import Struct, Switch, Bytes, Int16ul, RawCopy, Check, this, stream_seek, stream_tell, stream_read, Subconstruct
-from .kdbx3 import DynamicHeader as DynamicHeader3
+from construct import (
+    Bytes, Check, Int16ul, RawCopy, Struct, Switch, Subconstruct,
+    stream_tell, stream_seek, stream_read, this
+)
+
 from .kdbx3 import Body as Body3
-from .kdbx4 import DynamicHeader as DynamicHeader4
+from .kdbx3 import DynamicHeader as DynamicHeader3
 from .kdbx4 import Body as Body4
+from .kdbx4 import DynamicHeader as DynamicHeader4
 
 
 class Copy(Subconstruct):
