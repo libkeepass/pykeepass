@@ -18,7 +18,8 @@ release: lock dist
 		exit 1
 	fi
 	# generate release notes from changelog
-	awk "/---/{next}; /^$${stripped}/{next}; {print} ; /^$$/{exit}" CHANGELOG.rst > TMPNOTES
+	awk "BEGIN{p=0}; /^$${stripped}/{next}; /---/{p=1;next}; /^$$/{exit}; p {print}" CHANGELOG.rst > TMPNOTES
+	# make github and pypi release
 	gh release create --latest --verify-tag v$(version) dist/pykeepass-$(version)* -F TMPNOTES
 	twine upload -u __token__ dist/pykeepass-$(version)*
 
