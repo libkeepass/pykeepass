@@ -5,10 +5,10 @@ from construct import (
     IfThenElse, Int32sl, Int32ul, Int64sl, Int64ul, Mapping, Padding, Peek,
     Pointer, Prefixed, RepeatUntil, Struct, Switch, Tell, this,
 )
-from construct import Bytes, Check, Int16ul, RawCopy, Struct, Switch, this
+from construct import Check, Int16ul, RawCopy, Switch, stream_write, ChecksumError
+from Cryptodome.Random import get_random_bytes
 
-from pykeepass.kdbx_parsing.kdbx4 import DynamicHeader as DynamicHeader4
-from pykeepass.kdbx_parsing.kdbx4 import compute_transformed
+from pykeepass.kdbx_parsing.kdbx4 import compute_transformed, CompressionFlags, VariantDictionary, CipherId, DynamicDict
 from pykeepass.kdbx_parsing.common import compute_master
 import hmac
 import hashlib
@@ -40,6 +40,54 @@ def compute_header_hmac_hash(context):
 # verify file signature
 def check_signature(ctx):
     return ctx.sig1 == b'\x03\xd9\xa2\x9a' and ctx.sig2 == b'\x67\xFB\x4B\xB5'
+
+class RandomBytes(Bytes):
+    """Same as Bytes, but generate random bytes when building"""
+
+    def _build(self, obj, stream, context, path):
+        print('generating random bytes...')
+        length = self.length(context) if callable(self.length) else self.length
+        data = get_random_bytes(length)
+        print('old:', sum(context.data))
+        print('new:', sum(data))
+        stream_write(stream, data, length, path)
+        return data
+
+
+DynamicHeaderItem = Struct(
+    "id" / Mapping(
+        Byte,
+        {'end': 0,
+         'comment': 1,
+         'cipher_id': 2,
+         'compression_flags': 3,
+         'master_seed': 4,
+         'encryption_iv': 7,
+         'kdf_parameters': 11,
+         'public_custom_data': 12
+         }
+    ),
+    "data" / Prefixed(
+        Int32ul,
+        Switch(
+            this.id,
+            {'compression_flags': CompressionFlags,
+             'kdf_parameters': VariantDictionary,
+             'cipher_id': CipherId,
+             'master_seed': RandomBytes(32),
+             },
+            default=GreedyBytes
+        )
+    )
+)
+
+DynamicHeader4 = DynamicDict(
+    'id',
+    RepeatUntil(
+        lambda item, a, b: item.id == 'end',
+        DynamicHeaderItem
+    )
+)
 
 
 Body4 = Struct(
@@ -96,4 +144,7 @@ del parsed1.header.data
 KDBX.build_file(parsed1, '/tmp/test4.kdbx', **opts)
 # parse the database
 print('PARSING')
-parsed2 = KDBX.parse_file('test4.kdbx', **opts)
+try:
+    parsed2 = KDBX.parse_file('/tmp/test4.kdbx', **opts)
+except ChecksumError:
+    pass
