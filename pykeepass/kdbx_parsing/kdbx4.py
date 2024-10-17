@@ -3,6 +3,7 @@
 
 import hashlib
 import hmac
+import logging
 import struct
 
 import argon2
@@ -50,6 +51,10 @@ from .common import (
     compute_master,
 )
 
+from .factorinfo import FactorInfo
+
+log = logging.getLogger(__name__)
+
 # -------------------- Key Derivation --------------------
 
 # https://github.com/keepassxreboot/keepassxc/blob/bc55974ff304794e53c925442784c50a2fdaf6ee/src/format/KeePass2.cpp#L30-L33
@@ -63,9 +68,42 @@ kdf_uuids = {
 def compute_transformed(context):
     """Compute transformed key for opening database"""
 
+    factor_info = getattr(context._._, 'factor_info', None)
+    if factor_info is None and hasattr(context._.header.value.dynamic_header, 'public_custom_data'):
+        public_custom_data = context._.header.value.dynamic_header.public_custom_data.data.dict
+        xml_val = public_custom_data.get("authentication_factors", None)
+        if xml_val is not None:
+            factor_info = FactorInfo.decode(xml_val.value)
+
+    factor_data = getattr(context._._, 'factor_data', {})
+    password = context._._.password
+    keyfile = context._._.keyfile
+
+    additional_key_parts = []
+    if factor_info is not None:
+        for group in factor_info.factor_groups:
+            if len(group.factors) == 0:
+                # Bogus, irrelevant
+                log.warning("Factor group with no factors encountered!")
+                continue
+
+            unwrapped_part = group.unwrap_key_part({
+                'factor_data': factor_data,
+                'password': password,
+                'keyfile': keyfile
+            })
+
+            additional_key_parts.append(unwrapped_part)
+
+        if factor_info.comprehensive:
+            # If the other factor header is comprehensive, don't use our supplied password/keyfile later
+            password = None
+            keyfile = None
+
     key_composite = compute_key_composite(
-        password=context._._.password,
-        keyfile=context._._.keyfile
+        password=password,
+        keyfile=keyfile,
+        additional_parts=additional_key_parts
     )
     kdf_parameters = context._.header.value.dynamic_header.kdf_parameters.data.dict
 
@@ -173,6 +211,7 @@ DynamicHeaderItem = Struct(
             this.id,
             {'compression_flags': CompressionFlags,
              'kdf_parameters': VariantDictionary,
+             'public_custom_data': VariantDictionary,
              'cipher_id': CipherId
              },
             default=GreedyBytes
