@@ -5,10 +5,11 @@ from construct import (
     IfThenElse, Int32sl, Int32ul, Int64sl, Int64ul, Mapping, Padding, Peek,
     Pointer, Prefixed, RepeatUntil, Struct, Switch, Tell, this,
 )
-from construct import Check, Int16ul, RawCopy, Switch, stream_write, ChecksumError
+from construct import Check, Int16ul, RawCopy, Switch, stream_write, ChecksumError, Adapter, Container, ListContainer
+from collections import OrderedDict
 from Cryptodome.Random import get_random_bytes
 
-from pykeepass.kdbx_parsing.kdbx4 import compute_transformed, CompressionFlags, VariantDictionary, CipherId, DynamicDict
+from pykeepass.kdbx_parsing.kdbx4 import compute_transformed, CompressionFlags, VariantDictionary, CipherId
 from pykeepass.kdbx_parsing.common import compute_master
 import hmac
 import hashlib
@@ -81,6 +82,47 @@ DynamicHeaderItem = Struct(
     )
 )
 
+
+class DynamicDict(Adapter):
+    """ListContainer <---> Container
+    Convenience mapping so we dont have to iterate ListContainer to find
+    the right item
+
+    FIXME: lump kwarg was added to get around the fact that InnerHeader is
+    not truly a dict.  We lump all 'binary' InnerHeaderItems into a single list
+    """
+
+    def __init__(self, key, subcon, lump=[]):
+        super().__init__(subcon)
+        self.key = key
+        self.lump = lump
+
+    # map ListContainer to Container
+    def _decode(self, obj, context, path):
+        d = OrderedDict()
+        for l in self.lump:
+            d[l] = ListContainer([])
+        for item in obj:
+            if item[self.key] in self.lump:
+                d[item[self.key]].append(item)
+            else:
+                d[item[self.key]] = item
+
+        return Container(d)
+
+    # map Container to ListContainer
+    def _encode(self, obj, context, path):
+        l = []
+        for key in obj:
+            if key == 'master_seed':
+                print('key:', key, sum(obj[key].data))
+            if key in self.lump:
+                l += obj[key]
+            else:
+                l.append(obj[key])
+
+        return ListContainer(l)
+
 DynamicHeader4 = DynamicDict(
     'id',
     RepeatUntil(
@@ -88,7 +130,7 @@ DynamicHeader4 = DynamicDict(
         DynamicHeaderItem
     )
 )
-
+# from issue219_adaptertest_deleteme import DynamicHeader4
 
 Body4 = Struct(
     "transformed_key" / Computed(compute_transformed),
@@ -134,17 +176,18 @@ KDBX = Struct(
     )
 )
 
-# parse the database
-opts = dict(password='password', keyfile='test4.key', decrypt=True, transformed_key=None)
-print('PARSING')
-parsed1 = KDBX.parse_file('test4.kdbx', **opts)
-# rebuild and try to reparse final result
-print('SAVING')
-del parsed1.header.data
-KDBX.build_file(parsed1, '/tmp/test4.kdbx', **opts)
-# parse the database
-print('PARSING')
-try:
-    parsed2 = KDBX.parse_file('/tmp/test4.kdbx', **opts)
-except ChecksumError:
-    pass
+if __name__ == '__main__':
+    # parse the database
+    opts = dict(password='password', keyfile='test4.key', decrypt=True, transformed_key=None)
+    print('PARSING')
+    parsed1 = KDBX.parse_file('test4.kdbx', **opts)
+    # rebuild and try to reparse final result
+    print('SAVING')
+    del parsed1.header.data
+    KDBX.build_file(parsed1, '/tmp/test4.kdbx', **opts)
+    # parse the database
+    print('PARSING')
+    try:
+        parsed2 = KDBX.parse_file('/tmp/test4.kdbx', **opts)
+    except ChecksumError:
+        pass
