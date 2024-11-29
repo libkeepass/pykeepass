@@ -188,15 +188,15 @@ class PyKeePass:
         """tuple: Length 2 tuple of ints containing major and minor versions.
         Generally (3, 1) or (4, 0)."""
         return (
-            self.kdbx.header.value.major_version,
-            self.kdbx.header.value.minor_version
+            self.kdbx.header.major_version,
+            self.kdbx.header.minor_version
         )
 
     @property
     def encryption_algorithm(self):
         """str: encryption algorithm used by database during decryption.
         Can be one of 'aes256', 'chacha20', or 'twofish'."""
-        return self.kdbx.header.value.dynamic_header.cipher_id.data
+        return self.kdbx.header.dynamic_header.cipher_id.data
 
     @property
     def kdf_algorithm(self):
@@ -205,7 +205,7 @@ class PyKeePass:
         if self.version == (3, 1):
             return 'aeskdf'
         elif self.version == (4, 0):
-            kdf_parameters = self.kdbx.header.value.dynamic_header.kdf_parameters.data.dict
+            kdf_parameters = self.kdbx.header.dynamic_header.kdf_parameters.data.dict
             if kdf_parameters['$UUID'].value == kdf_uuids['argon2']:
                 return 'argon2'
             elif kdf_parameters['$UUID'].value == kdf_uuids['argon2id']:
@@ -225,9 +225,9 @@ class PyKeePass:
        credentials which are used in extension to current keyfile."""
 
        if self.version == (3, 1):
-            return self.kdbx.header.value.dynamic_header.transform_seed.data
+            return self.kdbx.header.dynamic_header.transform_seed.data
 
-       kdf_parameters = self.kdbx.header.value.dynamic_header.kdf_parameters.data.dict
+       kdf_parameters = self.kdbx.header.dynamic_header.kdf_parameters.data.dict
        return kdf_parameters['S'].value
 
     @property
