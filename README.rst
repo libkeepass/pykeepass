@@ -178,7 +178,7 @@ Entry Functions and Properties
 
 **trash_entry** (entry)
 
-move a group to the recycle bin.  The recycle bin is created if it does not exit.  ``entry`` must be an empty Entry.
+move an entry to the recycle bin.  The recycle bin is created if it does not exit.  ``entry`` must be an empty Entry.
 
 **move_entry** (entry, destination_group)
 
@@ -227,6 +227,12 @@ If ``expiry_time`` is a naive datetime object (i.e. ``expiry_time.tzinfo`` is no
 
    # update modification or access time
    >>> entry.touch(modify=True)
+
+
+**save_history** ()
+
+save the Entry in its history
+
 
 Group Functions and Properties
 ------------------------------
