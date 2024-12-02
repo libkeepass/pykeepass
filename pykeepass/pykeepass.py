@@ -52,16 +52,16 @@ class PyKeePass:
             database.
 
     Raises:
-        CredentialsError: raised when password/keyfile or transformed key
+        `CredentialsError`: raised when password/keyfile or transformed key
             are wrong
-        HeaderChecksumError: raised when checksum in database header is
+        `HeaderChecksumError`: raised when checksum in database header is
             is wrong.  e.g. database tampering or file corruption
-        PayloadChecksumError: raised when payload blocks checksum is wrong,
+        `PayloadChecksumError`: raised when payload blocks checksum is wrong,
             e.g. corruption during database saving
 
-    Todo:
-        - raise, no filename provided, database not open
     """
+
+    # TODO: raise, no filename provided, database not open
 
     def __init__(self, filename, password=None, keyfile=None,
                  transformed_key=None, decrypt=True):
@@ -85,10 +85,9 @@ class PyKeePass:
              transformed_key=None, decrypt=True):
         """
         See class docstring.
-
-        Todo:
-            - raise, no filename provided, database not open
         """
+
+        # TODO: - raise, no filename provided, database not open
         self._password = password
         self._keyfile = keyfile
         if filename:
@@ -185,7 +184,7 @@ class PyKeePass:
 
     @property
     def version(self):
-        """tuple: Length 2 tuple of ints containing major and minor versions.
+        """`tuple` of `int`: Length 2 tuple of ints containing major and minor versions.
         Generally (3, 1) or (4, 0)."""
         return (
             self.kdbx.header.value.major_version,
@@ -194,13 +193,13 @@ class PyKeePass:
 
     @property
     def encryption_algorithm(self):
-        """str: encryption algorithm used by database during decryption.
+        """`str`: encryption algorithm used by database during decryption.
         Can be one of 'aes256', 'chacha20', or 'twofish'."""
         return self.kdbx.header.value.dynamic_header.cipher_id.data
 
     @property
     def kdf_algorithm(self):
-        """str: key derivation algorithm used by database during decryption.
+        """`str`: key derivation algorithm used by database during decryption.
         Can be one of 'aeskdf', 'argon2', or 'aeskdf'"""
         if self.version == (3, 1):
             return 'aeskdf'
@@ -215,13 +214,13 @@ class PyKeePass:
 
     @property
     def transformed_key(self):
-        """bytes: transformed key used in database decryption.  May be cached
+        """`bytes`: transformed key used in database decryption.  May be cached
         and passed to `open` for faster database opening"""
         return self.kdbx.body.transformed_key
 
     @property
     def database_salt(self):
-       """bytes: salt of database kdf. This can be used for adding additional
+       """`bytes`: salt of database kdf. This can be used for adding additional
        credentials which are used in extension to current keyfile."""
 
        if self.version == (3, 1):
@@ -232,7 +231,8 @@ class PyKeePass:
 
     @property
     def payload(self):
-        """Encrypted payload of keepass database"""
+        """`construct.Container`: Encrypted payload of keepass database"""
+
         # check if payload is decrypted
         if self.kdbx.body.payload is None:
             raise ValueError("Database is not decrypted")
@@ -241,36 +241,36 @@ class PyKeePass:
 
     @property
     def tree(self):
-        """lxml.etree._ElementTree: database XML payload"""
+        """`lxml.etree._ElementTree`: database XML payload"""
         return self.payload.xml
 
     @property
     def root_group(self):
-        """Group: root Group of database"""
+        """`Group`: root Group of database"""
         return self.find_groups(path='', first=True)
 
     @property
     def recyclebin_group(self):
-        """Group: RecycleBin Group of database"""
+        """`Group`: RecycleBin Group of database"""
         elem = self._xpath('/KeePassFile/Meta/RecycleBinUUID', first=True)
         recyclebin_uuid = uuid.UUID( bytes = base64.b64decode(elem.text) )
         return self.find_groups(uuid=recyclebin_uuid, first=True)
 
     @property
     def groups(self):
-        """:obj:`list` of :obj:`Group`: list of all Group objects in database
+        """`list` of `Group`: all Group objects in database
         """
         return self.find_groups()
 
     @property
     def entries(self):
-        """:obj:`list` of :obj:`Entry`: list of all Entry objects in database,
+        """`list` of `Entry`: all Entry objects in database,
         excluding history"""
         return self.find_entries()
 
     @property
     def database_name(self):
-        """Name of database"""
+        """`str`: Name of database"""
         elem = self._xpath('/KeePassFile/Meta/DatabaseName', first=True)
         return elem.text
 
@@ -281,7 +281,7 @@ class PyKeePass:
 
     @property
     def database_description(self):
-        """Description of the database"""
+        """`str`: Description of the database"""
         elem = self._xpath('/KeePassFile/Meta/DatabaseDescription', first=True)
         return elem.text
 
@@ -292,11 +292,7 @@ class PyKeePass:
 
     @property
     def default_username(self):
-        """Default Username
-
-        Returns:
-            user name or None if not set.
-        """
+        """`str` or `None`: default user.  `None` if not set"""
         elem = self._xpath('/KeePassFile/Meta/DefaultUserName', first=True)
         return elem.text
 
@@ -309,7 +305,7 @@ class PyKeePass:
         """Get XML part of database as string
 
         Returns:
-            str: XML payload section of database.
+            `str`
         """
         return etree.tostring(
             self.tree,
@@ -476,7 +472,7 @@ class PyKeePass:
             flags (str): XPath [flags][flags]
 
         Returns:
-            :obj:`list` of :obj:`Group` or :obj:`Group`
+            `list` of `Group` or `Group`
 
         [XSLT style]: https://www.xml.com/pub/a/2003/06/04/tr.html
         [flags]: https://www.w3.org/TR/xpath-functions/#flags
@@ -714,10 +710,10 @@ class PyKeePass:
         """Dereference [field reference][fieldref] of Entry
 
         Args:
-            ref (str): KeePass reference string to another field
+            ref (`str`): KeePass reference string to another field
 
         Returns:
-            str, uuid.UUID or None if no match found
+            `str`, `uuid.UUID` or `None` if no match found
 
         [fieldref]: https://keepass.info/help/base/fieldrefs.html
         """
@@ -750,7 +746,7 @@ class PyKeePass:
 
     @property
     def password(self):
-        """str: Get or set database password"""
+        """`str`: Get or set database password"""
         return self._password
 
     @password.setter
@@ -760,7 +756,7 @@ class PyKeePass:
 
     @property
     def keyfile(self):
-        """str or pathlib.Path: get or set database keyfile"""
+        """`str` or `pathlib.Path`: get or set database keyfile"""
         return self._keyfile
 
     @keyfile.setter
@@ -770,14 +766,14 @@ class PyKeePass:
 
     @property
     def credchange_required_days(self):
-        """int: Days until password update should be required"""
+        """`int`: Days until password update should be required"""
         e = self._xpath('/KeePassFile/Meta/MasterKeyChangeForce', first=True)
         if e is not None:
             return int(e.text)
 
     @property
     def credchange_recommended_days(self):
-        """int: Days until password update should be recommended"""
+        """`int`: Days until password update should be recommended"""
         e = self._xpath('/KeePassFile/Meta/MasterKeyChangeRec', first=True)
         if e is not None:
             return int(e.text)
@@ -796,7 +792,7 @@ class PyKeePass:
 
     @property
     def credchange_date(self):
-        """datetime.datetime: get or set UTC time of last credential change"""
+        """`datetime.datetime`: get or set UTC time of last credential change"""
         e = self._xpath('/KeePassFile/Meta/MasterKeyChanged', first=True)
         if e is not None:
             return self._decode_time(e.text)
@@ -808,7 +804,7 @@ class PyKeePass:
 
     @property
     def credchange_required(self):
-        """bool: Check if credential change is required"""
+        """`bool`: Check if credential change is required"""
         change_date = self.credchange_date
         if change_date is None or self.credchange_required_days == -1:
             return False
@@ -817,7 +813,7 @@ class PyKeePass:
 
     @property
     def credchange_recommended(self):
-        """bool: Check if credential change is recommended"""
+        """`bool`: Check if credential change is recommended"""
         change_date = self.credchange_date
         if change_date is None or self.credchange_recommended_days == -1:
             return False
@@ -827,7 +823,7 @@ class PyKeePass:
     # ---------- Datetime Functions ----------
 
     def _encode_time(self, value):
-        """bytestring or plaintext string: Convert datetime to base64 or plaintext string"""
+        """`bytes` or `str`: Convert datetime to base64 or plaintext string"""
 
         if self.version >= (4, 0):
             diff_seconds = int(
@@ -848,7 +844,7 @@ class PyKeePass:
             return value.isoformat()
 
     def _decode_time(self, text):
-        """datetime.datetime: Convert base64 time or plaintext time to datetime"""
+        """`datetime.datetime`: Convert base64 time or plaintext time to datetime"""
 
         if self.version >= (4, 0):
             # decode KDBX4 date from b64 format
@@ -881,7 +877,7 @@ def create_database(
             key.
 
     Returns:
-        PyKeePass
+        `PyKeePass`
     """
     keepass_instance = PyKeePass(
         BLANK_DATABASE_LOCATION, BLANK_DATABASE_PASSWORD

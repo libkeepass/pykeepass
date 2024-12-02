@@ -3,6 +3,7 @@ from .exceptions import BinaryError
 
 
 class Attachment:
+    """Binary data attached to an `Entry`. A piece of binary data may be attached to multiple entries"""
     def __init__(self, element=None, kp=None, id=None, filename=None):
         self._element = element
         self._kp = kp
@@ -12,7 +13,7 @@ class Attachment:
 
     @property
     def id(self):
-        """str: get or set id of binary the attachment points to"""
+        """`str`: get or set id of binary the attachment points to"""
         return int(self._element.find('Value').attrib['Ref'])
 
     @id.setter
@@ -21,7 +22,7 @@ class Attachment:
 
     @property
     def filename(self):
-        """str: get or set filename attachment"""
+        """`str`: get or set filename attachment"""
         return self._element.find('Key').text
 
     @filename.setter
@@ -30,13 +31,13 @@ class Attachment:
 
     @property
     def entry(self):
-        """Entry: get entry this attachment is associated with"""
+        """`Entry`: entry this attachment is associated with"""
         ancestor = self._element.getparent()
         return entry.Entry(element=ancestor, kp=self._kp)
 
     @property
     def binary(self):
-        """bytes: get binary this attachment points to"""
+        """`bytes`: binary data this attachment points to"""
         try:
             return self._kp.binaries[self.id]
         except IndexError:

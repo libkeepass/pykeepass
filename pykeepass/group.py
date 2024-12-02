@@ -42,7 +42,7 @@ class Group(BaseElement):
 
     @property
     def name(self):
-        """str: get or set group name"""
+        """`str`: get or set group name"""
         return self._get_subelement_text('Name')
 
     @name.setter
@@ -51,7 +51,7 @@ class Group(BaseElement):
 
     @property
     def notes(self):
-        """str: get or set group notes"""
+        """`str`: get or set group notes"""
         return self._get_subelement_text('Notes')
 
     @notes.setter
@@ -60,22 +60,22 @@ class Group(BaseElement):
 
     @property
     def entries(self):
-        """:obj:`list` of :obj:`Entry`: get list of entries in this group"""
+        """`list` of `Entry`: get list of entries in this group"""
         return [Entry(element=x, kp=self._kp) for x in self._element.findall('Entry')]
 
     @property
     def subgroups(self):
-        """:obj:`list` of :obj:`Group`: get list of groups in this group"""
+        """`list` of `Group`: get list of groups in this group"""
         return [Group(element=x, kp=self._kp) for x in self._element.findall('Group')]
 
     @property
     def is_root_group(self):
-        """bool: return True if this is the database root"""
+        """`bool`: return True if this is the database root"""
         return self._element.getparent().tag == 'Root'
 
     @property
     def path(self):
-        """:obj:`list` of (:obj:`str` or None): a list containing names of all parent groups, not including root"""
+        """`list` of (`str` or `None`): names of all parent groups, not including root"""
         # The root group is an orphan
         if self.is_root_group or self.parentgroup is None:
             return []
@@ -91,8 +91,9 @@ class Group(BaseElement):
         """Add copy of an entry to this group
 
         Args:
-            entries (:obj:`Entry` or :obj:`list` of :obj:`Entry`)
+            entries (`Entry` or `list` of `Entry`)
         """
+        # FIXME: check if `entries` is iterable instead of list
         if isinstance(entries, list):
             for e in entries:
                 self._element.append(e._element)

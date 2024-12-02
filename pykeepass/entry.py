@@ -82,10 +82,10 @@ class Entry(BaseElement):
         """Get a string field from an entry
 
         Args:
-            key (str): name of field
+            key (`str`): name of field
 
         Returns:
-            (str or None): field value
+            `str` or `None`: field value
         """
 
         field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), history=True, first=True)
@@ -96,10 +96,10 @@ class Entry(BaseElement):
         """Create or overwrite a string field in an Entry
 
         Args:
-            key (str): name of field
-            value (str): value of field
-            protected (bool or None): mark whether the field should be protected in memory
-                in other tools.  If None, value is either copied from existing field or field
+            key (`str`): name of field
+            value (`str`): value of field
+            protected (`bool` or `None`): mark whether the field should be protected in memory
+                in other tools.  If `None`, value is either copied from existing field or field
                 is created with protected property unset.
 
         Note: pykeepass does not support memory protection
@@ -131,7 +131,7 @@ class Entry(BaseElement):
 
     @property
     def index(self):
-        """int: get index of a entry within a group"""
+        """`int`: index of a entry within a group"""
         group = self.group._element
         children = group.getchildren()
         first_index = self.group._first_entry
@@ -142,7 +142,7 @@ class Entry(BaseElement):
         """Move entry to a new index within a group
         
         Args:
-            new_index (int): new index for the entry starting at 0
+            new_index (`int`): new index for the entry starting at 0
         """
         group = self.group._element
         first_index = self.group._first_entry
@@ -151,6 +151,7 @@ class Entry(BaseElement):
 
     @property
     def attachments(self):
+        """`list` of `Attachment`: attachments associated with entry"""
         return self._kp.find_attachments(
             element=self,
             filename='.*',
@@ -159,6 +160,15 @@ class Entry(BaseElement):
         )
 
     def add_attachment(self, id, filename):
+        """Add attachment to entry
+
+        Args:
+            id (`int`): ID of attachment in database
+            filename (`str`): filename to assign to this attachment data
+
+        Returns:
+            `Attachment`
+        """
         element = E.Binary(
             E.Key(filename),
             E.Value(Ref=str(id))
@@ -168,14 +178,16 @@ class Entry(BaseElement):
         return attachment.Attachment(element=element, kp=self._kp)
 
     def delete_attachment(self, attachment):
+        """remove an attachment from entry"""
         attachment.delete()
 
     def deref(self, attribute):
+        """See `PyKeePass.deref`"""
         return self._kp.deref(getattr(self, attribute))
 
     @property
     def title(self):
-        """str: get or set entry title"""
+        """`str`: get or set entry title"""
         return self._get_string_field('Title')
 
     @title.setter
@@ -184,7 +196,7 @@ class Entry(BaseElement):
 
     @property
     def username(self):
-        """str: get or set entry username"""
+        """`str`: get or set entry username"""
         return self._get_string_field('UserName')
 
     @username.setter
@@ -193,7 +205,7 @@ class Entry(BaseElement):
 
     @property
     def password(self):
-        """str: get or set entry password"""
+        """`str`: get or set entry password"""
         return self._get_string_field('Password')
 
     @password.setter
@@ -214,7 +226,7 @@ class Entry(BaseElement):
 
     @property
     def notes(self):
-        """str: get or set entry notes"""
+        """`str`: get or set entry notes"""
         return self._get_string_field('Notes')
 
     @notes.setter
@@ -223,7 +235,7 @@ class Entry(BaseElement):
 
     @property
     def icon(self):
-        """str: get or set entry icon. See icons.py"""
+        """`str`: get or set entry icon. See icons.py"""
         return self._get_subelement_text('IconID')
 
     @icon.setter
@@ -232,7 +244,7 @@ class Entry(BaseElement):
 
     @property
     def tags(self):
-        """str: get or set entry tags"""
+        """`str`: get or set entry tags"""
         val = self._get_subelement_text('Tags')
         return val.replace(',', ';').split(';') if val else []
 
@@ -244,7 +256,7 @@ class Entry(BaseElement):
 
     @property
     def otp(self):
-        """str: get or set entry OTP text. (defacto standard)"""
+        """`str`: get or set entry OTP text. (defacto standard)"""
         return self._get_string_field('otp')
 
     @otp.setter
@@ -256,7 +268,7 @@ class Entry(BaseElement):
 
     @property
     def history(self):
-        """:obj:`list` of :obj:`HistoryEntry`: get entry history"""
+        """`list` of `HistoryEntry`: get entry history"""
         if self._element.find('History') is not None:
             return [HistoryEntry(element=x, kp=self._kp) for x in self._element.find('History').findall('Entry')]
         else:
@@ -295,7 +307,7 @@ class Entry(BaseElement):
 
     @property
     def autotype_window(self):
-        """str: get or set [autotype target window filter](https://keepass.info/help/base/autotype.html#autowindows)"""
+        """`str`: get or set [autotype target window filter](https://keepass.info/help/base/autotype.html#autowindows)"""
         sequence = self._element.find('AutoType/Association/Window')
         if sequence is None or sequence.text == '':
             return None
@@ -307,7 +319,7 @@ class Entry(BaseElement):
 
     @property
     def is_a_history_entry(self):
-        """bool: check if entry is History entry"""
+        """`bool`: check if entry is History entry"""
         parent = self._element.getparent()
         if parent is not None:
             return parent.tag == 'History'
@@ -315,8 +327,8 @@ class Entry(BaseElement):
 
     @property
     def path(self):
-        """Path to element as list.  List contains all parent group names
-        ending with entry title.  List contains strings or NoneTypes."""
+        """`list` of (`str` or `None`): Path of entry.  List contains all parent group names
+        ending with entry title. May contain `None` for unnamed/untitled groups/entries."""
 
         # The root group is an orphan
         if self.parentgroup is None:
@@ -352,10 +364,10 @@ class Entry(BaseElement):
         specified key.
 
         Args:
-            key (:obj:`str`): key of the custom property to check.
+            key (`str`): key of the custom property to check.
 
         Returns:
-            bool: Whether the custom property is protected.
+            `bool`: Whether the custom property is protected.
 
         """
         assert key not in reserved_keys, '{} is a reserved key'.format(key)
@@ -380,10 +392,10 @@ class Entry(BaseElement):
         """Create reference to an attribute of this element.
 
         Args:
-            attribute (str): one of 'title', 'username', 'password', 'url', 'notes', or 'uuid'
+            attribute (`str`): one of 'title', 'username', 'password', 'url', 'notes', or 'uuid'
 
         Returns:
-            str: [field reference][fieldref] to this field of this entry
+            `str`: [field reference][fieldref] to this field of this entry
 
         [fieldref]: https://keepass.info/help/base/fieldrefs.html
         """
@@ -398,10 +410,10 @@ class Entry(BaseElement):
         return '{{REF:{}@I:{}}}'.format(attribute_to_field[attribute], self.uuid.hex.upper())
 
     def save_history(self):
-        '''
+        """
         Save the entry in its history.  History is not created unless this function is
         explicitly called.
-        '''
+        """
         archive = deepcopy(self._element)
         hist = archive.find('History')
         if hist is not None:
@@ -417,8 +429,8 @@ class Entry(BaseElement):
         Delete entries from history
 
         Args:
-            history_entry (Entry): history item to delete
-            all (bool): delete all entries from history.  Default is False
+            history_entry (`Entry`): history item to delete
+            all (`bool`): delete all entries from history.  Default is False
         """
 
         if all:
