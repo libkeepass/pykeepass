@@ -11,3 +11,4 @@ Pipfile.lock
 .idea
 .venv*
 TMPNOTES
+docs/

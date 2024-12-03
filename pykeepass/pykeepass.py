@@ -30,7 +30,6 @@ from .xpath import attachment_xp, entry_xp, group_xp, path_xp
 
 logger = logging.getLogger(__name__)
 
-
 BLANK_DATABASE_FILENAME = "blank_database.kdbx"
 BLANK_DATABASE_LOCATION = os.path.join(os.path.dirname(os.path.realpath(__file__)), BLANK_DATABASE_FILENAME)
 BLANK_DATABASE_PASSWORD = "password"
@@ -323,7 +322,7 @@ class PyKeePass:
         with open(filename, 'wb') as f:
             f.write(self.xml())
 
-    def _xpath(self, xpath_str, tree=None, first=False, cast=False, **kwargs):
+    def xpath(self, xpath_str, tree=None, first=False, cast=False, **kwargs):
         """Look up elements in the XML payload and return corresponding object.
 
         Internal function which searches the payload lxml ElementTree for
@@ -332,18 +331,18 @@ class PyKeePass:
         is raised.
 
         Args:
-            xpath_str (str): XPath query for finding element(s)
-            tree (:obj:`_ElementTree`, :obj:`Element`, optional): use this
+            xpath_str (`str`): XPath query for finding element(s)
+            tree (`_ElementTree`, `Element`, optional): use this
                 element as root node when searching
-            first (bool): If True, function returns first result or None.  If
-                False, function returns list of matches or empty list.  Default
-                is False.
-            cast (bool): If True, matches are instead instantiated as
+            first (`bool`): If True, function returns first result or None.  If
+                False, function returns list of matches or empty list.
+                    (default `False`).
+            cast (`bool`): If True, matches are instead instantiated as
                 pykeepass Group, Entry, or Attachment objects.  An exception
-                is raised if a match cannot be cast.  Default is False.
+                is raised if a match cannot be cast.  (default `False`)
 
         Returns:
-            `Group`, `Entry`, `Attachment`, or `lxml.etree.Element`
+            `list` of `Group`, `Entry`, `Attachment`, or `lxml.etree.Element`
         """
 
         if tree is None:
@@ -372,6 +371,8 @@ class PyKeePass:
             res = res[0] if res else None
 
         return res
+
+    _xpath = xpath
 
     def _find(self, prefix, keys_xp, path=None, tree=None, first=False,
               history=False, regex=False, flags=None, **kwargs):

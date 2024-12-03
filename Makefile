@@ -46,5 +46,5 @@ tag:
 
 .PHONY: docs
 docs:
-	lazydocs pykeepass --overview-file README.md
+	pdoc -o docs --docformat google --no-search pykeepass '!pykeepass.icons'
 	ghp-import -f -p -b docs docs
