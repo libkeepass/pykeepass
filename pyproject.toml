@@ -3,7 +3,7 @@ name = "pykeepass"
 # setuptools normalizes semver '-' to '.'
 # avoid using hyphens: 1.2.3.post1
 version = "4.1.0.post1"
-readme = "README.rst"
+readme = "README.md"
 description = "Python library to interact with keepass databases (supports KDBX3 and KDBX4)"
 authors = [
     { name = "Philipp Schmitt", email = "philipp@schmitt.co" },
@@ -32,7 +32,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-test = ["pyotp"]
+test = ["pyotp", "pdoc"]
 
 [project.urls]
 Homepage = "https://github.com/libkeepass/pykeepass"
