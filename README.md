@@ -16,8 +16,7 @@ sudo apt install python3-lxml
 pip install pykeepass
 ```
 
-Quickstart
--------
+# Quickstart
 
 General database manipulation
 
@@ -198,19 +197,21 @@ OTP codes
 ```
 
 
-Tests and Debugging
--------------------
+# Tests and Debugging
 
 Run tests with `python tests/tests.py` or `python tests/tests.py SomeSpecificTest`
 
 Enable debugging when doing tests in console:
 
-   >>> from pykeepass.pykeepass import debug_setup
-   >>> debug_setup()
-   >>> kp.entries[0]
-   DEBUG:pykeepass.pykeepass:xpath query: //Entry
-   DEBUG:pykeepass.pykeepass:xpath query: (ancestor::Group)[last()]
-   DEBUG:pykeepass.pykeepass:xpath query: (ancestor::Group)[last()]
-   DEBUG:pykeepass.pykeepass:xpath query: String/Key[text()="Title"]/../Value
-   DEBUG:pykeepass.pykeepass:xpath query: String/Key[text()="UserName"]/../Value
-   Entry: "root_entry (foobar_user)"
+``` python
+>>> from pykeepass.pykeepass import debug_setup
+>>> debug_setup()
+>>> kp.entries[0]
+DEBUG:pykeepass.pykeepass:xpath query: //Entry
+DEBUG:pykeepass.pykeepass:xpath query: (ancestor::Group)[last()]
+DEBUG:pykeepass.pykeepass:xpath query: (ancestor::Group)[last()]
+DEBUG:pykeepass.pykeepass:xpath query: String/Key[text()="Title"]/../Value
+DEBUG:pykeepass.pykeepass:xpath query: String/Key[text()="UserName"]/../Value
+Entry: "root_entry (foobar_user)"
+```
+
