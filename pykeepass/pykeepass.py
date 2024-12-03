@@ -39,15 +39,15 @@ class PyKeePass:
     """Open a KeePass database
 
     Args:
-        filename (:obj:`str`, optional): path to database or stream object.
+        filename (`str`, optional): path to database or stream object.
             If None, the path given when the database was opened is used.
-        password (:obj:`str`, optional): database password.  If None,
+        password (`str`, optional): database password.  If None,
             database is assumed to have no password
-        keyfile (:obj:`str`, optional): path to keyfile.  If None,
+        keyfile (`str`, optional): path to keyfile.  If None,
             database is assumed to have no keyfile
-        transformed_key (:obj:`bytes`, optional): precomputed transformed
+        transformed_key (`bytes`, optional): precomputed transformed
             key.
-        decrypt (:obj:`bool`, optional): whether to decrypt XML payload.
+        decrypt (`bool`, optional): whether to decrypt XML payload.
             Set `False` to access outer header information without decrypting
             database.
 
@@ -137,7 +137,7 @@ class PyKeePass:
                 raise
 
     def reload(self):
-        """Reload current database using previous credentials """
+        """Reload current database using previously given credentials """
 
         self.read(self.filename, self.password, self.keyfile)
 
@@ -145,10 +145,10 @@ class PyKeePass:
         """Save current database object to disk.
 
         Args:
-            filename (:obj:`str`, optional): path to database or stream object.
+            filename (`str`, optional): path to database or stream object.
                 If None, the path given when the database was opened is used.
                 PyKeePass.filename is unchanged.
-            transformed_key (:obj:`bytes`, optional): precomputed transformed
+            transformed_key (`bytes`, optional): precomputed transformed
                 key.
         """
 
@@ -258,13 +258,13 @@ class PyKeePass:
 
     @property
     def groups(self):
-        """`list` of `Group`: all Group objects in database
+        """`list` of `Group`: all groups in database
         """
         return self.find_groups()
 
     @property
     def entries(self):
-        """`list` of `Entry`: all Entry objects in database,
+        """`list` of `Entry`: all entries in database,
         excluding history"""
         return self.find_entries()
 
@@ -305,7 +305,7 @@ class PyKeePass:
         """Get XML part of database as string
 
         Returns:
-            `str`
+            `str`: XML content of database
         """
         return etree.tostring(
             self.tree,
@@ -318,7 +318,7 @@ class PyKeePass:
         """ Dump the contents of the database to file as XML
 
         Args:
-            filename (str): path to output file
+            filename (`str`): path to output file
         """
         with open(filename, 'wb') as f:
             f.write(self.xml())
@@ -458,32 +458,66 @@ class PyKeePass:
     )
 
     def find_groups(self, recursive=True, path=None, group=None, **kwargs):
-        """
-        Find groups in a database
-
-        Args:
-            name (str): name of group
-            first (bool): return first result instead of list (default False)
-            recursive (bool): do a recursive search of all groups/subgroups
-            path (str): do group search starting from path
-            group (Group): search underneath group
-            uuid (uuid.UUID): group UUID
-            regex (bool): whether `str` search arguments contain [XSLT style][XSLT style] regular expression
-            flags (str): XPath [flags][flags]
-
-        Returns:
-            `list` of `Group` or `Group`
+        """ Find groups in a database
 
         [XSLT style]: https://www.xml.com/pub/a/2003/06/04/tr.html
         [flags]: https://www.w3.org/TR/xpath-functions/#flags
+
+        Args:
+            name (`str`): name of group
+            first (`bool`): return first result instead of list (default `False`)
+            recursive (`bool`): do a recursive search of all groups/subgroups
+            path (`list` of `str`): do group search starting from path
+            group (`Group`): search underneath group
+            uuid (`uuid.UUID`): group UUID
+            regex (`bool`): whether `str` search arguments contain [XSLT style][XSLT style] regular expression
+            flags (`str`): XPath [flags][flags]
+
+        The `path` list is a full path to a group (ex. `['foobar_group', 'sub_group']`).  This implies `first=True`.  All other arguments are ignored when this is given.  This is useful for handling user input.
+
+        The `group` argument determines what `Group` to search under, and the `recursive` boolean controls whether to search recursively.
+
+        The `first` (default `False`) boolean controls whether to return the first matched item, or a list of matched items.
+
+        - if `first=False`, the function returns a list of `Group` or `[]` if there are no matches
+        - if `first=True`, the function returns the first `Group` match, or `None` if there are no matches
+
+        Returns:
+            `list` of `Group` if `first=False`
+            or (`Group` or `None`) if `first=True`
+
+        Examples:
+        ``` python
+        >>> kp.find_groups(name='foo', first=True)
+        Group: "foo"
+
+        >>> kp.find_groups(name='foo.*', regex=True)
+        [Group: "foo", Group "foobar"]
+
+        >>> kp.find_groups(path=['social'], regex=True)
+        [Group: "social", Group: "social/foo_subgroup"]
+
+        >>> kp.find_groups(name='social', first=True).subgroups
+        [Group: "social/foo_subgroup"]
+        ```
         """
 
         prefix = '//Group' if recursive else '/Group'
         res = self._find(prefix, group_xp, path=path, tree=group, **kwargs)
         return res
 
-    # creates a new group and all parent groups, if necessary
     def add_group(self, destination_group, group_name, icon=None, notes=None):
+        """Create a new group and all parent groups, if necessary
+
+        Args:
+            destination_group (`Group`): parent group to add a new group to
+            group_name (`str`): name of new group
+            icon (`str`): icon name from `icons`
+            notes (`str`): group notes
+
+        Returns:
+            `Group`: newly added group
+        """
         logger.debug('Creating group {}'.format(group_name))
 
         if icon:
@@ -498,6 +532,7 @@ class PyKeePass:
         group.delete()
 
     def move_group(self, group, destination_group):
+        """Move a group"""
         destination_group.append(group)
 
     def _create_or_get_recyclebin_group(self, **kwargs):
@@ -513,8 +548,10 @@ class PyKeePass:
     def trash_group(self, group):
         """Move a group to the RecycleBin
 
+        The recycle bin is created if it does not exit. ``group`` must be an empty Group.
+
         Args:
-            group (:obj:`Group`): Group to send to the RecycleBin
+            group (`Group`): Group to send to the RecycleBin
         """
         if not self._can_be_moved_to_recyclebin(group):
             raise UnableToSendToRecycleBin
@@ -522,12 +559,12 @@ class PyKeePass:
         self.move_group( group, recyclebin_group)
 
     def empty_group(self, group):
-        """Delete the content of a group.
+        """Delete all entries and subgroups of a group.
 
         This does not delete the group itself
 
         Args:
-            group (:obj:`Group`): Group to empty
+            group (`Group`): Group to empty
         """
         while len(group.subgroups):
             self.delete_group(group.subgroups[0])
@@ -549,6 +586,59 @@ class PyKeePass:
     )
 
     def find_entries(self, recursive=True, path=None, group=None, **kwargs):
+        """Returns entries which match all provided parameters
+        Args:
+            path (`list` of (`str` or `None`), optional): full path to an entry
+                (eg. `['foobar_group', 'foobar_entry']`).  This implies `first=True`.
+                All other arguments are ignored when this is given.  This is useful for
+                handling user input.
+            title (`str`, optional): title of entry to find
+            username (`str`, optional): username of entry to find
+            password (`str`, optional): password of entry to find
+            url (`str`, optional): url of entry to find
+            notes (`str`, optional): notes of entry to find
+            otp (`str`, optional): otp string of entry to find
+            string (`dict`): custom string fields.
+                (eg. `{'custom_field1': 'custom value', 'custom_field2': 'custom value'}`)
+            uuid (`uuid.UUID`): entry UUID
+            tags (`list` of `str`): entry tags
+            autotype_enabled (`bool`, optional): autotype string is enabled
+            autotype_sequence (`str`, optional): autotype string
+            autotype_window (`str`, optional): autotype target window filter string
+            group (`Group` or `None`, optional): search under this group
+            first (`bool`, optional): return first match or `None` if no matches.
+                Otherwise return list of `Entry` matches. (default `False`)
+            history (`bool`): include history entries in results. (default `False`)
+            recursive (`bool`): search recursively
+            regex (`bool`): interpret search strings given above as
+                [XSLT style](https://www.xml.com/pub/a/2003/06/04/tr.html) regexes
+            flags (`str`): regex [search flags](https://www.w3.org/TR/xpath-functions/#flags)
+
+        Returns:
+            `list` of `Entry` if `first=False`
+            or (`Entry` or `None`) if `first=True`
+
+        Examples:
+
+        ``` python
+        >>> kp.find_entries(title='gmail', first=True)
+        Entry: "social/gmail (myusername)"
+
+        >>> kp.find_entries(title='foo.*', regex=True)
+        [Entry: "foo_entry (myusername)", Entry: "foobar_entry (myusername)"]
+
+        >>> entry = kp.find_entries(title='foo.*', url='.*facebook.*', regex=True, first=True)
+        >>> entry.url
+        'facebook.com'
+        >>> entry.title
+        'foo_entry'
+        >>> entry.title = 'hello'
+
+        >>> group = kp.find_group(name='social', first=True)
+        >>> kp.find_entries(title='facebook', group=group, recursive=False, first=True)
+        Entry: "social/facebook (myusername)"
+        ```
+        """
 
         prefix = '//Entry' if recursive else '/Entry'
         res = self._find(prefix, entry_xp, path=path, tree=group, **kwargs)
@@ -559,6 +649,31 @@ class PyKeePass:
     def add_entry(self, destination_group, title, username,
                   password, url=None, notes=None, expiry_time=None,
                   tags=None, otp=None, icon=None, force_creation=False):
+
+        """Create a new entry
+
+        Args:
+            destination_group (`Group`): parent group to add a new entry to
+            title (`str`, or `None`): title of new entry
+            username (`str` or `None`): username of new entry
+            password (`str` or `None`): password of new entry
+            url (`str` or `None`): URL of new entry
+            notes (`str` or `None`): notes of new entry
+            expiry_time (`datetime.datetime`): time of entry expiration
+            tags (`list` of `str` or `None`): entry tags
+            otp (`str` or `None`): OTP code of object
+            icon (`str`, optional): icon name from `icons`
+            force_creation (`bool`): create entry even if one with identical
+                title exists in this group (default `False`)
+
+        If ``expiry_time`` is a naive datetime object
+        (i.e. ``expiry_time.tzinfo`` is not set), the timezone is retrieved from
+        ``dateutil.tz.gettz()``.
+
+
+        Returns:
+            `Group`: newly added group
+        """
 
         entries = self.find_entries(
             title=title,
@@ -594,16 +709,29 @@ class PyKeePass:
         return entry
 
     def delete_entry(self, entry):
+        """Delete entry
+
+        Args:
+            entry (`Entry`): entry to delete
+        """
         entry.delete()
 
     def move_entry(self, entry, destination_group):
+        """Move entry to group
+
+        Args:
+            entry (`Entry`): entry to move
+            destination_group (`Group`): group to move to
+        """
         destination_group.append(entry)
 
     def trash_entry(self, entry):
         """Move an entry to the RecycleBin
 
+        The recycle bin is created if it does not exit.
+
         Args:
-            entry (:obj:`Entry`): Entry to send to the RecycleBin
+            entry (`Entry`): Entry to send to the RecycleBin
         """
         if not self._can_be_moved_to_recyclebin(entry):
             raise UnableToSendToRecycleBin
@@ -613,6 +741,20 @@ class PyKeePass:
     # ---------- Attachments ----------
 
     def find_attachments(self, recursive=True, path=None, element=None, **kwargs):
+        """ Find attachments in database
+
+        Args:
+            id (`int` or `None`): attachment ID to match
+            filename (`str` or `None`): filename to match
+            element (`Entry` or `Group` or `None`): entry or group to search under
+            recursive (`bool`): search recursively (default `True`)
+            regex (`bool`): whether `str` search arguments contain [XSLT style][XSLT style] regular expression
+            flags (`str`): XPath [flags][flags]
+            history (`bool`): search under history entries. (default `False`)
+            first (`bool`): If True, function returns first result or None.  If
+                False, function returns list of matches or empty list.  (default
+                `False`).
+        """
 
         prefix = '//Binary' if recursive else '/Binary'
         res = self._find(prefix, attachment_xp, path=path, tree=element, **kwargs)
@@ -621,10 +763,13 @@ class PyKeePass:
 
     @property
     def attachments(self):
+        """`list` of `Attachment`: all attachments in database"""
         return self.find_attachments(filename='.*', regex=True)
 
     @property
     def binaries(self):
+        """`list` of `bytes`: all attachment binaries in database.  The position
+        within this list indicates the binary's ID"""
         if self.version >= (4, 0):
             # first byte is a prepended flag
             binaries = [a.data[1:] for a in self.payload.inner_header.binary]
@@ -646,6 +791,18 @@ class PyKeePass:
         return binaries
 
     def add_binary(self, data, compressed=True, protected=True):
+        """Add binary data to database.  Note this does not create an attachment (see `Entry.add_attachment`)
+
+        Args:
+            data (`bytes`): binary data
+            compressed (`bool`): whether binary data should be compressed.
+                (default `True`).  Applies only to KDBX3
+            protected (`bool`): whether protected flag should be set.  (default `True`).  Note
+                Applies only to KDBX4
+
+        Returns:
+            id (`int`): ID of binary in database
+        """
         if self.version >= (4, 0):
             # add protected flag byte
             data = b'\x01' + data if protected else b'\x00' + data
@@ -680,6 +837,17 @@ class PyKeePass:
         return len(self.binaries) - 1
 
     def delete_binary(self, id):
+        """Remove a binary from database and deletes attachments that reference it
+
+        Since attachments reference binaries by their positional index,
+        attachments that reference binaries with ID > `id` will automatically be decremented
+
+        Args:
+            id (`int`): ID of binary to remove
+
+        Raises:
+            `IndexError`: raised when binary with given ID does not exist
+        """
         try:
             if self.version >= (4, 0):
                 # remove binary element from inner header
@@ -756,7 +924,7 @@ class PyKeePass:
 
     @property
     def keyfile(self):
-        """`str` or `pathlib.Path`: get or set database keyfile"""
+        """`str` or `pathlib.Path` or `None`: get or set database keyfile"""
         return self._keyfile
 
     @keyfile.setter
@@ -867,13 +1035,13 @@ def create_database(
     Create a new database at ``filename`` with supplied credentials.
 
     Args:
-        filename (:obj:`str`, optional): path to database or stream object.
+        filename (`str`, optional): path to database or stream object.
             If None, the path given when the database was opened is used.
-        password (:obj:`str`, optional): database password.  If None,
+        password (`str`, optional): database password.  If None,
             database is assumed to have no password
-        keyfile (:obj:`str`, optional): path to keyfile.  If None,
+        keyfile (`str`, optional): path to keyfile.  If None,
             database is assumed to have no keyfile
-        transformed_key (:obj:`bytes`, optional): precomputed transformed
+        transformed_key (`bytes`, optional): precomputed transformed
             key.
 
     Returns:

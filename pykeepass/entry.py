@@ -162,6 +162,8 @@ class Entry(BaseElement):
     def add_attachment(self, id, filename):
         """Add attachment to entry
 
+        The existence of a binary with the given `id` is not checked
+
         Args:
             id (`int`): ID of attachment in database
             filename (`str`): filename to assign to this attachment data
@@ -178,7 +180,7 @@ class Entry(BaseElement):
         return attachment.Attachment(element=element, kp=self._kp)
 
     def delete_attachment(self, attachment):
-        """remove an attachment from entry"""
+        """remove an attachment from entry.  Does not remove binary data"""
         attachment.delete()
 
     def deref(self, attribute):
@@ -235,7 +237,7 @@ class Entry(BaseElement):
 
     @property
     def icon(self):
-        """`str`: get or set entry icon. See icons.py"""
+        """`str`: get or set entry icon. See `icons`"""
         return self._get_subelement_text('IconID')
 
     @icon.setter

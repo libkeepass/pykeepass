@@ -3,7 +3,15 @@ from .exceptions import BinaryError
 
 
 class Attachment:
-    """Binary data attached to an `Entry`. A piece of binary data may be attached to multiple entries"""
+    """Binary data attached to an `Entry`.
+
+    *Binary* refers to the bytes of the attached data
+    (stored at the root level of the database), while *attachment* is a
+    reference to a binary (stored in an entry).  A binary can be referenced
+    by none, one or many attachments.
+    A piece of binary data may be attached to multiple entries
+
+    """
     def __init__(self, element=None, kp=None, id=None, filename=None):
         self._element = element
         self._kp = kp
@@ -22,7 +30,7 @@ class Attachment:
 
     @property
     def filename(self):
-        """`str`: get or set filename attachment"""
+        """`str`: get or set filename string"""
         return self._element.find('Key').text
 
     @filename.setter
