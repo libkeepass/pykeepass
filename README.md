@@ -1,9 +1,8 @@
 # pykeepass
 
 <a href="https://github.com/libkeepass/pykeepass/actions/workflows/ci.yaml"><img src="https://github.com/libkeepass/pykeepass/actions/workflows/ci.yaml/badge.svg"/></a>
-<a href="https://pykeepass.readthedocs.io/en/latest/?badge=latest"><img src="https://readthedocs.org/projects/pykeepass/badge/?version=latest"/></a>
-<a href="https://matrix.to/#/#pykeepass:matrix.org"><img src="https://img.shields.io/matrix/pykeepass:matrix.org.svg"/></a>
-<a href="https://webchat.freenode.net/?channels=pykeepass"><img src="https://img.shields.io/badge/irc-%23pykeepass-brightgreen"/></a>
+<a href="https://libkeepass.github.io/pykeepass"><img src="https://readthedocs.org/projects/pykeepass/badge/?version=latest"/></a>
+<a href="https://matrix.to/#/%23pykeepass:matrix.org"><img src="https://img.shields.io/badge/chat-%23pykeepass-green"/></a>
     
 This library allows you to write entries to a KeePass database.
 
