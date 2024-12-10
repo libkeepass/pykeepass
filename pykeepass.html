@@ -22,14 +22,9 @@
             <h2>Contents</h2>
             <ul>
   <li><a href="#pykeepass">pykeepass</a></li>
-  <li><a href="#installation">Installation</a>
-  <ul>
-    <li><a href="#quickstart">Quickstart</a></li>
-    <li><a href="#credential-expiry">Credential Expiry</a></li>
-    <li><a href="#miscellaneous">Miscellaneous</a></li>
-    <li><a href="#totp">TOTP</a></li>
-    <li><a href="#tests-and-debugging">Tests and Debugging</a></li>
-  </ul></li>
+  <li><a href="#installation">Installation</a></li>
+  <li><a href="#quickstart">Quickstart</a></li>
+  <li><a href="#tests-and-debugging">Tests and Debugging</a></li>
 </ul>
 
 
@@ -358,9 +353,8 @@ pykeepass    </h1>
                         <div class="docstring"><h1 id="pykeepass">pykeepass</h1>
 
 <p><a href="https://github.com/libkeepass/pykeepass/actions/workflows/ci.yaml"><img src="https://github.com/libkeepass/pykeepass/actions/workflows/ci.yaml/badge.svg"/></a>
-<a href="https://pykeepass.readthedocs.io/en/latest/?badge=latest"><img src="https://readthedocs.org/projects/pykeepass/badge/?version=latest"/></a>
-<a href="https://matrix.to/#/#pykeepass:matrix.org"><img src="https://img.shields.io/matrix/pykeepass:matrix.org.svg"/></a>
-<a href="https://webchat.freenode.net/?channels=pykeepass"><img src="https://img.shields.io/badge/irc-%23pykeepass-brightgreen"/></a></p>
+<a href="https://libkeepass.github.io/pykeepass"><img src="https://readthedocs.org/projects/pykeepass/badge/?version=latest"/></a>
+<a href="https://matrix.to/#/%23pykeepass:matrix.org"><img src="https://img.shields.io/badge/chat-%23pykeepass-green"/></a></p>
 
 <p>This library allows you to write entries to a KeePass database.</p>
 
@@ -374,7 +368,7 @@ pip<span class="w"> </span>install<span class="w"> </span>pykeepass
 </code></pre>
 </div>
 
-<h2 id="quickstart">Quickstart</h2>
+<h1 id="quickstart">Quickstart</h1>
 
 <p>General database manipulation</p>
 
@@ -559,110 +553,24 @@ pip<span class="w"> </span>install<span class="w"> </span>pykeepass
 </code></pre>
 </div>
 
-<p>`</p>
+<h1 id="tests-and-debugging">Tests and Debugging</h1>
 
-<h2 id="credential-expiry">Credential Expiry</h2>
+<p>Run tests with <code>python tests/tests.py</code> or <code>python tests/tests.py SomeSpecificTest</code></p>
 
-<p><strong>credchange_date</strong></p>
+<p>Enable debugging when doing tests in console:</p>
 
-<p>datetime object with date of last credentials change</p>
-
-<p><strong>credchange_required</strong></p>
-
-<p>boolean whether database credentials have expired and are required to change</p>
-
-<p><strong>credchange_recommended</strong></p>
-
-<p>boolean whether database credentials have expired and are recommended to change</p>
-
-<p><strong>credchange_required_days</strong></p>
-
-<p>days after <strong>credchange_date</strong> that credential update is required</p>
-
-<p><strong>credchange_recommended_days</strong></p>
-
-<p>days after <strong>credchange_date</strong> that credential update is recommended</p>
-
-<h2 id="miscellaneous">Miscellaneous</h2>
-
-<p><strong>read</strong> (filename=None, password=None, keyfile=None, transformed_key=None, decrypt=False)</p>
-
-<p>where <code>filename</code>, <code>password</code>, and <code>keyfile</code> are strings (  <code>filename</code> and <code>keyfile</code> may also be file-like objects).  <code>filename</code> is the path to the database, <code>password</code> is the master password string, and <code>keyfile</code> is the path to the database keyfile.  At least one of <code>password</code> and <code>keyfile</code> is required.  Alternatively, the derived key can be supplied directly through <code>transformed_key</code>.  <code>decrypt</code> tells whether the file should be decrypted or not.</p>
-
-<p>Can raise <code>CredentialsError</code>, <code>HeaderChecksumError</code>, or <code>PayloadChecksumError</code>.</p>
-
-<p><strong>reload</strong> ()</p>
-
-<p>reload database from disk using previous credentials</p>
-
-<p><strong>save</strong> (filename=None)</p>
-
-<p>where <code>filename</code> is the path of the file to save to (<code>filename</code> may also be file-like object).  If <code>filename</code> is not given, the path given in <code>read</code> will be used.</p>
-
-<p><strong>password</strong></p>
-
-<p>string containing database password.  Can also be set.  Use <code>None</code> for no password.</p>
-
-<p><strong>filename</strong></p>
-
-<p>string containing path to database.  Can also be set</p>
-
-<p><strong>keyfile</strong></p>
-
-<p>string containing path to the database keyfile.  Can also be set.  Use <code>None</code> for no keyfile.</p>
-
-<p><strong>version</strong></p>
-
-<p>tuple containing database version.  e.g. <code>(3, 1)</code> is a KDBX version 3.1 database.</p>
-
-<p><strong>encryption_algorithm</strong></p>
-
-<p>string containing algorithm used to encrypt database.  Possible values are <code>aes256</code>, <code>chacha20</code>, and <code>twofish</code>.</p>
-
-<p><strong>create_database</strong> (filename, password=None, keyfile=None, transformed_key=None)</p>
-
-<p>create a new database at <code>filename</code> with supplied credentials.  Returns <code><a href="#PyKeePass">PyKeePass</a></code> object</p>
-
-<p><strong>tree</strong></p>
-
-<p>database lxml tree</p>
-
-<p><strong>xml</strong></p>
-
-<p>get database XML data as string</p>
-
-<p><strong>dump_xml</strong> (filename)</p>
-
-<p>pretty print database XML to file</p>
-
-<h2 id="totp">TOTP</h2>
-
-<p><strong><a href="#Entry.otp">Entry.otp</a></strong></p>
-
-<p>TOTP URI which can be passed to an OTP library to generate codes</p>
-
-<p>.. code:: python</p>
-
-<h2 id="tests-and-debugging">Tests and Debugging</h2>
-
-<p>Run tests with :code:<code>python tests/tests.py</code> or :code:<code>python tests/tests.py SomeSpecificTest</code></p>
-
-<h6 id="enable-debugging-when-doing-tests-in-console">Enable debugging when doing tests in console:</h6>
-
-<blockquote>
-  <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pykeepass.pykeepass</span> <span class="kn">import</span> <span class="n">debug_setup</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">debug_setup</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">kp</span><span class="o">.</span><span class="n">entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="go">DEBUG:pykeepass.pykeepass:xpath query: //Entry</span>
-<span class="go">DEBUG:pykeepass.pykeepass:xpath query: (ancestor::Group)[last()]</span>
-<span class="go">DEBUG:pykeepass.pykeepass:xpath query: (ancestor::Group)[last()]</span>
-<span class="go">DEBUG:pykeepass.pykeepass:xpath query: String/Key[text()=&quot;Title&quot;]/../Value</span>
-<span class="go">DEBUG:pykeepass.pykeepass:xpath query: String/Key[text()=&quot;UserName&quot;]/../Value</span>
-<span class="go">Entry: &quot;root_entry (foobar_user)&quot;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">pykeepass.pykeepass</span> <span class="kn">import</span> <span class="n">debug_setup</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">debug_setup</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">kp</span><span class="o">.</span><span class="n">entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">DEBUG</span><span class="p">:</span><span class="n">pykeepass</span><span class="o">.</span><span class="n">pykeepass</span><span class="p">:</span><span class="n">xpath</span> <span class="n">query</span><span class="p">:</span> <span class="o">//</span><span class="n">Entry</span>
+<span class="n">DEBUG</span><span class="p">:</span><span class="n">pykeepass</span><span class="o">.</span><span class="n">pykeepass</span><span class="p">:</span><span class="n">xpath</span> <span class="n">query</span><span class="p">:</span> <span class="p">(</span><span class="n">ancestor</span><span class="p">::</span><span class="n">Group</span><span class="p">)[</span><span class="n">last</span><span class="p">()]</span>
+<span class="n">DEBUG</span><span class="p">:</span><span class="n">pykeepass</span><span class="o">.</span><span class="n">pykeepass</span><span class="p">:</span><span class="n">xpath</span> <span class="n">query</span><span class="p">:</span> <span class="p">(</span><span class="n">ancestor</span><span class="p">::</span><span class="n">Group</span><span class="p">)[</span><span class="n">last</span><span class="p">()]</span>
+<span class="n">DEBUG</span><span class="p">:</span><span class="n">pykeepass</span><span class="o">.</span><span class="n">pykeepass</span><span class="p">:</span><span class="n">xpath</span> <span class="n">query</span><span class="p">:</span> <span class="n">String</span><span class="o">/</span><span class="n">Key</span><span class="p">[</span><span class="n">text</span><span class="p">()</span><span class="o">=</span><span class="s2">&quot;Title&quot;</span><span class="p">]</span><span class="o">/../</span><span class="n">Value</span>
+<span class="n">DEBUG</span><span class="p">:</span><span class="n">pykeepass</span><span class="o">.</span><span class="n">pykeepass</span><span class="p">:</span><span class="n">xpath</span> <span class="n">query</span><span class="p">:</span> <span class="n">String</span><span class="o">/</span><span class="n">Key</span><span class="p">[</span><span class="n">text</span><span class="p">()</span><span class="o">=</span><span class="s2">&quot;UserName&quot;</span><span class="p">]</span><span class="o">/../</span><span class="n">Value</span>
+<span class="n">Entry</span><span class="p">:</span> <span class="s2">&quot;root_entry (foobar_user)&quot;</span>
 </code></pre>
-  </div>
-</blockquote>
+</div>
 </div>
 
                         <input id="mod-pykeepass-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
@@ -677,7 +585,7 @@ pip<span class="w"> </span>install<span class="w"> </span>pykeepass
 </span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="kn">from</span> <span class="nn">.entry</span> <span class="kn">import</span> <span class="n">Entry</span>
 </span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="kn">from</span> <span class="nn">.group</span> <span class="kn">import</span> <span class="n">Group</span>
 </span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="kn">from</span> <span class="nn">.attachment</span> <span class="kn">import</span> <span class="n">Attachment</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="kn">from</span> <span class="nn">.icons</span> <span class="kn">import</span> <span class="n">icons</span> <span class="k">as</span> <span class="n">icons</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="kn">from</span> <span class="nn">.icons</span> <span class="kn">import</span> <span class="n">icons</span>
 </span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="kn">from</span> <span class="nn">.version</span> <span class="kn">import</span> <span class="n">__version__</span>
 </span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>
 </span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PyKeePass&quot;</span><span class="p">,</span> <span class="s2">&quot;Entry&quot;</span><span class="p">,</span> <span class="s2">&quot;Group&quot;</span><span class="p">,</span> <span class="s2">&quot;Attachment&quot;</span><span class="p">,</span> <span class="s2">&quot;icons&quot;</span><span class="p">,</span> <span class="s2">&quot;create_database&quot;</span><span class="p">,</span> <span class="s2">&quot;__version__&quot;</span><span class="p">]</span>
@@ -1587,7 +1495,7 @@ pip<span class="w"> </span>install<span class="w"> </span>pykeepass
 </span><span id="PyKeePass-926"><a href="#PyKeePass-926"><span class="linenos"> 926</span></a>
 </span><span id="PyKeePass-927"><a href="#PyKeePass-927"><span class="linenos"> 927</span></a>    <span class="nd">@property</span>
 </span><span id="PyKeePass-928"><a href="#PyKeePass-928"><span class="linenos"> 928</span></a>    <span class="k">def</span> <span class="nf">keyfile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="PyKeePass-929"><a href="#PyKeePass-929"><span class="linenos"> 929</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;`str` or `pathlib.Path`: get or set database keyfile&quot;&quot;&quot;</span>
+</span><span id="PyKeePass-929"><a href="#PyKeePass-929"><span class="linenos"> 929</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;`str` or `pathlib.Path` or `None`: get or set database keyfile&quot;&quot;&quot;</span>
 </span><span id="PyKeePass-930"><a href="#PyKeePass-930"><span class="linenos"> 930</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keyfile</span>
 </span><span id="PyKeePass-931"><a href="#PyKeePass-931"><span class="linenos"> 931</span></a>
 </span><span id="PyKeePass-932"><a href="#PyKeePass-932"><span class="linenos"> 932</span></a>    <span class="nd">@keyfile</span><span class="o">.</span><span class="n">setter</span>
@@ -3412,12 +3320,12 @@ attachments that reference binaries with ID &gt; <code>id</code> will automatica
     <a class="headerlink" href="#PyKeePass.keyfile"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="PyKeePass.keyfile-927"><a href="#PyKeePass.keyfile-927"><span class="linenos">927</span></a>    <span class="nd">@property</span>
 </span><span id="PyKeePass.keyfile-928"><a href="#PyKeePass.keyfile-928"><span class="linenos">928</span></a>    <span class="k">def</span> <span class="nf">keyfile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="PyKeePass.keyfile-929"><a href="#PyKeePass.keyfile-929"><span class="linenos">929</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;`str` or `pathlib.Path`: get or set database keyfile&quot;&quot;&quot;</span>
+</span><span id="PyKeePass.keyfile-929"><a href="#PyKeePass.keyfile-929"><span class="linenos">929</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;`str` or `pathlib.Path` or `None`: get or set database keyfile&quot;&quot;&quot;</span>
 </span><span id="PyKeePass.keyfile-930"><a href="#PyKeePass.keyfile-930"><span class="linenos">930</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keyfile</span>
 </span></pre></div>
 
 
-            <div class="docstring"><p><code>str</code> or <code>pathlib.Path</code>: get or set database keyfile</p>
+            <div class="docstring"><p><code>str</code> or <code>pathlib.Path</code> or <code>None</code>: get or set database keyfile</p>
 </div>
 
 
@@ -3719,8 +3627,8 @@ attachments that reference binaries with ID &gt; <code>id</code> will automatica
 </span><span id="Entry-189"><a href="#Entry-189"><span class="linenos">189</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kp</span><span class="o">.</span><span class="n">deref</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span>
 </span><span id="Entry-190"><a href="#Entry-190"><span class="linenos">190</span></a>
 </span><span id="Entry-191"><a href="#Entry-191"><span class="linenos">191</span></a>    <span class="nd">@property</span>
-</span><span id="Entry-192"><a href="#Entry-192"><span class="linenos">192</span></a>    <span class="k">def</span> <span class="nf">title</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="Entry-193"><a href="#Entry-193"><span class="linenos">193</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;`str`: get or set entry title&quot;&quot;&quot;</span>
+</span><span id="Entry-192"><a href="#Entry-192"><span class="linenos">192</span></a>    <span class="k">def</span> <span class="nf">title</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="Entry-193"><a href="#Entry-193"><span class="linenos">193</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;get or set entry title&quot;&quot;&quot;</span>
 </span><span id="Entry-194"><a href="#Entry-194"><span class="linenos">194</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_string_field</span><span class="p">(</span><span class="s1">&#39;Title&#39;</span><span class="p">)</span>
 </span><span id="Entry-195"><a href="#Entry-195"><span class="linenos">195</span></a>
 </span><span id="Entry-196"><a href="#Entry-196"><span class="linenos">196</span></a>    <span class="nd">@title</span><span class="o">.</span><span class="n">setter</span>
@@ -3776,13 +3684,13 @@ attachments that reference binaries with ID &gt; <code>id</code> will automatica
 </span><span id="Entry-246"><a href="#Entry-246"><span class="linenos">246</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_subelement_text</span><span class="p">(</span><span class="s1">&#39;IconID&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 </span><span id="Entry-247"><a href="#Entry-247"><span class="linenos">247</span></a>
 </span><span id="Entry-248"><a href="#Entry-248"><span class="linenos">248</span></a>    <span class="nd">@property</span>
-</span><span id="Entry-249"><a href="#Entry-249"><span class="linenos">249</span></a>    <span class="k">def</span> <span class="nf">tags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="Entry-249"><a href="#Entry-249"><span class="linenos">249</span></a>    <span class="k">def</span> <span class="nf">tags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 </span><span id="Entry-250"><a href="#Entry-250"><span class="linenos">250</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;`str`: get or set entry tags&quot;&quot;&quot;</span>
 </span><span id="Entry-251"><a href="#Entry-251"><span class="linenos">251</span></a>        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_subelement_text</span><span class="p">(</span><span class="s1">&#39;Tags&#39;</span><span class="p">)</span>
 </span><span id="Entry-252"><a href="#Entry-252"><span class="linenos">252</span></a>        <span class="k">return</span> <span class="n">val</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">val</span> <span class="k">else</span> <span class="p">[]</span>
 </span><span id="Entry-253"><a href="#Entry-253"><span class="linenos">253</span></a>
 </span><span id="Entry-254"><a href="#Entry-254"><span class="linenos">254</span></a>    <span class="nd">@tags</span><span class="o">.</span><span class="n">setter</span>
-</span><span id="Entry-255"><a href="#Entry-255"><span class="linenos">255</span></a>    <span class="k">def</span> <span class="nf">tags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">):</span>
+</span><span id="Entry-255"><a href="#Entry-255"><span class="linenos">255</span></a>    <span class="k">def</span> <span class="nf">tags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="nb">list</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">):</span>
 </span><span id="Entry-256"><a href="#Entry-256"><span class="linenos">256</span></a>        <span class="c1"># Accept both str or list</span>
 </span><span id="Entry-257"><a href="#Entry-257"><span class="linenos">257</span></a>        <span class="n">v</span> <span class="o">=</span> <span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">value</span><span class="p">])</span>
 </span><span id="Entry-258"><a href="#Entry-258"><span class="linenos">258</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_subelement_text</span><span class="p">(</span><span class="s1">&#39;Tags&#39;</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
@@ -4237,20 +4145,20 @@ attachments that reference binaries with ID &gt; <code>id</code> will automatica
                             <div id="Entry.title" class="classattr">
                                         <input id="Entry.title-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 <div class="attr variable">
-            <span class="name">title</span>
+            <span class="name">title</span><span class="annotation">: str</span>
 
                 <label class="view-source-button" for="Entry.title-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#Entry.title"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="Entry.title-191"><a href="#Entry.title-191"><span class="linenos">191</span></a>    <span class="nd">@property</span>
-</span><span id="Entry.title-192"><a href="#Entry.title-192"><span class="linenos">192</span></a>    <span class="k">def</span> <span class="nf">title</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="Entry.title-193"><a href="#Entry.title-193"><span class="linenos">193</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;`str`: get or set entry title&quot;&quot;&quot;</span>
+</span><span id="Entry.title-192"><a href="#Entry.title-192"><span class="linenos">192</span></a>    <span class="k">def</span> <span class="nf">title</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="Entry.title-193"><a href="#Entry.title-193"><span class="linenos">193</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;get or set entry title&quot;&quot;&quot;</span>
 </span><span id="Entry.title-194"><a href="#Entry.title-194"><span class="linenos">194</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_string_field</span><span class="p">(</span><span class="s1">&#39;Title&#39;</span><span class="p">)</span>
 </span></pre></div>
 
 
-            <div class="docstring"><p><code>str</code>: get or set entry title</p>
+            <div class="docstring"><p>get or set entry title</p>
 </div>
 
 
@@ -4363,14 +4271,14 @@ attachments that reference binaries with ID &gt; <code>id</code> will automatica
                             <div id="Entry.tags" class="classattr">
                                         <input id="Entry.tags-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 <div class="attr variable">
-            <span class="name">tags</span>
+            <span class="name">tags</span><span class="annotation">: list[str]</span>
 
                 <label class="view-source-button" for="Entry.tags-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#Entry.tags"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="Entry.tags-248"><a href="#Entry.tags-248"><span class="linenos">248</span></a>    <span class="nd">@property</span>
-</span><span id="Entry.tags-249"><a href="#Entry.tags-249"><span class="linenos">249</span></a>    <span class="k">def</span> <span class="nf">tags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="Entry.tags-249"><a href="#Entry.tags-249"><span class="linenos">249</span></a>    <span class="k">def</span> <span class="nf">tags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 </span><span id="Entry.tags-250"><a href="#Entry.tags-250"><span class="linenos">250</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;`str`: get or set entry tags&quot;&quot;&quot;</span>
 </span><span id="Entry.tags-251"><a href="#Entry.tags-251"><span class="linenos">251</span></a>        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_subelement_text</span><span class="p">(</span><span class="s1">&#39;Tags&#39;</span><span class="p">)</span>
 </span><span id="Entry.tags-252"><a href="#Entry.tags-252"><span class="linenos">252</span></a>        <span class="k">return</span> <span class="n">val</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">val</span> <span class="k">else</span> <span class="p">[]</span>
@@ -5381,7 +5289,7 @@ A piece of binary data may be attached to multiple entries</p>
                     <div class="attr variable">
             <span class="name">icons</span>        =
 <input id="icons-view-value" class="view-value-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-            <label class="view-value-button pdoc-button" for="icons-view-value"></label><span class="default_value">{&#39;Key&#39;: &#39;0&#39;, &#39;World&#39;: &#39;1&#39;, &#39;Warning&#39;: &#39;2&#39;, &#39;NetworkServer&#39;: &#39;3&#39;, &#39;MarkedDirectory&#39;: &#39;4&#39;, &#39;UserCommunication&#39;: &#39;5&#39;, &#39;Parts&#39;: &#39;6&#39;, &#39;Notepad&#39;: &#39;7&#39;, &#39;WorldSocket&#39;: &#39;8&#39;, &#39;Identity&#39;: &#39;9&#39;, &#39;PaperReady&#39;: &#39;10&#39;, &#39;Digicam&#39;: &#39;11&#39;, &#39;IRCommunication&#39;: &#39;12&#39;, &#39;MultiKeys&#39;: &#39;13&#39;, &#39;Energy&#39;: &#39;14&#39;, &#39;Scanner&#39;: &#39;15&#39;, &#39;WorldStar&#39;: &#39;16&#39;, &#39;CDRom&#39;: &#39;17&#39;, &#39;Monitor&#39;: &#39;18&#39;, &#39;EMail&#39;: &#39;19&#39;, &#39;Configuration&#39;: &#39;20&#39;, &#39;ClipboardReady&#39;: &#39;21&#39;, &#39;PaperNew&#39;: &#39;22&#39;, &#39;Screen&#39;: &#39;23&#39;, &#39;EnergyCareful&#39;: &#39;24&#39;, &#39;EMailBox&#39;: &#39;25&#39;, &#39;Disk&#39;: &#39;26&#39;, &#39;Drive&#39;: &#39;27&#39;, &#39;PaperQ&#39;: &#39;28&#39;, &#39;TerminalEncrypted&#39;: &#39;29&#39;, &#39;Console&#39;: &#39;30&#39;, &#39;Printer&#39;: &#39;31&#39;, &#39;ProgramIcons&#39;: &#39;32&#39;, &#39;Run&#39;: &#39;33&#39;, &#39;Settings&#39;: &#39;34&#39;, &#39;WorldComputer&#39;: &#39;35&#39;, &#39;Archive&#39;: &#39;36&#39;, &#39;Homebanking&#39;: &#39;37&#39;, &#39;DriveWindows&#39;: &#39;38&#39;, &#39;Clock&#39;: &#39;39&#39;, &#39;EMailSearch&#39;: &#39;40&#39;, &#39;PaperFlag&#39;: &#39;41&#39;, &#39;Memory&#39;: &#39;42&#39;, &#39;TrashBin&#39;: &#39;43&#39;, &#39;Note&#39;: &#39;44&#39;, &#39;Expired&#39;: &#39;45&#39;, &#39;Info&#39;: &#39;46&#39;, &#39;Package&#39;: &#39;47&#39;, &#39;Folder&#39;: &#39;48&#39;, &#39;FolderOpen&#39;: &#39;49&#39;, &#39;FolderPackage&#39;: &#39;50&#39;, &#39;LockOpen&#39;: &#39;51&#39;, &#39;PaperLocked&#39;: &#39;52&#39;, &#39;Checked&#39;: &#39;53&#39;, &#39;Pen&#39;: &#39;54&#39;, &#39;Thumbnail&#39;: &#39;55&#39;, &#39;Book&#39;: &#39;56&#39;, &#39;List&#39;: &#39;57&#39;, &#39;UserKey&#39;: &#39;58&#39;, &#39;Tool&#39;: &#39;59&#39;, &#39;Home&#39;: &#39;60&#39;, &#39;Star&#39;: &#39;61&#39;, &#39;Tux&#39;: &#39;62&#39;, &#39;Feather&#39;: &#39;63&#39;, &#39;Apple&#39;: &#39;64&#39;, &#39;Wiki&#39;: &#39;65&#39;, &#39;Money&#39;: &#39;66&#39;, &#39;Certificate&#39;: &#39;67&#39;, &#39;BlackBerry&#39;: &#39;68&#39;, &#39;KEY&#39;: &#39;0&#39;, &#39;GLOBE&#39;: &#39;1&#39;, &#39;WARNING_SIGN&#39;: &#39;2&#39;, &#39;SERVER&#39;: &#39;3&#39;, &#39;PINNED_NOTE&#39;: &#39;4&#39;, &#39;SPEECH_BUBBLE&#39;: &#39;5&#39;, &#39;SQUARES&#39;: &#39;6&#39;, &#39;HANDWRITTEN_NOTE&#39;: &#39;7&#39;, &#39;GLOBE_PLUG&#39;: &#39;8&#39;, &#39;BUSINESS_CARD&#39;: &#39;9&#39;, &#39;GREEN_AND_WHITE_THINGY&#39;: &#39;10&#39;, &#39;CAMERA&#39;: &#39;11&#39;, &#39;INFRARED&#39;: &#39;12&#39;, &#39;KEYS&#39;: &#39;13&#39;, &#39;POWER_PLUG&#39;: &#39;14&#39;, &#39;FLATBED_SCANNER&#39;: &#39;15&#39;, &#39;GLOBE_STAR&#39;: &#39;16&#39;, &#39;CD_ROM&#39;: &#39;17&#39;, &#39;MONITOR&#39;: &#39;18&#39;, &#39;ENVELOPE&#39;: &#39;19&#39;, &#39;GEAR&#39;: &#39;20&#39;, &#39;CHECKLIST&#39;: &#39;21&#39;, &#39;NOTEPAD&#39;: &#39;22&#39;, &#39;DESKTOP&#39;: &#39;23&#39;, &#39;POWER_FLASH&#39;: &#39;24&#39;, &#39;FOLDER_ENVELOPE&#39;: &#39;25&#39;, &#39;FLOPPY_DISK&#39;: &#39;26&#39;, &#39;SERVER_2&#39;: &#39;27&#39;, &#39;GREEN_DOT&#39;: &#39;28&#39;, &#39;MONITOR_KEY&#39;: &#39;29&#39;, &#39;SHELL&#39;: &#39;30&#39;, &#39;PRINTER&#39;: &#39;31&#39;, &#39;DASHBOARD&#39;: &#39;32&#39;, &#39;CROATIA&#39;: &#39;33&#39;, &#39;WRENCH&#39;: &#39;34&#39;, &#39;PC_INTERNET&#39;: &#39;35&#39;, &#39;ZIP_FILE&#39;: &#39;36&#39;, &#39;PERCENT_SIGN&#39;: &#39;37&#39;, &#39;SAMBA_SHARE&#39;: &#39;38&#39;, &#39;CLOCK&#39;: &#39;39&#39;, &#39;SEARCH&#39;: &#39;40&#39;, &#39;USED_TAMPON&#39;: &#39;41&#39;, &#39;MEMORY_STICK&#39;: &#39;42&#39;, &#39;RECYCLE_BIN&#39;: &#39;43&#39;, &#39;POST_IT&#39;: &#39;44&#39;, &#39;RED_CROSS&#39;: &#39;45&#39;, &#39;INFO_SIGN&#39;: &#39;46&#39;, &#39;CARDBOARD&#39;: &#39;47&#39;, &#39;FOLDER&#39;: &#39;48&#39;, &#39;FOLDER_OPEN&#39;: &#39;49&#39;, &#39;FOLDER_CUBE&#39;: &#39;50&#39;, &#39;LOCK_OPEN&#39;: &#39;51&#39;, &#39;LOCK_CLOSED&#39;: &#39;52&#39;, &#39;GREEN_CHECKMARK&#39;: &#39;53&#39;, &#39;FEATHER_PEN&#39;: &#39;54&#39;, &#39;POLAROID_PICTURE&#39;: &#39;55&#39;, &#39;BOOK_OPENED&#39;: &#39;56&#39;, &#39;UI&#39;: &#39;57&#39;, &#39;MANAGER&#39;: &#39;58&#39;, &#39;HAMMER&#39;: &#39;59&#39;, &#39;HOUSE&#39;: &#39;60&#39;, &#39;STAR&#39;: &#39;61&#39;, &#39;PENGUIN&#39;: &#39;62&#39;, &#39;FEATHER&#39;: &#39;63&#39;, &#39;APPLE&#39;: &#39;64&#39;, &#39;WIKIPEDIA&#39;: &#39;65&#39;, &#39;DOLLAR_SIGN&#39;: &#39;66&#39;, &#39;CERTIFICATE&#39;: &#39;67&#39;, &#39;SMARTPHONE&#39;: &#39;68&#39;}</span>
+            <label class="view-value-button pdoc-button" for="icons-view-value"></label><span class="default_value">namespace(Key=&#39;0&#39;, World=&#39;1&#39;, Warning=&#39;2&#39;, NetworkServer=&#39;3&#39;, MarkedDirectory=&#39;4&#39;, UserCommunication=&#39;5&#39;, Parts=&#39;6&#39;, Notepad=&#39;7&#39;, WorldSocket=&#39;8&#39;, Identity=&#39;9&#39;, PaperReady=&#39;10&#39;, Digicam=&#39;11&#39;, IRCommunication=&#39;12&#39;, MultiKeys=&#39;13&#39;, Energy=&#39;14&#39;, Scanner=&#39;15&#39;, WorldStar=&#39;16&#39;, CDRom=&#39;17&#39;, Monitor=&#39;18&#39;, EMail=&#39;19&#39;, Configuration=&#39;20&#39;, ClipboardReady=&#39;21&#39;, PaperNew=&#39;22&#39;, Screen=&#39;23&#39;, EnergyCareful=&#39;24&#39;, EMailBox=&#39;25&#39;, Disk=&#39;26&#39;, Drive=&#39;27&#39;, PaperQ=&#39;28&#39;, TerminalEncrypted=&#39;29&#39;, Console=&#39;30&#39;, Printer=&#39;31&#39;, ProgramIcons=&#39;32&#39;, Run=&#39;33&#39;, Settings=&#39;34&#39;, WorldComputer=&#39;35&#39;, Archive=&#39;36&#39;, Homebanking=&#39;37&#39;, DriveWindows=&#39;38&#39;, Clock=&#39;39&#39;, EMailSearch=&#39;40&#39;, PaperFlag=&#39;41&#39;, Memory=&#39;42&#39;, TrashBin=&#39;43&#39;, Note=&#39;44&#39;, Expired=&#39;45&#39;, Info=&#39;46&#39;, Package=&#39;47&#39;, Folder=&#39;48&#39;, FolderOpen=&#39;49&#39;, FolderPackage=&#39;50&#39;, LockOpen=&#39;51&#39;, PaperLocked=&#39;52&#39;, Checked=&#39;53&#39;, Pen=&#39;54&#39;, Thumbnail=&#39;55&#39;, Book=&#39;56&#39;, List=&#39;57&#39;, UserKey=&#39;58&#39;, Tool=&#39;59&#39;, Home=&#39;60&#39;, Star=&#39;61&#39;, Tux=&#39;62&#39;, Feather=&#39;63&#39;, Apple=&#39;64&#39;, Wiki=&#39;65&#39;, Money=&#39;66&#39;, Certificate=&#39;67&#39;, BlackBerry=&#39;68&#39;, KEY=&#39;0&#39;, GLOBE=&#39;1&#39;, WARNING_SIGN=&#39;2&#39;, SERVER=&#39;3&#39;, PINNED_NOTE=&#39;4&#39;, SPEECH_BUBBLE=&#39;5&#39;, SQUARES=&#39;6&#39;, HANDWRITTEN_NOTE=&#39;7&#39;, GLOBE_PLUG=&#39;8&#39;, BUSINESS_CARD=&#39;9&#39;, GREEN_AND_WHITE_THINGY=&#39;10&#39;, CAMERA=&#39;11&#39;, INFRARED=&#39;12&#39;, KEYS=&#39;13&#39;, POWER_PLUG=&#39;14&#39;, FLATBED_SCANNER=&#39;15&#39;, GLOBE_STAR=&#39;16&#39;, CD_ROM=&#39;17&#39;, MONITOR=&#39;18&#39;, ENVELOPE=&#39;19&#39;, GEAR=&#39;20&#39;, CHECKLIST=&#39;21&#39;, NOTEPAD=&#39;22&#39;, DESKTOP=&#39;23&#39;, POWER_FLASH=&#39;24&#39;, FOLDER_ENVELOPE=&#39;25&#39;, FLOPPY_DISK=&#39;26&#39;, SERVER_2=&#39;27&#39;, GREEN_DOT=&#39;28&#39;, MONITOR_KEY=&#39;29&#39;, SHELL=&#39;30&#39;, PRINTER=&#39;31&#39;, DASHBOARD=&#39;32&#39;, CROATIA=&#39;33&#39;, WRENCH=&#39;34&#39;, PC_INTERNET=&#39;35&#39;, ZIP_FILE=&#39;36&#39;, PERCENT_SIGN=&#39;37&#39;, SAMBA_SHARE=&#39;38&#39;, CLOCK=&#39;39&#39;, SEARCH=&#39;40&#39;, USED_TAMPON=&#39;41&#39;, MEMORY_STICK=&#39;42&#39;, RECYCLE_BIN=&#39;43&#39;, POST_IT=&#39;44&#39;, RED_CROSS=&#39;45&#39;, INFO_SIGN=&#39;46&#39;, CARDBOARD=&#39;47&#39;, FOLDER=&#39;48&#39;, FOLDER_OPEN=&#39;49&#39;, FOLDER_CUBE=&#39;50&#39;, LOCK_OPEN=&#39;51&#39;, LOCK_CLOSED=&#39;52&#39;, GREEN_CHECKMARK=&#39;53&#39;, FEATHER_PEN=&#39;54&#39;, POLAROID_PICTURE=&#39;55&#39;, BOOK_OPENED=&#39;56&#39;, UI=&#39;57&#39;, MANAGER=&#39;58&#39;, HAMMER=&#39;59&#39;, HOUSE=&#39;60&#39;, STAR=&#39;61&#39;, PENGUIN=&#39;62&#39;, FEATHER=&#39;63&#39;, APPLE=&#39;64&#39;, WIKIPEDIA=&#39;65&#39;, DOLLAR_SIGN=&#39;66&#39;, CERTIFICATE=&#39;67&#39;, SMARTPHONE=&#39;68&#39;)</span>
 
         
     </div>
