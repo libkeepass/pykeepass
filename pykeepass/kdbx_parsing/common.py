@@ -13,6 +13,7 @@ from construct import (
     Adapter,
     BitsSwapped,
     BitStruct,
+    Bytes,
     Container,
     Flag,
     GreedyBytes,
@@ -29,6 +30,16 @@ from lxml import etree
 from .twofish import Twofish
 
 log = logging.getLogger(__name__)
+
+
+class RandomBytes(Bytes):
+    """Same as Bytes, but generate random bytes when building"""
+
+    def _build(self, obj, stream, context, path):
+        length = self.length(context) if callable(self.length) else self.length
+        data = get_random_bytes(length)
+        stream_write(stream, data, length, path)
+        return data
 
 
 class HeaderChecksumError(Exception):
@@ -183,7 +194,7 @@ def compute_master(context):
 
     # combine the transformed key with the header master seed to find the master_key
     master_key = hashlib.sha256(
-        context._.header.value.dynamic_header.master_seed.data +
+        context._.header.dynamic_header.master_seed.data +
         context.transformed_key).digest()
     return master_key
 
@@ -312,7 +323,7 @@ class DecryptedPayload(Adapter):
     def _decode(self, payload_data, con, path):
         cipher = self.get_cipher(
             con.master_key,
-            con._.header.value.dynamic_header.encryption_iv.data
+            con._.header.dynamic_header.encryption_iv.data
         )
         payload_data = cipher.decrypt(payload_data)
         # FIXME: Construct ugliness.  Fixes #244.  First 32 bytes of decrypted kdbx3 payload
@@ -332,7 +343,7 @@ class DecryptedPayload(Adapter):
         payload_data = self.pad(payload_data)
         cipher = self.get_cipher(
             con.master_key,
-            con._.header.value.dynamic_header.encryption_iv.data
+            con._.header.dynamic_header.encryption_iv.data
         )
         payload_data = cipher.encrypt(payload_data)
 
