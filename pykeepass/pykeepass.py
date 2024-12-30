@@ -199,7 +199,7 @@ class PyKeePass:
     @property
     def kdf_algorithm(self):
         """`str`: key derivation algorithm used by database during decryption.
-        Can be one of 'aeskdf', 'argon2', or 'aeskdf'"""
+        Can be one of 'aeskdf', 'argon2', or 'argon2id'"""
         if self.version == (3, 1):
             return 'aeskdf'
         elif self.version == (4, 0):
