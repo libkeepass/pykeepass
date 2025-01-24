@@ -4,6 +4,6 @@ cffi==1.17.1
 construct==2.10.70
 lxml==5.2.2
 pycparser==2.22
-pycryptodomex==3.20.0
+pycryptodomex==3.21.0
 pykeepass @ file:///home/evan/resources/pykeepass
 pyotp==2.9.0
