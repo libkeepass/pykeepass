@@ -46,5 +46,5 @@ tag:
 
 .PHONY: docs
 docs:
-	pdoc -o docs --docformat google --no-search pykeepass '!pykeepass.icons'
+	pdoc -o docs --docformat google --no-search pykeepass '!pykeepass.icons' --footer-text "pykeepass ${version}"
 	ghp-import -f -p -b docs docs
