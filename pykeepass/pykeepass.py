@@ -879,7 +879,7 @@ class PyKeePass:
         """Dereference [field reference][fieldref] of Entry
 
         Args:
-            ref (`str`): KeePass reference string to another field
+            value (`str`): KeePass reference string to another field
 
         Returns:
             `str`, `uuid.UUID` or `None` if no match found
@@ -915,7 +915,7 @@ class PyKeePass:
 
     @property
     def password(self):
-        """`str`: Get or set database password"""
+        """`str` or `None`: Get or set database password"""
         return self._password
 
     @password.setter

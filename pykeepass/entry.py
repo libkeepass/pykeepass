@@ -188,8 +188,8 @@ class Entry(BaseElement):
         return self._kp.deref(getattr(self, attribute))
 
     @property
-    def title(self):
-        """`str`: get or set entry title"""
+    def title(self) -> str:
+        """get or set entry title"""
         return self._get_string_field('Title')
 
     @title.setter
@@ -245,13 +245,13 @@ class Entry(BaseElement):
         return self._set_subelement_text('IconID', value)
 
     @property
-    def tags(self):
+    def tags(self) -> list[str]:
         """`str`: get or set entry tags"""
         val = self._get_subelement_text('Tags')
         return val.replace(',', ';').split(';') if val else []
 
     @tags.setter
-    def tags(self, value, sep=';'):
+    def tags(self, value: str|list, sep=';'):
         # Accept both str or list
         v = sep.join(value if isinstance(value, list) else [value])
         return self._set_subelement_text('Tags', v)
