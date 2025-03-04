@@ -121,7 +121,7 @@ def compute_key_composite(password=None, keyfile=None):
     Used in header verification and payload decryption."""
 
     # hash the password
-    if password:
+    if password is not None:
         password_composite = hashlib.sha256(password.encode('utf-8')).digest()
     else:
         password_composite = b''

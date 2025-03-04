@@ -1,3 +1,5 @@
+- fixed #410 - support empty string as password
+
 4.1.0 - 2024-06-26
 ------------------
 - merged #389 - add PyKeePass.database_name and database_description
