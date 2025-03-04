@@ -1,3 +1,5 @@
+4.1.1 - 2025-03-04
+------------------
 - fixed #410 - support empty string as password
 
 4.1.0 - 2024-06-26
