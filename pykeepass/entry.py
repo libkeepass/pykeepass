@@ -251,7 +251,7 @@ class Entry(BaseElement):
         return val.replace(',', ';').split(';') if val else []
 
     @tags.setter
-    def tags(self, value: str|list, sep=';'):
+    def tags(self, value, sep=';'):
         # Accept both str or list
         v = sep.join(value if isinstance(value, list) else [value])
         return self._set_subelement_text('Tags', v)
