@@ -15,7 +15,7 @@ jobs:
           # - macos
         python-version:
           # - "3.6" # not supported in ubuntu-latest (22.04)
-          - "3.7"
+          # - "3.7" # not supported in ubuntu-latest ()
           - "3.8"
           - "3.9"
           - "3.10"
