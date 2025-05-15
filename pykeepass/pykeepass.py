@@ -648,7 +648,7 @@ class PyKeePass:
 
 
     def add_entry(self, destination_group, title, username,
-                  password, url=None, notes=None, expiry_time=None,
+                  password=None, url=None, notes=None, expiry_time=None,
                   tags=None, otp=None, icon=None, force_creation=False):
 
         """Create a new entry
