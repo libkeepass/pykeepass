@@ -46,3 +46,9 @@ include-package-data = true
 [build-system]
 requires = ["setuptools>=59.0.0"]
 build-backend = 'setuptools.build_meta'
+
+[dependency-groups]
+dev = [
+    "construct-typing>=0.6.2",
+    "types-lxml>=2025.8.25",
+]
