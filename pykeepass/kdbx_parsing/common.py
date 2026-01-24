@@ -353,7 +353,7 @@ class ChaCha20Payload(DecryptedPayload):
 
 class TwoFishPayload(DecryptedPayload):
     def get_cipher(self, master_key, encryption_iv):
-        return Twofish.new(master_key, mode=Twofish.MODE_CBC, IV=encryption_iv)
+        return Twofish.new(master_key, mode=Twofish.MODE_CBC, iv=encryption_iv)
 
     def pad(self, data):
         return CryptoPadding.pad(data, 16)
