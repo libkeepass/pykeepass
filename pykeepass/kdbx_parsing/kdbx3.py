@@ -2,6 +2,7 @@
 # keepass decrypt experimentation
 
 import hashlib
+from typing import TYPE_CHECKING
 
 from construct import (
     Byte,
@@ -44,6 +45,9 @@ from .common import (
     compute_master,
 )
 
+if TYPE_CHECKING:
+    from construct import Context
+
 # -------------------- Key Derivation --------------------
 
 # https://github.com/keepassxreboot/keepassxc/blob/8324d03f0a015e62b6182843b4478226a5197090/src/format/KeePass2.cpp#L24-L26
@@ -52,7 +56,7 @@ kdf_uuids = {
 }
 
 
-def compute_transformed(context):
+def compute_transformed(context: Context) -> bytes:
     """Compute transformed key for opening database"""
 
     if context._._.transformed_key is not None:

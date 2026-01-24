@@ -4,6 +4,7 @@
 import hashlib
 import hmac
 import struct
+from typing import TYPE_CHECKING
 
 import argon2
 from construct import (
@@ -50,6 +51,9 @@ from .common import (
     compute_master,
 )
 
+if TYPE_CHECKING:
+    from construct import Context
+
 # -------------------- Key Derivation --------------------
 
 # https://github.com/keepassxreboot/keepassxc/blob/bc55974ff304794e53c925442784c50a2fdaf6ee/src/format/KeePass2.cpp#L30-L33
@@ -60,7 +64,7 @@ kdf_uuids = {
 }
 
 
-def compute_transformed(context):
+def compute_transformed(context: Context) -> bytes:
     """Compute transformed key for opening database"""
 
     key_composite = compute_key_composite(
@@ -98,7 +102,7 @@ def compute_transformed(context):
     return transformed_key
 
 
-def compute_header_hmac_hash(context):
+def compute_header_hmac_hash(context: Context) -> bytes:
     """Compute HMAC-SHA256 hash of header.
     Used to prevent header tampering."""
 
@@ -190,7 +194,7 @@ DynamicHeader = DynamicDict(
 
 
 # -------------------- Payload Verification --------------------
-def compute_payload_block_hash(this):
+def compute_payload_block_hash(this: Context) -> bytes:
     """Compute hash of each payload block.
     Used to prevent payload corruption and tampering."""
 

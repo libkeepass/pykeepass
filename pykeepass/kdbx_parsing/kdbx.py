@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from construct import Bytes, Check, Int16ul, RawCopy, Struct, Switch, this
 
 from .kdbx3 import Body as Body3
@@ -5,9 +7,12 @@ from .kdbx3 import DynamicHeader as DynamicHeader3
 from .kdbx4 import Body as Body4
 from .kdbx4 import DynamicHeader as DynamicHeader4
 
+if TYPE_CHECKING:
+    from construct import Context
+
 
 # verify file signature
-def check_signature(ctx):
+def check_signature(ctx: Context) -> bool:
     return ctx.sig1 == b"\x03\xd9\xa2\x9a" and ctx.sig2 == b"\x67\xfb\x4b\xb5"
 
 
