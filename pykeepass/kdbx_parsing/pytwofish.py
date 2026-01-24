@@ -34,10 +34,12 @@
 ## Try python-mcrypt instead. In case a faster library is not installed
 ## on the target system, this code can be used as a portable fallback.
 
-try:
-    import psyco
+import struct
 
-    psyco.full()
+try:
+    import psyco  # pyright: ignore[reportMissingImports]
+
+    psyco.full()  # pyright: ignore[reportUnknownMemberType]
 except ImportError:
     pass
 
@@ -46,13 +48,13 @@ key_size = 32
 
 
 class Twofish:
-    def __init__(self, key=None):
+    def __init__(self, key: bytes | None = None) -> None:
         """Twofish."""
 
         if key:
             self.set_key(key)
 
-    def set_key(self, key):
+    def set_key(self, key: bytes) -> None:
         """Init."""
 
         key_len = len(key)
@@ -77,7 +79,7 @@ class Twofish:
 
         set_key(self.context, key_word32, key_len)
 
-    def decrypt(self, block):
+    def decrypt(self, block: bytes) -> bytes:
         """Decrypt blocks."""
 
         if len(block) % 16:
@@ -94,7 +96,7 @@ class Twofish:
 
         return plaintext
 
-    def encrypt(self, block):
+    def encrypt(self, block: bytes) -> bytes:
         """Encrypt blocks."""
 
         if len(block) % 16:
@@ -131,30 +133,38 @@ class Twofish:
 # Private.
 #
 
-import struct
 
-
-def rotr32(x, n):
+def rotr32(x: int, n: int) -> int:
     return (x >> n) | ((x << (32 - n)) & 0xFFFFFFFF)
 
 
-def rotl32(x, n):
+def rotl32(x: int, n: int) -> int:
     return ((x << n) & 0xFFFFFFFF) | (x >> (32 - n))
 
 
 class TWI:
-    def __init__(self):
+    def __init__(self) -> None:
         self.k_len = 0  # word32
         self.l_key = [0] * 40  # word32
         self.s_key = [0] * 4  # word32
         self.qt_gen = 0  # word32
         self.q_tab = [[0] * 256, [0] * 256]  # byte
         self.mt_gen = 0  # word32
-        self.m_tab = [[0] * 256, [0] * 256, [0] * 256, [0] * 256]  # word32
-        self.mk_tab = [[0] * 256, [0] * 256, [0] * 256, [0] * 256]  # word32
+        self.m_tab = [
+            [0] * 256,
+            [0] * 256,
+            [0] * 256,
+            [0] * 256,
+        ]  # word32
+        self.mk_tab = [
+            [0] * 256,
+            [0] * 256,
+            [0] * 256,
+            [0] * 256,
+        ]  # word32
 
 
-def byte(x, n):
+def byte(x: int, n: int) -> int:
     return (x >> (8 * n)) & 0xFF
 
 
@@ -180,7 +190,7 @@ qt3 = [
 ]
 
 
-def qp(n, x):  # word32, byte
+def qp(n: int, x: int) -> int:
     n %= 0x100000000
     x %= 0x100
     a0 = x >> 4
@@ -196,13 +206,13 @@ def qp(n, x):  # word32, byte
     return (b4 << 4) | a4
 
 
-def gen_qtab(pkey):
+def gen_qtab(pkey: TWI) -> None:
     for i in range(256):
         pkey.q_tab[0][i] = qp(0, i)
         pkey.q_tab[1][i] = qp(1, i)
 
 
-def gen_mtab(pkey):
+def gen_mtab(pkey: TWI) -> None:
     for i in range(256):
         f01 = pkey.q_tab[1][i]
         f01 = pkey.q_tab[1][i]
@@ -218,7 +228,7 @@ def gen_mtab(pkey):
         pkey.m_tab[3][i] = f5b + (f01 << 8) + (fef << 16) + (f5b << 24)
 
 
-def gen_mk_tab(pkey, key):
+def gen_mk_tab(pkey: TWI, key: list[int]) -> None:
     if pkey.k_len == 2:
         for i in range(256):
             by = i % 0x100
@@ -306,7 +316,7 @@ def gen_mk_tab(pkey, key):
             ]
 
 
-def h_fun(pkey, x, key):
+def h_fun(pkey: TWI, x: int, key: list[int]) -> int:
     b0 = byte(x, 0)
     b1 = byte(x, 1)
     b2 = byte(x, 2)
@@ -329,9 +339,10 @@ def h_fun(pkey, x, key):
     return pkey.m_tab[0][b0] ^ pkey.m_tab[1][b1] ^ pkey.m_tab[2][b2] ^ pkey.m_tab[3][b3]
 
 
-def mds_rem(p0, p1):
-    i, t, u = 0, 0, 0
-    for i in range(8):
+def mds_rem(p0: int, p1: int) -> int:
+    t = 0
+    u = 0
+    for _ in range(8):
         t = p1 >> 24
         p1 = ((p1 << 8) & 0xFFFFFFFF) | (p0 >> 24)
         p0 = (p0 << 8) & 0xFFFFFFFF
@@ -346,7 +357,7 @@ def mds_rem(p0, p1):
     return p1
 
 
-def set_key(pkey, in_key, key_len):
+def set_key(pkey: TWI, in_key: list[int], key_len: int) -> None:
     pkey.qt_gen = 0
     if not pkey.qt_gen:
         gen_qtab(pkey)
@@ -377,7 +388,7 @@ def set_key(pkey, in_key, key_len):
     gen_mk_tab(pkey, pkey.s_key)
 
 
-def encrypt(pkey, in_blk):
+def encrypt(pkey: TWI, in_blk: list[int]) -> None:
     blk = [0, 0, 0, 0]
 
     blk[0] = in_blk[0] ^ pkey.l_key[0]
@@ -432,7 +443,7 @@ def encrypt(pkey, in_blk):
     return
 
 
-def decrypt(pkey, in_blk):
+def decrypt(pkey: TWI, in_blk: list[int]) -> None:
     blk = [0, 0, 0, 0]
 
     blk[0] = in_blk[0] ^ pkey.l_key[4]
