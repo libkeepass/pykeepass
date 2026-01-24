@@ -12,6 +12,7 @@ class Attachment:
     A piece of binary data may be attached to multiple entries
 
     """
+
     def __init__(self, element=None, kp=None, id=None, filename=None):
         self._element = element
         self._kp = kp
@@ -22,20 +23,20 @@ class Attachment:
     @property
     def id(self):
         """`str`: get or set id of binary the attachment points to"""
-        return int(self._element.find('Value').attrib['Ref'])
+        return int(self._element.find("Value").attrib["Ref"])
 
     @id.setter
     def id(self, id):
-        self._element.find('Value').attrib['Ref'] = str(id)
+        self._element.find("Value").attrib["Ref"] = str(id)
 
     @property
     def filename(self):
         """`str`: get or set filename string"""
-        return self._element.find('Key').text
+        return self._element.find("Key").text
 
     @filename.setter
     def filename(self, filename):
-        self._element.find('Key').text = filename
+        self._element.find("Key").text = filename
 
     @property
     def entry(self):
@@ -49,7 +50,7 @@ class Attachment:
         try:
             return self._kp.binaries[self.id]
         except IndexError:
-            raise BinaryError('No such binary with id {}'.format(self.id))
+            raise BinaryError("No such binary with id {}".format(self.id))
 
     data = binary
 

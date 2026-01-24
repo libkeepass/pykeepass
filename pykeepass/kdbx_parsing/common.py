@@ -97,9 +97,7 @@ def Reparsed(subcon_out):
 
 
 # is the payload compressed?
-CompressionFlags = BitsSwapped(
-    BitStruct("compression" / Flag, Padding(8 * 4 - 1))
-)
+CompressionFlags = BitsSwapped(BitStruct("compression" / Flag, Padding(8 * 4 - 1)))
 
 
 # -------------------- Key Computation --------------------
@@ -122,9 +120,9 @@ def compute_key_composite(password=None, keyfile=None):
 
     # hash the password
     if password is not None:
-        password_composite = hashlib.sha256(password.encode('utf-8')).digest()
+        password_composite = hashlib.sha256(password.encode("utf-8")).digest()
     else:
-        password_composite = b''
+        password_composite = b""
     # hash the keyfile
     if keyfile:
         if hasattr(keyfile, "read"):
@@ -132,20 +130,20 @@ def compute_key_composite(password=None, keyfile=None):
                 keyfile.seek(0)
             keyfile_bytes = keyfile.read()
         else:
-            with open(keyfile, 'rb') as f:
+            with open(keyfile, "rb") as f:
                 keyfile_bytes = f.read()
         # try to read XML keyfile
         try:
             tree = etree.fromstring(keyfile_bytes)
-            version = tree.find('Meta/Version').text
-            data_element = tree.find('Key/Data')
-            if version.startswith('1.0'):
+            version = tree.find("Meta/Version").text
+            data_element = tree.find("Key/Data")
+            if version.startswith("1.0"):
                 keyfile_composite = base64.b64decode(data_element.text)
-            elif version.startswith('2.0'):
+            elif version.startswith("2.0"):
                 # read keyfile data and convert to bytes
                 keyfile_composite = bytes.fromhex(data_element.text.strip())
                 # validate bytes against hash
-                hash = bytes.fromhex(data_element.attrib['Hash'])
+                hash = bytes.fromhex(data_element.attrib["Hash"])
                 hash_computed = hashlib.sha256(keyfile_composite).digest()[:4]
                 assert hash == hash_computed, "Keyfile has invalid hash"
             else:
@@ -163,15 +161,15 @@ def compute_key_composite(password=None, keyfile=None):
                     keyfile_composite = keyfile_bytes
                 # if the length is 64 bytes we assume the key is hex encoded
                 elif len(keyfile_bytes) == 64 and is_hex:
-                    keyfile_composite = codecs.decode(keyfile_bytes, 'hex')
+                    keyfile_composite = codecs.decode(keyfile_bytes, "hex")
                 # anything else may be a file to hash for the key
                 else:
                     keyfile_composite = hashlib.sha256(keyfile_bytes).digest()
             except:
-                raise IOError('Could not read keyfile')
+                raise IOError("Could not read keyfile")
 
     else:
-        keyfile_composite = b''
+        keyfile_composite = b""
 
     # create composite key from password and keyfile composites
     return hashlib.sha256(password_composite + keyfile_composite).digest()
@@ -183,8 +181,8 @@ def compute_master(context):
 
     # combine the transformed key with the header master seed to find the master_key
     master_key = hashlib.sha256(
-        context._.header.value.dynamic_header.master_seed.data +
-        context.transformed_key).digest()
+        context._.header.value.dynamic_header.master_seed.data + context.transformed_key
+    ).digest()
     return master_key
 
 
@@ -207,7 +205,7 @@ class UnprotectedStream(Adapter):
     Iterate etree for Protected elements and decrypt using cipher
     provided by get_cipher"""
 
-    protected_xpath = '//Value[@Protected=\'True\']'
+    protected_xpath = "//Value[@Protected='True']"
 
     def __init__(self, protected_stream_key, subcon):
         super().__init__(subcon)
@@ -218,18 +216,20 @@ class UnprotectedStream(Adapter):
         for elem in tree.xpath(self.protected_xpath):
             if elem.text is not None:
                 try:
-                    result = cipher.decrypt(base64.b64decode(elem.text)).decode('utf-8')
+                    result = cipher.decrypt(base64.b64decode(elem.text)).decode("utf-8")
                     # strip invalid XML characters - https://stackoverflow.com/questions/8733233
                     result = re.sub(
-                        '[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\U00010000-\U0010FFFF]+',
-                        '',
-                        result
+                        "[^\u0020-\ud7ff\u0009\u000a\u000d\ue000-\ufffd\U00010000-\U0010ffff]+",
+                        "",
+                        result,
                     )
                     elem.text = result
                 except (UnicodeDecodeError, BinasciiError, ValueError):
                     # FIXME: this should be a warning eventually, need to fix all databases in tests/ first
                     log.error(
-                        "Element at {} marked as protected, but could not unprotect".format(tree.getpath(elem))
+                        "Element at {} marked as protected, but could not unprotect".format(
+                            tree.getpath(elem)
+                        )
                     )
         return tree
 
@@ -238,11 +238,7 @@ class UnprotectedStream(Adapter):
         cipher = self.get_cipher(self.protected_stream_key(con))
         for elem in tree_copy.xpath(self.protected_xpath):
             if elem.text is not None:
-                elem.text = base64.b64encode(
-                    cipher.encrypt(
-                        elem.text.encode('utf-8')
-                    )
-                )
+                elem.text = base64.b64encode(cipher.encrypt(elem.text.encode("utf-8")))
         return tree_copy
 
 
@@ -255,10 +251,7 @@ class ARCFourVariantStream(UnprotectedStream):
 class Salsa20Stream(UnprotectedStream):
     def get_cipher(self, protected_stream_key):
         key = hashlib.sha256(protected_stream_key).digest()
-        return Salsa20.new(
-            key=key,
-            nonce=b'\xE8\x30\x09\x4B\x97\x20\x5D\x2A'
-        )
+        return Salsa20.new(key=key, nonce=b"\xe8\x30\x09\x4b\x97\x20\x5d\x2a")
 
 
 # https://github.com/dlech/KeePass2.x/blob/97141c02733cd3abf8d4dce1187fa7959ded58a8/KeePassLib/Cryptography/CryptoRandomStream.cs#L103-L111
@@ -267,10 +260,7 @@ class ChaCha20Stream(UnprotectedStream):
         key_hash = hashlib.sha512(protected_stream_key).digest()
         key = key_hash[:32]
         nonce = key_hash[32:44]
-        return ChaCha20.new(
-            key=key,
-            nonce=nonce
-        )
+        return ChaCha20.new(key=key, nonce=nonce)
 
 
 def Unprotect(protected_stream_id, protected_stream_key, subcon):
@@ -278,30 +268,32 @@ def Unprotect(protected_stream_id, protected_stream_key, subcon):
 
     return Switch(
         protected_stream_id,
-        {'arcfourvariant': ARCFourVariantStream(protected_stream_key, subcon),
-         'salsa20': Salsa20Stream(protected_stream_key, subcon),
-         'chacha20': ChaCha20Stream(protected_stream_key, subcon),
-         },
-        default=subcon
+        {
+            "arcfourvariant": ARCFourVariantStream(protected_stream_key, subcon),
+            "salsa20": Salsa20Stream(protected_stream_key, subcon),
+            "chacha20": ChaCha20Stream(protected_stream_key, subcon),
+        },
+        default=subcon,
     )
 
 
 # -------------------- Payload Encryption/Decompression --------------------
 
+
 class Concatenated(Adapter):
     """Data Blocks <---> Bytes"""
 
     def _decode(self, blocks, con, path):
-        return b''.join([block.block_data for block in blocks])
+        return b"".join([block.block_data for block in blocks])
 
     def _encode(self, payload_data, con, path):
         blocks = []
         # split payload_data into 1 MB blocks (spec default)
         i = 0
         while i < len(payload_data):
-            blocks.append(Container(block_data=payload_data[i:i + 2**20]))
+            blocks.append(Container(block_data=payload_data[i : i + 2**20]))
             i += 2**20
-        blocks.append(Container(block_data=b''))
+        blocks.append(Container(block_data=b""))
 
         return blocks
 
@@ -311,8 +303,7 @@ class DecryptedPayload(Adapter):
 
     def _decode(self, payload_data, con, path):
         cipher = self.get_cipher(
-            con.master_key,
-            con._.header.value.dynamic_header.encryption_iv.data
+            con.master_key, con._.header.value.dynamic_header.encryption_iv.data
         )
         payload_data = cipher.decrypt(payload_data)
         # FIXME: Construct ugliness.  Fixes #244.  First 32 bytes of decrypted kdbx3 payload
@@ -331,8 +322,7 @@ class DecryptedPayload(Adapter):
     def _encode(self, payload_data, con, path):
         payload_data = self.pad(payload_data)
         cipher = self.get_cipher(
-            con.master_key,
-            con._.header.value.dynamic_header.encryption_iv.data
+            con.master_key, con._.header.value.dynamic_header.encryption_iv.data
         )
         payload_data = cipher.encrypt(payload_data)
 
@@ -342,8 +332,10 @@ class DecryptedPayload(Adapter):
 class AES256Payload(DecryptedPayload):
     def get_cipher(self, master_key, encryption_iv):
         return AES.new(master_key, AES.MODE_CBC, encryption_iv)
+
     def pad(self, data):
         return CryptoPadding.pad(data, 16)
+
     def unpad(self, data):
         return CryptoPadding.unpad(data, 16)
 
@@ -351,8 +343,10 @@ class AES256Payload(DecryptedPayload):
 class ChaCha20Payload(DecryptedPayload):
     def get_cipher(self, master_key, encryption_iv):
         return ChaCha20.new(key=master_key, nonce=encryption_iv)
+
     def pad(self, data):
         return data
+
     def unpad(self, data):
         return data
 
@@ -360,8 +354,10 @@ class ChaCha20Payload(DecryptedPayload):
 class TwoFishPayload(DecryptedPayload):
     def get_cipher(self, master_key, encryption_iv):
         return Twofish.new(master_key, mode=Twofish.MODE_CBC, IV=encryption_iv)
+
     def pad(self, data):
         return CryptoPadding.pad(data, 16)
+
     def unpad(self, data):
         return CryptoPadding.unpad(data, 16)
 
@@ -373,13 +369,7 @@ class Decompressed(Adapter):
         return zlib.decompress(data, 16 + 15)
 
     def _encode(self, data, con, path):
-        compressobj = zlib.compressobj(
-            6,
-            zlib.DEFLATED,
-            16 + 15,
-            zlib.DEF_MEM_LEVEL,
-            0
-        )
+        compressobj = zlib.compressobj(6, zlib.DEFLATED, 16 + 15, zlib.DEF_MEM_LEVEL, 0)
         data = compressobj.compress(data)
         data += compressobj.flush()
         return data
@@ -391,19 +381,21 @@ class Decompressed(Adapter):
 # https://github.com/keepassxreboot/keepassxc/blob/8324d03f0a015e62b6182843b4478226a5197090/src/format/KeePass2.cpp#L24-L26
 CipherId = Mapping(
     GreedyBytes,
-    {'aes256': b'1\xc1\xf2\xe6\xbfqCP\xbeX\x05!j\xfcZ\xff',
-     'twofish': b'\xadh\xf2\x9fWoK\xb9\xa3j\xd4z\xf9e4l',
-     'chacha20': b'\xd6\x03\x8a+\x8boL\xb5\xa5$3\x9a1\xdb\xb5\x9a'
-     }
+    {
+        "aes256": b"1\xc1\xf2\xe6\xbfqCP\xbeX\x05!j\xfcZ\xff",
+        "twofish": b"\xadh\xf2\x9fWoK\xb9\xa3j\xd4z\xf9e4l",
+        "chacha20": b"\xd6\x03\x8a+\x8boL\xb5\xa5$3\x9a1\xdb\xb5\x9a",
+    },
 )
 
 # protected entry encryption method
 # https://github.com/dlech/KeePass2.x/blob/149ab342338ffade24b44aaa1fd89f14b64fda09/KeePassLib/Cryptography/CryptoRandomStream.cs#L35
 ProtectedStreamId = Mapping(
     Int32ul,
-    {'none': 0,
-     'arcfourvariant': 1,
-     'salsa20': 2,
-     'chacha20': 3,
-     }
+    {
+        "none": 0,
+        "arcfourvariant": 1,
+        "salsa20": 2,
+        "chacha20": 3,
+    },
 )
