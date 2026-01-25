@@ -11,7 +11,7 @@ authors = [
 ]
 license = {text = "GPL-3.0"}
 keywords = ["vault", "keepass"]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [
     "pyotp>=2.9.0",
     "setuptools; python_version<'3.8'",
@@ -24,11 +24,11 @@ classifiers = [
     "Topic :: Security",
     "Topic :: Software Development :: Libraries",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Typing :: Typed",
 ]
 
 [project.optional-dependencies]
@@ -44,6 +44,20 @@ Changelog = "https://github.com/libkeepass/pykeepass/blob/master/CHANGELOG.rst"
 packages = ["pykeepass", "pykeepass.kdbx_parsing"]
 include-package-data = true
 
+[tool.setuptools.package-data]
+pykeepass = ["py.typed"]
+
 [build-system]
 requires = ["setuptools>=59.0.0"]
 build-backend = 'setuptools.build_meta'
+
+[dependency-groups]
+dev = [
+    "construct-typing>=0.6.2",
+    "pyright>=1.1.408",
+    "types-lxml>=2025.8.25",
+]
+
+[tool.pyright]
+pythonVersion = "3.8"
+typeCheckingMode = "standard"

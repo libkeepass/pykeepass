@@ -22,12 +22,17 @@
 # =============================================================================
 # -*- coding: utf-8 -*-
 
-__all__ = ['Twofish']
+from __future__ import annotations
+
+from typing import Callable, Literal, Union
 
 from Cryptodome.Util.Padding import pad
 from Cryptodome.Util.strxor import strxor
 
 from . import pytwofish
+
+__all__ = ["Twofish"]
+
 
 MODE_ECB = 1
 MODE_CBC = 2
@@ -38,9 +43,9 @@ MODE_XTS = 7
 MODE_CMAC = 8
 
 
-class BlockCipher():
-    """ Base class for all blockciphers
-    """
+class BlockCipher:
+    """Base class for all blockciphers"""
+
     MODE_ECB = MODE_ECB
     MODE_CBC = MODE_CBC
     MODE_CFB = MODE_CFB
@@ -49,70 +54,112 @@ class BlockCipher():
     MODE_XTS = MODE_XTS
     MODE_CMAC = MODE_CMAC
 
-    key_error_message = "Wrong key size" #should be overwritten in child classes
+    key_error_message = "Wrong key size"  # should be overwritten in child classes
 
-    def __init__(self,key,mode,IV,counter,cipher_module,segment_size,args={}):
+    key: Union[bytes, tuple[bytes, bytes]]
+    mode: int
+    cache: bytes
+    ed: Literal["e", "d", "enc", "dec"] | None
+    cipher: pytwofish.Twofish
+    cipher2: pytwofish.Twofish
+    chain: "CBC"
+    iv: bytes
+    blocksize: int
+
+    def __init__(
+        self,
+        key: Union[bytes, tuple[bytes, bytes]],
+        mode: int,
+        iv: bytes | None,
+        counter: Callable[..., int] | None,
+        cipher_module: type[pytwofish.Twofish],
+        segment_size: int | None,
+        args: dict[str, Union[int, str, bytes, bool]] = {},
+    ) -> None:
         # Cipher classes inheriting from this one take care of:
         #   self.blocksize
         #   self.cipher
         self.key = key
         self.mode = mode
-        self.cache = b''
+        self.cache = b""
         self.ed = None
 
-        if 'keylen_valid' in dir(self): #wrappers for pycrypto functions don't have this function
-         if not self.keylen_valid(key) and type(key) is not tuple:
+        if "keylen_valid" in dir(
+            self
+        ):  # wrappers for pycrypto functions don't have this function
+            if not self.keylen_valid(key) and type(key) is not tuple:  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
                 raise ValueError(self.key_error_message)
 
-        if IV == None:
-            self.IV = b'\x00'*self.blocksize
+        if iv is None:
+            self.iv = b"\x00" * self.blocksize
         else:
-            self.IV = IV
+            self.iv = iv
 
         if mode != MODE_XTS:
-            self.cipher = cipher_module(self.key,**args)
+            self.cipher = cipher_module(self.key, **args)  # pyright: ignore[reportArgumentType] key is always bytes
         if mode == MODE_ECB:
-            self.chain = ECB(self.cipher, self.blocksize)
+            raise Exception("Chaining mode ECB not implemented")
+            # self.chain = ECB(self.cipher, self.blocksize)
         elif mode == MODE_CBC:
-            if len(self.IV) != self.blocksize:
-                raise Exception("the IV length should be %i bytes"%self.blocksize)
-            self.chain = CBC(self.cipher, self.blocksize,self.IV)
+            if len(self.iv) != self.blocksize:
+                raise Exception("the IV length should be %i bytes" % self.blocksize)
+            self.chain = CBC(self.cipher, self.blocksize, self.iv)
         elif mode == MODE_CFB:
-            if len(self.IV) != self.blocksize:
-                raise Exception("the IV length should be %i bytes"%self.blocksize)
-            if segment_size == None:
-                raise ValueError("segment size must be defined explicitely for CFB mode")
-            if segment_size > self.blocksize*8 or segment_size%8 != 0:
-                # current CFB implementation doesn't support bit level acces => segment_size should be multiple of bytes
-                raise ValueError("segment size should be a multiple of 8 bits between 8 and %i"%(self.blocksize*8))
-            self.chain = CFB(self.cipher, self.blocksize,self.IV,segment_size)
+            raise Exception("Chaining mode CFB not implemented")
+            # if len(self.iv) != self.blocksize:
+            #     raise Exception("the IV length should be %i bytes" % self.blocksize)
+            # if segment_size is None:
+            #     raise ValueError(
+            #         "segment size must be defined explicitely for CFB mode"
+            #     )
+            # if segment_size > self.blocksize * 8 or segment_size % 8 != 0:
+            #     # current CFB implementation doesn't support bit level acces => segment_size should be multiple of bytes
+            #     raise ValueError(
+            #         "segment size should be a multiple of 8 bits between 8 and %i"
+            #         % (self.blocksize * 8)
+            #     )
+            # self.chain = CFB(self.cipher, self.blocksize, self.iv, segment_size)
         elif mode == MODE_OFB:
-            if len(self.IV) != self.blocksize:
-                raise ValueError("the IV length should be %i bytes"%self.blocksize)
-            self.chain = OFB(self.cipher, self.blocksize,self.IV)
+            raise Exception("Chaining mode OFB not implemented")
+            # if len(self.iv) != self.blocksize:
+            #     raise ValueError("the IV length should be %i bytes" % self.blocksize)
+            # self.chain = OFB(self.cipher, self.blocksize, self.iv)
         elif mode == MODE_CTR:
-            if (counter == None) or  not callable(counter):
-                raise Exception("Supply a valid counter object for the CTR mode")
-            self.chain = CTR(self.cipher,self.blocksize,counter)
+            raise Exception("Chaining mode CTR not implemented")
+            # if (counter is None) or not callable(counter):
+            #     raise Exception("Supply a valid counter object for the CTR mode")
+            # self.chain = CTR(self.cipher, self.blocksize, counter)
         elif mode == MODE_XTS:
-            if self.blocksize != 16:
-                raise Exception('XTS only works with blockcipher that have a 128-bit blocksize')
-            if not(type(key) == tuple and len(key) == 2):
-                raise Exception('Supply two keys as a tuple when using XTS')
-            if 'keylen_valid' in dir(self): #wrappers for pycrypto functions don't have this function
-             if not self.keylen_valid(key[0]) or  not self.keylen_valid(key[1]):
-                raise ValueError(self.key_error_message)
-            self.cipher = cipher_module(self.key[0],**args)
-            self.cipher2 = cipher_module(self.key[1],**args)
-            self.chain = XTS(self.cipher, self.cipher2)
+            raise Exception("Chaining mode XTS not implemented")
+            # if self.blocksize != 16:
+            #     raise Exception(
+            #         "XTS only works with blockcipher that have a 128-bit blocksize"
+            #     )
+            # if not (isinstance(key, tuple) and len(key) == 2):
+            #     raise Exception("Supply two keys as a tuple when using XTS")
+            # if "keylen_valid" in dir(
+            #     self
+            # ):  # wrappers for pycrypto functions don't have this function
+            #     key_tuple: tuple[bytes, bytes] = key
+            #     if not self.keylen_valid(key_tuple[0]) or not self.keylen_valid(  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
+            #         key_tuple[1]
+            #     ):
+            #         raise ValueError(self.key_error_message)
+            # key_tuple = key
+            # self.cipher = cipher_module(key_tuple[0], **args)
+            # self.cipher2 = cipher_module(key_tuple[1], **args)
+            # self.chain = XTS(self.cipher, self.cipher2)
         elif mode == MODE_CMAC:
-            if self.blocksize not in (8,16):
-                raise Exception('CMAC only works with blockcipher that have a 64 or 128-bit blocksize')
-            self.chain = CMAC(self.cipher,self.blocksize,self.IV)
+            raise Exception("Chaining mode CMAC not implemented")
+            # if self.blocksize not in (8, 16):
+            #     raise Exception(
+            #         "CMAC only works with blockcipher that have a 64 or 128-bit blocksize"
+            #     )
+            # self.chain = CMAC(self.cipher, self.blocksize, self.iv)
         else:
-                raise Exception("Unknown chaining mode!")
+            raise Exception("Unknown chaining mode!")
 
-    def encrypt(self,plaintext,n=''):
+    def encrypt(self, plaintext: bytes, n: str = "") -> bytes:
         """Encrypt some plaintext
 
             plaintext   = a string of binary data
@@ -148,18 +195,18 @@ class BlockCipher():
         No finalizing needed.
         The hashlength is equal to block size of the used block cipher.
         """
-        #self.ed = 'e' if chain is encrypting, 'd' if decrypting,
+        # self.ed = 'e' if chain is encrypting, 'd' if decrypting,
         # None if nothing happened with the chain yet
-        #assert self.ed in ('e',None) 
+        # assert self.ed in ('e',None)
         # makes sure you don't encrypt with a cipher that has started decrypting
-        self.ed = 'e'
+        self.ed = "e"
         if self.mode == MODE_XTS:
             # data sequence number (or 'tweak') has to be provided when in XTS mode
-            return self.chain.update(plaintext,'e',n)
+            return self.chain.update(plaintext, "e", n)
         else:
-            return self.chain.update(plaintext,'e')
+            return self.chain.update(plaintext, "e")
 
-    def decrypt(self,ciphertext,n=''):
+    def decrypt(self, ciphertext: bytes, n: str = "") -> bytes:
         """Decrypt some ciphertext
 
             ciphertext  = a string of binary data
@@ -193,18 +240,18 @@ class BlockCipher():
         -----
         Mode not supported for decryption as this does not make sense.
         """
-        #self.ed = 'e' if chain is encrypting, 'd' if decrypting,
+        # self.ed = 'e' if chain is encrypting, 'd' if decrypting,
         # None if nothing happened with the chain yet
-        #assert self.ed in ('d',None)
+        # assert self.ed in ('d',None)
         # makes sure you don't decrypt with a cipher that has started encrypting
-        self.ed = 'd'
+        self.ed = "d"
         if self.mode == MODE_XTS:
             # data sequence number (or 'tweak') has to be provided when in XTS mode
-            return self.chain.update(ciphertext,'d',n)
+            return self.chain.update(ciphertext, "d", n)
         else:
-            return self.chain.update(ciphertext,'d')
+            return self.chain.update(ciphertext, "d")
 
-    def final(self,style='pkcs7'):
+    def final(self, style: str = "pkcs7") -> bytes | None:
         # TODO: after calling final, reset the IV? so the cipher is as good as new?
         """Finalizes the encryption by padding the cache
 
@@ -223,31 +270,38 @@ class BlockCipher():
         After finalization, the chain can still be used but the IV, counter etc
           aren't reset but just continue as they were after the last step (finalization step).
         """
-        assert self.mode not in (MODE_XTS, MODE_CMAC) # finalizing (=padding) doesn't make sense when in XTS or CMAC mode
-        if self.ed == b'e':
+        assert self.mode not in (
+            MODE_XTS,
+            MODE_CMAC,
+        )  # finalizing (=padding) doesn't make sense when in XTS or CMAC mode
+        if self.ed == "e":
             # when the chain is in encryption mode, finalizing will pad the cache and encrypt this last block
-            if self.mode in (MODE_OFB,MODE_CFB,MODE_CTR):
-                dummy = b'0'*(self.chain.totalbytes%self.blocksize) # a dummy string that will be used to get a valid padding
-            else: #ECB, CBC
-                dummy = self.chain.cache
-            pdata = pad(dummy,self.blocksize,style=style)[len(dummy):]
-            #~ pad = padfct(dummy,padding.PAD,self.blocksize)[len(dummy):] # construct the padding necessary
-            return self.chain.update(pdata,b'e') # supply the padding to the update function => chain cache will be "cache+padding"
+            if self.mode in (MODE_OFB, MODE_CFB, MODE_CTR):
+                raise Exception("Chaining mode OFB, CFB and CTR not implemented")
+                # totalbytes: int = self.chain.totalbytes
+                # dummy = b"0" * (totalbytes % self.blocksize)
+            else:  # ECB, CBC
+                dummy: bytes = self.chain.cache
+            pdata = pad(dummy, self.blocksize, style=style)[len(dummy) :]
+            # ~ pad = padfct(dummy,padding.PAD,self.blocksize)[len(dummy):] # construct the padding necessary
+            return self.chain.update(
+                pdata, "e"
+            )  # supply the padding to the update function => chain cache will be "cache+padding"
         else:
             # final function doesn't make sense when decrypting => padding should be removed manually
             pass
 
 
 class CBC:
-    """CBC chaining mode
-    """
-    def __init__(self, codebook, blocksize, IV):
-        self.IV = IV
-        self.cache = b''
+    """CBC chaining mode"""
+
+    def __init__(self, codebook: pytwofish.Twofish, blocksize: int, iv: bytes) -> None:
+        self.iv: bytes = iv
+        self.cache: bytes = b""
         self.codebook = codebook
         self.blocksize = blocksize
 
-    def update(self, data, ed):
+    def update(self, data: bytes, ed: str, tweak: str = "") -> bytes:
         """Processes the given ciphertext/plaintext
 
         Inputs:
@@ -262,40 +316,59 @@ class CBC:
           the new data will be concatenated to the cache and then
           cache+data will be processed and full blocks will be outputted.
         """
-        if ed == 'e':
-            encrypted_blocks = b''
+        i = 0
+        if ed == "e":
+            encrypted_blocks = b""
             self.cache += data
             if len(self.cache) < self.blocksize:
-                return b''
-            for i in range(0, len(self.cache)-self.blocksize+1, self.blocksize):
-                self.IV = self.codebook.encrypt(strxor(self.cache[i:i+self.blocksize],self.IV))
-                encrypted_blocks += self.IV
-            self.cache = self.cache[i+self.blocksize:]
+                return b""
+            for i in range(0, len(self.cache) - self.blocksize + 1, self.blocksize):
+                self.iv = self.codebook.encrypt(
+                    strxor(self.cache[i : i + self.blocksize], self.iv)
+                )
+                encrypted_blocks += self.iv
+            self.cache = self.cache[i + self.blocksize :]
             return encrypted_blocks
         else:
-            decrypted_blocks = b''
+            decrypted_blocks = b""
             self.cache += data
             if len(self.cache) < self.blocksize:
-                return b''
-            for i in range(0, len(self.cache)-self.blocksize+1, self.blocksize):
-                plaintext = strxor(self.IV,self.codebook.decrypt(self.cache[i:i + self.blocksize]))
-                self.IV = self.cache[i:i + self.blocksize]
-                decrypted_blocks+=plaintext
-            self.cache = self.cache[i+self.blocksize:]
+                return b""
+            for i in range(0, len(self.cache) - self.blocksize + 1, self.blocksize):
+                plaintext = strxor(
+                    self.iv, self.codebook.decrypt(self.cache[i : i + self.blocksize])
+                )
+                self.iv = self.cache[i : i + self.blocksize]
+                decrypted_blocks += plaintext
+            self.cache = self.cache[i + self.blocksize :]
             return decrypted_blocks
 
 
 class python_Twofish(BlockCipher):
-    def __init__(self,key,mode,IV,counter,segment_size):
-        if len(key) not in (16,24,32) and type(key) is not tuple:
-                raise ValueError("Key should be 128, 192 or 256 bits")
+    def __init__(
+        self,
+        key: Union[bytes, tuple[bytes, bytes]],
+        mode: int,
+        iv: bytes | None,
+        counter: Callable[..., int] | None,
+        segment_size: int | None,
+    ) -> None:
+        if len(key) not in (16, 24, 32) and type(key) is not tuple:
+            raise ValueError("Key should be 128, 192 or 256 bits")
         cipher_module = pytwofish.Twofish
         self.blocksize = 16
-        BlockCipher.__init__(self,key,mode,IV,counter,cipher_module,segment_size)
-    
+        BlockCipher.__init__(self, key, mode, iv, counter, cipher_module, segment_size)
+
     @classmethod
-    def new(cls, key,mode=MODE_ECB,IV=None,counter=None,segment_size=None):
-        return cls(key,mode,IV,counter,segment_size)
+    def new(
+        cls,
+        key: Union[bytes, tuple[bytes, bytes]],
+        mode: int = MODE_ECB,
+        iv: bytes | None = None,
+        counter: Callable[..., int] | None = None,
+        segment_size: int | None = None,
+    ) -> "python_Twofish":
+        return cls(key, mode, iv, counter, segment_size)
+
 
 Twofish = python_Twofish
-

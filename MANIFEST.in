@@ -1,5 +1,6 @@
 include LICENSE README.rst requirements.txt
 include pykeepass/blank_database.kdbx
+include pykeepass/py.typed
 recursive-exclude * __pycache__
 recursive-exclude * *.pyc
 recursive-exclude * *.pyo
