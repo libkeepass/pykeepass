@@ -2,6 +2,8 @@
 .. include:: ../README.md
 """
 
+from __future__ import annotations
+
 from .attachment import Attachment
 from .entry import Entry
 from .group import Group

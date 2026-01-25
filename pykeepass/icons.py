@@ -3,6 +3,8 @@
 
 # TODO: deprecate module-level variables
 
+from __future__ import annotations
+
 from types import SimpleNamespace
 
 Key = "0"

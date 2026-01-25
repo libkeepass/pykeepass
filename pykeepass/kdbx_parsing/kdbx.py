@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from construct import Bytes, Check, Int16ul, RawCopy, Struct, Switch, this

@@ -1,6 +1,8 @@
 # ---------- Find functions ---------------
 # Use find_entries()/find_groups() instead
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Literal, Union, overload
 from uuid import UUID
 

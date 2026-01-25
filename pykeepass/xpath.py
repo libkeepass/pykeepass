@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 attachment_xp = {
     False: {"id": '/Value[@Ref="{}"]/..', "filename": '/Key[text()="{}"]/..'},
     True: {

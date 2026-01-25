@@ -34,6 +34,8 @@
 ## Try python-mcrypt instead. In case a faster library is not installed
 ## on the target system, this code can be used as a portable fallback.
 
+from __future__ import annotations
+
 import struct
 
 try:

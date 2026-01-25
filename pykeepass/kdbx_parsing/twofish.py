@@ -22,7 +22,7 @@
 # =============================================================================
 # -*- coding: utf-8 -*-
 
-__all__ = ["Twofish"]
+from __future__ import annotations
 
 from typing import Callable, Literal, Union
 
@@ -30,6 +30,9 @@ from Cryptodome.Util.Padding import pad
 from Cryptodome.Util.strxor import strxor
 
 from . import pytwofish
+
+__all__ = ["Twofish"]
+
 
 MODE_ECB = 1
 MODE_CBC = 2
@@ -293,8 +296,8 @@ class CBC:
     """CBC chaining mode"""
 
     def __init__(self, codebook: pytwofish.Twofish, blocksize: int, iv: bytes) -> None:
-        self.iv = iv
-        self.cache = b""
+        self.iv: bytes = iv
+        self.cache: bytes = b""
         self.codebook = codebook
         self.blocksize = blocksize
 

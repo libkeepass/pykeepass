@@ -1,6 +1,8 @@
 # Evan Widloski - 2018-04-11
 # keepass decrypt experimentation
 
+from __future__ import annotations
+
 import hashlib
 from typing import TYPE_CHECKING
 
