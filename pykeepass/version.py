@@ -7,6 +7,8 @@ try:
     __version__ = version("pykeepass")
 except ImportError:
     # Fallback for older Python versions (< 3.8)
-    from pkg_resources import get_distribution
+    from pkg_resources import (  # pyright: ignore[reportMissingImports]
+        get_distribution,  # pyright: ignore[reportUnknownVariableType]
+    )
 
-    __version__ = get_distribution("pykeepass").version
+    __version__: str = get_distribution("pykeepass").version  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]

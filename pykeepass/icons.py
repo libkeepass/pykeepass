@@ -3,6 +3,8 @@
 
 # TODO: deprecate module-level variables
 
+from types import SimpleNamespace
+
 Key = "0"
 World = "1"
 Warning = "2"
@@ -145,7 +147,6 @@ DOLLAR_SIGN = "66"
 CERTIFICATE = "67"
 SMARTPHONE = "68"
 
-from types import SimpleNamespace
 
 icons = SimpleNamespace(
     Key="0",

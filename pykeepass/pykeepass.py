@@ -9,8 +9,14 @@ import zlib
 from binascii import Error as BinasciiError
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import TYPE_CHECKING, Any, Literal, Union, cast, overload
+from xml.etree.ElementTree import Element, ElementTree
 
-from construct import CheckError, ChecksumError, Container
+from construct import (
+    CheckError,
+    ChecksumError,
+    Container,
+)
 from lxml import etree
 from lxml.builder import E
 
@@ -34,6 +40,15 @@ BLANK_DATABASE_LOCATION = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), BLANK_DATABASE_FILENAME
 )
 BLANK_DATABASE_PASSWORD = "password"
+
+
+if TYPE_CHECKING:
+    from construct import Context, FilenameType, StreamType
+else:
+    FilenameType = Any
+    StreamType = Any
+
+Xpath_Result = Union[Group, Entry, Attachment, Element]
 
 
 class PyKeePass:
@@ -64,9 +79,19 @@ class PyKeePass:
 
     # TODO: raise, no filename provided, database not open
 
+    filename: FilenameType | StreamType
+    _password: str | None
+    _keyfile: FilenameType | None
+    kdbx: Container[Any]
+
     def __init__(
-        self, filename, password=None, keyfile=None, transformed_key=None, decrypt=True
-    ):
+        self,
+        filename: FilenameType | StreamType,
+        password: str | None = None,
+        keyfile: FilenameType | None = None,
+        transformed_key: bytes | None = None,
+        decrypt: bool = True,
+    ) -> None:
         self.read(
             filename=filename,
             password=password,
@@ -75,21 +100,21 @@ class PyKeePass:
             decrypt=decrypt,
         )
 
-    def __enter__(self):
+    def __enter__(self) -> "PyKeePass":
         return self
 
-    def __exit__(self, typ, value, tb):
+    def __exit__(self, typ: Any, value: Any, tb: Any) -> None:
         # see issue 137
         pass
 
     def read(
         self,
-        filename=None,
-        password=None,
-        keyfile=None,
-        transformed_key=None,
-        decrypt=True,
-    ):
+        filename: FilenameType | StreamType | None = None,
+        password: str | None = None,
+        keyfile: FilenameType | None = None,
+        transformed_key: bytes | None = None,
+        decrypt: bool = True,
+    ) -> None:
         """
         See class docstring.
         """
@@ -105,7 +130,7 @@ class PyKeePass:
         try:
             if hasattr(filename, "read"):
                 self.kdbx = KDBX.parse_stream(
-                    filename,
+                    cast(StreamType, filename),
                     password=password,
                     keyfile=keyfile,
                     transformed_key=transformed_key,
@@ -113,7 +138,7 @@ class PyKeePass:
                 )
             else:
                 self.kdbx = KDBX.parse_file(
-                    filename,
+                    cast(FilenameType, filename),
                     password=password,
                     keyfile=keyfile,
                     transformed_key=transformed_key,
@@ -148,7 +173,11 @@ class PyKeePass:
 
         self.read(self.filename, self.password, self.keyfile)
 
-    def save(self, filename=None, transformed_key=None):
+    def save(
+        self,
+        filename: FilenameType | StreamType | None = None,
+        transformed_key: bytes | None = None,
+    ) -> None:
         """Save current database object to disk.
 
         Args:
@@ -165,7 +194,7 @@ class PyKeePass:
         if hasattr(filename, "write"):
             KDBX.build_stream(
                 self.kdbx,
-                filename,
+                cast(StreamType, filename),
                 password=self.password,
                 keyfile=self.keyfile,
                 transformed_key=transformed_key,
@@ -174,7 +203,7 @@ class PyKeePass:
         else:
             # save to temporary file to prevent database clobbering
             # see issues 223, 101
-            filename_tmp = Path(filename).with_suffix(".tmp")
+            filename_tmp = Path(cast(str, filename)).with_suffix(".tmp")
             try:
                 KDBX.build_file(
                     self.kdbx,
@@ -187,10 +216,10 @@ class PyKeePass:
             except Exception as e:
                 os.remove(filename_tmp)
                 raise e
-            shutil.move(filename_tmp, filename)
+            shutil.move(filename_tmp, cast(str, filename))
 
     @property
-    def version(self):
+    def version(self) -> tuple[int, int]:
         """`tuple` of `int`: Length 2 tuple of ints containing major and minor versions.
         Generally (3, 1) or (4, 0)."""
         return (
@@ -199,13 +228,17 @@ class PyKeePass:
         )
 
     @property
-    def encryption_algorithm(self):
+    def encryption_algorithm(
+        self,
+    ) -> Union[Literal["aes256"], Literal["chacha20"], Literal["twofish"]]:
         """`str`: encryption algorithm used by database during decryption.
         Can be one of 'aes256', 'chacha20', or 'twofish'."""
         return self.kdbx.header.value.dynamic_header.cipher_id.data
 
     @property
-    def kdf_algorithm(self):
+    def kdf_algorithm(
+        self,
+    ) -> Union[None, Literal["aeskdf"], Literal["argon2"], Literal["argon2id"]]:
         """`str`: key derivation algorithm used by database during decryption.
         Can be one of 'aeskdf', 'argon2', or 'argon2id'"""
         if self.version == (3, 1):
@@ -222,13 +255,13 @@ class PyKeePass:
                 return "aeskdf"
 
     @property
-    def transformed_key(self):
+    def transformed_key(self) -> bytes:
         """`bytes`: transformed key used in database decryption.  May be cached
         and passed to `open` for faster database opening"""
         return self.kdbx.body.transformed_key
 
     @property
-    def database_salt(self):
+    def database_salt(self) -> bytes:
         """`bytes`: salt of database kdf. This can be used for adding additional
         credentials which are used in extension to current keyfile."""
 
@@ -239,7 +272,7 @@ class PyKeePass:
         return kdf_parameters["S"].value
 
     @property
-    def payload(self):
+    def payload(self) -> Context:
         """`construct.Container`: Encrypted payload of keepass database"""
 
         # check if payload is decrypted
@@ -249,77 +282,85 @@ class PyKeePass:
             return self.kdbx.body.payload
 
     @property
-    def tree(self):
+    def tree(self) -> ElementTree:
         """`lxml.etree._ElementTree`: database XML payload"""
         return self.payload.xml
 
     @property
-    def root_group(self):
+    def root_group(self) -> Group | None:
         """`Group`: root Group of database"""
         return self.find_groups(path="", first=True)
 
     @property
-    def recyclebin_group(self):
+    def recyclebin_group(self) -> Group | None:
         """`Group`: RecycleBin Group of database"""
         elem = self._xpath("/KeePassFile/Meta/RecycleBinUUID", first=True)
+        if elem is None or elem.text is None:
+            return None
         recyclebin_uuid = uuid.UUID(bytes=base64.b64decode(elem.text))
         return self.find_groups(uuid=recyclebin_uuid, first=True)
 
     @property
-    def groups(self):
+    def groups(self) -> list[Group]:
         """`list` of `Group`: all groups in database"""
         return self.find_groups()
 
     @property
-    def entries(self):
+    def entries(self) -> list[Entry]:
         """`list` of `Entry`: all entries in database,
         excluding history"""
         return self.find_entries()
 
     @property
-    def database_name(self):
+    def database_name(self) -> str | None:
         """`str`: Name of database"""
         elem = self._xpath("/KeePassFile/Meta/DatabaseName", first=True)
-        return elem.text
+        return elem.text if elem is not None else None
 
     @database_name.setter
-    def database_name(self, name):
+    def database_name(self, name: str) -> None:
         item = self._xpath("/KeePassFile/Meta/DatabaseName", first=True)
-        item.text = str(name)
+        if item is not None:
+            item.text = str(name)
 
     @property
-    def database_description(self):
+    def database_description(self) -> str | None:
         """`str`: Description of the database"""
         elem = self._xpath("/KeePassFile/Meta/DatabaseDescription", first=True)
-        return elem.text
+        return elem.text if elem is not None else None
 
     @database_description.setter
-    def database_description(self, name):
+    def database_description(self, name: str) -> None:
         item = self._xpath("/KeePassFile/Meta/DatabaseDescription", first=True)
-        item.text = str(name)
+        if item is not None:
+            item.text = str(name)
 
     @property
-    def default_username(self):
+    def default_username(self) -> str | None:
         """`str` or `None`: default user.  `None` if not set"""
         elem = self._xpath("/KeePassFile/Meta/DefaultUserName", first=True)
-        return elem.text
+        return elem.text if elem is not None else None
 
     @default_username.setter
-    def default_username(self, name):
+    def default_username(self, name: str) -> None:
         item = self._xpath("/KeePassFile/Meta/DefaultUserName", first=True)
-        item.text = str(name)
+        if item is not None:
+            item.text = str(name)
 
-    def xml(self):
+    def xml(self) -> bytes:
         """Get XML part of database as string
 
         Returns:
             `str`: XML content of database
         """
-        return etree.tostring(
-            self.tree, pretty_print=True, standalone=True, encoding="utf-8"
+        return etree.tostring(  # pyright: ignore[reportUnknownVariableType, reportCallIssue]
+            self.tree,  # pyright: ignore[reportArgumentType]
+            pretty_print=True,
+            standalone=True,
+            encoding="utf-8",
         )
 
-    def dump_xml(self, filename):
+    def dump_xml(self, filename: FilenameType) -> None:
         """Dump the contents of the database to file as XML
 
         Args:
@@ -328,7 +369,36 @@ class PyKeePass:
         with open(filename, "wb") as f:
             f.write(self.xml())
 
-    def xpath(self, xpath_str, tree=None, first=False, cast=False, **kwargs):
+    @overload
+    def xpath(
+        self,
+        xpath_str: str,
+        tree: Any = None,
+        *,
+        first: Literal[True],
+        cast: bool = False,
+        **kwargs: Any,
+    ) -> Xpath_Result | None: ...
+
+    @overload
+    def xpath(
+        self,
+        xpath_str: str,
+        tree: Any = None,
+        *,
+        first: Literal[False] = False,
+        cast: bool = False,
+        **kwargs: Any,
+    ) -> list[Xpath_Result]: ...
+
+    def xpath(
+        self,
+        xpath_str: str,
+        tree: Any = None,
+        first: bool | None = False,
+        cast: bool = False,
+        **kwargs: Any,
+    ) -> list[Xpath_Result] | Xpath_Result | None:
         """Look up elements in the XML payload and return corresponding object.
 
         Internal function which searches the payload lxml ElementTree for
@@ -358,7 +428,7 @@ class PyKeePass:
             xpath_str, namespaces={"re": "http://exslt.org/regular-expressions"}
         )
 
-        res = []
+        res: list[Union[Group, Entry, Attachment, Element]] = []
         for e in elements:
             if cast:
                 if e.tag == "Entry":
@@ -374,24 +444,53 @@ class PyKeePass:
 
         # return first object in list or None
         if first:
-            res = res[0] if res else None
-
+            return res[0] if res else None
         return res
 
     _xpath = xpath
 
+    @overload
     def _find(
         self,
-        prefix,
-        keys_xp,
-        path=None,
-        tree=None,
-        first=False,
-        history=False,
-        regex=False,
-        flags=None,
-        **kwargs,
-    ):
+        prefix: str,
+        keys_xp: dict[bool, dict[str, str]],
+        path: list[str] | str | None = None,
+        tree: Any = None,
+        *,
+        first: Literal[True],
+        history: bool = False,
+        regex: bool = False,
+        flags: str | None = None,
+        **kwargs: Any,
+    ) -> Xpath_Result | None: ...
+
+    @overload
+    def _find(
+        self,
+        prefix: str,
+        keys_xp: dict[bool, dict[str, str]],
+        path: list[str] | str | None = None,
+        tree: Any = None,
+        *,
+        first: Literal[False] = False,
+        history: bool = False,
+        regex: bool = False,
+        flags: str | None = None,
+        **kwargs: Any,
+    ) -> list[Xpath_Result]: ...
+
+    def _find(
+        self,
+        prefix: str,
+        keys_xp: dict[bool, dict[str, str]],
+        path: list[str] | str | None = None,
+        tree: "Group | None" = None,
+        first: bool = False,
+        history: bool = False,
+        regex: bool = False,
+        flags: str | None = None,
+        **kwargs: Any,
+    ) -> list[Xpath_Result] | Xpath_Result | None:
         """Internal function for converting a search into an XPath string"""
 
         xp = ""
@@ -445,13 +544,15 @@ class PyKeePass:
                 if value is not None:
                     xp += keys_xp[regex][key].format(value, flags=flags)
 
-        res = self._xpath(
-            xp, tree=tree._element if tree else None, first=first, cast=True, **kwargs
+        return self._xpath(
+            xp,
+            tree=tree._element if tree else None,  # pyright: ignore[reportPrivateUsage]
+            first=first,
+            cast=True,
+            **kwargs,
         )
 
-        return res
-
-    def _can_be_moved_to_recyclebin(self, entry_or_group):
+    def _can_be_moved_to_recyclebin(self, entry_or_group: "Group | Entry") -> bool:
         if entry_or_group == self.root_group:
             return False
         recyclebin_group = self.recyclebin_group
@@ -460,7 +561,7 @@ class PyKeePass:
         uuid_str = base64.b64encode(entry_or_group.uuid.bytes).decode("utf-8")
         elem = self._xpath(
             './UUID[text()="{}"]/..'.format(uuid_str),
-            tree=recyclebin_group._element,
+            tree=recyclebin_group._element,  # pyright: ignore[reportPrivateUsage]
             first=True,
             cast=False,
         )
@@ -475,7 +576,33 @@ class PyKeePass:
         find_groups_by_uuid,
     )
 
-    def find_groups(self, recursive=True, path=None, group=None, **kwargs):
+    @overload
+    def find_groups(
+        self,
+        recursive: bool = True,
+        path: list[str] | str | None = None,
+        group: "Group | None" = None,
+        *,
+        first: Literal[True],
+        **kwargs: Any,
+    ) -> Group | None: ...
+    @overload
+    def find_groups(
+        self,
+        recursive: bool = True,
+        path: list[str] | str | None = None,
+        group: "Group | None" = None,
+        *,
+        first: Literal[False] = False,
+        **kwargs: Any,
+    ) -> list[Group]: ...
+    def find_groups(
+        self,
+        recursive: bool = True,
+        path: list[str] | str | None = None,
+        group: "Group | None" = None,
+        **kwargs: Any,
+    ) -> list[Group] | Group | None:
         """Find groups in a database
 
         [XSLT style]: https://www.xml.com/pub/a/2003/06/04/tr.html
@@ -521,10 +648,21 @@ class PyKeePass:
         """
 
         prefix = "//Group" if recursive else "/Group"
-        res = self._find(prefix, group_xp, path=path, tree=group, **kwargs)
-        return res
+        return self._find(
+            prefix,
+            group_xp,
+            path=path,
+            tree=group,
+            **kwargs,
+        )  # pyright: ignore[reportUnknownVariableType]
 
-    def add_group(self, destination_group, group_name, icon=None, notes=None):
+    def add_group(
+        self,
+        destination_group: "Group",
+        group_name: str,
+        icon: str | None = None,
+        notes: str | None = None,
+    ) -> "Group":
         """Create a new group and all parent groups, if necessary
 
         Args:
@@ -546,24 +684,26 @@ class PyKeePass:
 
         return group
 
-    def delete_group(self, group):
+    def delete_group(self, group: "Group") -> None:
         group.delete()
 
-    def move_group(self, group, destination_group):
+    def move_group(self, group: "Group", destination_group: "Group") -> None:
         """Move a group"""
         destination_group.append(group)
 
-    def _create_or_get_recyclebin_group(self, **kwargs):
+    def _create_or_get_recyclebin_group(self, **kwargs: Any) -> "Group":
         existing_group = self.recyclebin_group
         if existing_group is not None:
             return existing_group
         kwargs.setdefault("group_name", "Recycle Bin")
-        group = self.add_group(self.root_group, **kwargs)
+        root = cast(Group, self.root_group)
+        group = self.add_group(root, **kwargs)
         elem = self._xpath("/KeePassFile/Meta/RecycleBinUUID", first=True)
-        elem.text = base64.b64encode(group.uuid.bytes).decode("utf-8")
+        if elem is not None:
+            elem.text = base64.b64encode(group.uuid.bytes).decode("utf-8")
         return group
 
-    def trash_group(self, group):
+    def trash_group(self, group: "Group") -> None:
         """Move a group to the RecycleBin
 
         The recycle bin is created if it does not exit. ``group`` must be an empty Group.
@@ -576,7 +716,7 @@ class PyKeePass:
         recyclebin_group = self._create_or_get_recyclebin_group()
         self.move_group(group, recyclebin_group)
 
-    def empty_group(self, group):
+    def empty_group(self, group: "Group") -> None:
         """Delete all entries and subgroups of a group.
 
         This does not delete the group itself
@@ -602,7 +742,33 @@ class PyKeePass:
         find_entries_by_uuid,
     )
 
-    def find_entries(self, recursive=True, path=None, group=None, **kwargs):
+    @overload
+    def find_entries(
+        self,
+        recursive: bool = True,
+        path: list[str] | None = None,
+        group: "Group | None" = None,
+        *,
+        first: Literal[True],
+        **kwargs: Any,
+    ) -> Entry | None: ...
+    @overload
+    def find_entries(
+        self,
+        recursive: bool = True,
+        path: list[str] | None = None,
+        group: "Group | None" = None,
+        *,
+        first: Literal[False] = False,
+        **kwargs: Any,
+    ) -> list[Entry]: ...
+    def find_entries(
+        self,
+        recursive: bool = True,
+        path: list[str] | None = None,
+        group: "Group | None" = None,
+        **kwargs: Any,
+    ) -> list[Entry] | Entry | None:
         """Returns entries which match all provided parameters
         Args:
             path (`list` of (`str` or `None`), optional): full path to an entry
@@ -658,24 +824,28 @@ class PyKeePass:
         """
 
         prefix = "//Entry" if recursive else "/Entry"
-        res = self._find(prefix, entry_xp, path=path, tree=group, **kwargs)
-
-        return res
+        return self._find(
+            prefix,
+            entry_xp,
+            path=path,
+            tree=group,
+            **kwargs,
+        )  # pyright: ignore[reportUnknownVariableType]
 
     def add_entry(
         self,
-        destination_group,
-        title,
-        username,
-        password,
-        url=None,
-        notes=None,
-        expiry_time=None,
-        tags=None,
-        otp=None,
-        icon=None,
-        force_creation=False,
-    ):
+        destination_group: "Group",
+        title: str | None,
+        username: str | None,
+        password: str | None,
+        url: str | None = None,
+        notes: str | None = None,
+        expiry_time: datetime | None = None,
+        tags: list[str] | str | None = None,
+        otp: str | None = None,
+        icon: str | None = None,
+        force_creation: bool = False,
+    ) -> "Entry":
         """Create a new entry
 
         Args:
@@ -732,7 +902,7 @@ class PyKeePass:
 
         return entry
 
-    def delete_entry(self, entry):
+    def delete_entry(self, entry: "Entry") -> None:
         """Delete entry
 
         Args:
@@ -740,7 +910,7 @@ class PyKeePass:
         """
         entry.delete()
 
-    def move_entry(self, entry, destination_group):
+    def move_entry(self, entry: "Entry", destination_group: "Group") -> None:
         """Move entry to group
 
         Args:
@@ -749,7 +919,7 @@ class PyKeePass:
         """
         destination_group.append(entry)
 
-    def trash_entry(self, entry):
+    def trash_entry(self, entry: "Entry") -> None:
         """Move an entry to the RecycleBin
 
         The recycle bin is created if it does not exit.
@@ -764,7 +934,33 @@ class PyKeePass:
 
     # ---------- Attachments ----------
 
-    def find_attachments(self, recursive=True, path=None, element=None, **kwargs):
+    @overload
+    def find_attachments(
+        self,
+        recursive: bool = True,
+        path: list[str] | str | None = None,
+        element: "Entry | None" = None,
+        *,
+        first: Literal[True],
+        **kwargs: Any,
+    ) -> Attachment | None: ...
+    @overload
+    def find_attachments(
+        self,
+        recursive: bool = True,
+        path: list[str] | str | None = None,
+        element: "Entry | None" = None,
+        *,
+        first: Literal[False] = False,
+        **kwargs: Any,
+    ) -> list[Attachment]: ...
+    def find_attachments(
+        self,
+        recursive: bool = True,
+        path: list[str] | str | None = None,
+        element: "Entry | None" = None,
+        **kwargs: Any,
+    ) -> list[Attachment] | Attachment | None:
         """Find attachments in database
 
         Args:
@@ -781,25 +977,30 @@ class PyKeePass:
         """
 
         prefix = "//Binary" if recursive else "/Binary"
-        res = self._find(prefix, attachment_xp, path=path, tree=element, **kwargs)
-
-        return res
+        return self._find(
+            prefix,
+            attachment_xp,
+            path=path,
+            tree=element,
+            **kwargs,
+        )  # pyright: ignore[reportUnknownVariableType]
 
     @property
-    def attachments(self):
+    def attachments(self) -> list[Attachment]:
         """`list` of `Attachment`: all attachments in database"""
         return self.find_attachments(filename=".*", regex=True)
 
     @property
-    def binaries(self):
+    def binaries(self) -> list[bytes]:
         """`list` of `bytes`: all attachment binaries in database.  The position
         within this list indicates the binary's ID"""
         if self.version >= (4, 0):
             # first byte is a prepended flag
             binaries = [a.data[1:] for a in self.payload.inner_header.binary]
         else:
-            binaries = []
+            binaries: list[bytes] = []
             for elem in self._xpath("/KeePassFile/Meta/Binaries/Binary"):
+                elem = cast(Element, elem)
                 if elem.text is not None:
                     if elem.get("Compressed") == "True":
                         data = zlib.decompress(
@@ -813,7 +1014,9 @@ class PyKeePass:
 
         return binaries
 
-    def add_binary(self, data, compressed=True, protected=True):
+    def add_binary(
+        self, data: bytes, compressed: bool = True, protected: bool = True
+    ) -> int:
         """Add binary data to database.  Note this does not create an attachment (see `Entry.add_attachment`)
 
         Args:
@@ -834,27 +1037,34 @@ class PyKeePass:
             self.payload.inner_header.binary.append(c)
         else:
             binaries = self._xpath("/KeePassFile/Meta/Binaries", first=True)
-            if compressed:
-                # gzip compression
-                compressor = zlib.compressobj(
-                    zlib.Z_DEFAULT_COMPRESSION, zlib.DEFLATED, zlib.MAX_WBITS | 16
+            if binaries is not None:
+                binaries = cast(Element, binaries)
+                if compressed:
+                    # gzip compression
+                    compressor = zlib.compressobj(
+                        zlib.Z_DEFAULT_COMPRESSION, zlib.DEFLATED, zlib.MAX_WBITS | 16
+                    )
+                    data = compressor.compress(data)
+                    data += compressor.flush()
+                data_str = base64.b64encode(data).decode()
+
+                # set ID for Binary Element
+                binary_id = len(self.binaries)
+
+                # add binary element to XML
+                binaries.append(
+                    cast(
+                        Any,
+                        E.Binary(
+                            data_str, ID=str(binary_id), Compressed=str(compressed)
+                        ),
+                    )
                 )
-                data = compressor.compress(data)
-                data += compressor.flush()
-            data = base64.b64encode(data).decode()
-
-            # set ID for Binary Element
-            binary_id = len(self.binaries)
-
-            # add binary element to XML
-            binaries.append(
-                E.Binary(data, ID=str(binary_id), Compressed=str(compressed))
-            )
 
         # return binary id
         return len(self.binaries) - 1
 
-    def delete_binary(self, id):
+    def delete_binary(self, id: int) -> None:
         """Remove a binary from database and deletes attachments that reference it
 
         Since attachments reference binaries by their positional index,
@@ -873,7 +1083,11 @@ class PyKeePass:
             else:
                 # remove binary element from XML
                 binaries = self._xpath("/KeePassFile/Meta/Binaries", first=True)
-                binaries.remove(binaries.getchildren()[id])
+                if binaries is not None:
+                    binaries = cast(Element, binaries)
+                    binaries.remove(list(binaries)[id])
+                else:
+                    raise IndexError()
         except IndexError:
             raise BinaryError("No such binary with id {}".format(id))
 
@@ -882,15 +1096,16 @@ class PyKeePass:
             reference.delete()
 
         # decrement references greater than this id
-        binaries_gt = self._xpath(
-            '//Binary/Value[@Ref > "{}"]/..'.format(id), cast=True
+        binaries_gt = cast(
+            list[Attachment],
+            self._xpath('//Binary/Value[@Ref > "{}"]/..'.format(id), cast=True),
         )
         for reference in binaries_gt:
             reference.id = reference.id - 1
 
     # ---------- Misc ----------
 
-    def deref(self, value):
+    def deref(self, value: str) -> str | None:
         """Dereference [field reference][fieldref] of Entry
 
         Args:
@@ -919,7 +1134,8 @@ class PyKeePass:
             search_in = field_to_attribute[search_in]
             if search_in == "uuid":
                 search_value = uuid.UUID(search_value)
-            ref_entry = self.find_entries(first=True, **{search_in: search_value})
+            kwargs: Any = {search_in: search_value}
+            ref_entry = self.find_entries(first=True, **kwargs)
             if ref_entry is None:
                 return None
             value = value.replace(ref, getattr(ref_entry, wanted_field))
@@ -928,84 +1144,89 @@ class PyKeePass:
     # ---------- Credential Changing and Expiry ----------
 
     @property
-    def password(self):
+    def password(self) -> str | None:
         """`str` or `None`: Get or set database password"""
         return self._password
 
     @password.setter
-    def password(self, password):
+    def password(self, password: str | None) -> None:
         self._password = password
         self.credchange_date = datetime.now(timezone.utc)
 
     @property
-    def keyfile(self):
+    def keyfile(self) -> FilenameType | None:
         """`str` or `pathlib.Path` or `None`: get or set database keyfile"""
         return self._keyfile
 
     @keyfile.setter
-    def keyfile(self, keyfile):
+    def keyfile(self, keyfile: FilenameType | None) -> None:
         self._keyfile = keyfile
         self.credchange_date = datetime.now(timezone.utc)
 
     @property
-    def credchange_required_days(self):
+    def credchange_required_days(self) -> int | None:
         """`int`: Days until password update should be required"""
         e = self._xpath("/KeePassFile/Meta/MasterKeyChangeForce", first=True)
         if e is not None:
-            return int(e.text)
+            return int(e.text)  # pyright: ignore[reportArgumentType]
 
     @property
-    def credchange_recommended_days(self):
+    def credchange_recommended_days(self) -> int | None:
         """`int`: Days until password update should be recommended"""
         e = self._xpath("/KeePassFile/Meta/MasterKeyChangeRec", first=True)
         if e is not None:
-            return int(e.text)
+            return int(e.text)  # pyright: ignore[reportArgumentType]
 
     @credchange_required_days.setter
-    def credchange_required_days(self, days):
+    def credchange_required_days(self, days: int) -> None:
         path = "/KeePassFile/Meta/MasterKeyChangeForce"
         item = self._xpath(path, first=True)
-        item.text = str(days)
+        if item is not None:
+            item.text = str(days)
 
     @credchange_recommended_days.setter
-    def credchange_recommended_days(self, days):
+    def credchange_recommended_days(self, days: int) -> None:
         path = "/KeePassFile/Meta/MasterKeyChangeRec"
         item = self._xpath(path, first=True)
-        item.text = str(days)
+        if item is not None:
+            item.text = str(days)
 
     @property
-    def credchange_date(self):
+    def credchange_date(self) -> datetime | None:
         """`datetime.datetime`: get or set UTC time of last credential change"""
         e = self._xpath("/KeePassFile/Meta/MasterKeyChanged", first=True)
         if e is not None:
-            return self._decode_time(e.text)
+            return self._decode_time(e.text)  # pyright: ignore[reportArgumentType]
 
     @credchange_date.setter
-    def credchange_date(self, date):
+    def credchange_date(self, date: datetime) -> None:
         mk_time = self._xpath("/KeePassFile/Meta/MasterKeyChanged", first=True)
-        mk_time.text = self._encode_time(date)
+        if mk_time is not None:
+            mk_time.text = self._encode_time(date)
 
     @property
-    def credchange_required(self):
+    def credchange_required(self) -> bool:
         """`bool`: Check if credential change is required"""
         change_date = self.credchange_date
-        if change_date is None or self.credchange_required_days == -1:
+        required_days = self.credchange_required_days
+        if change_date is None or required_days is None or required_days == -1:
             return False
         now_date = datetime.now(timezone.utc)
-        return (now_date - change_date).days > self.credchange_required_days
+        return (now_date - change_date).days > required_days
 
     @property
-    def credchange_recommended(self):
+    def credchange_recommended(self) -> bool:
         """`bool`: Check if credential change is recommended"""
         change_date = self.credchange_date
-        if change_date is None or self.credchange_recommended_days == -1:
+        recommended_days = self.credchange_recommended_days
+        if change_date is None or recommended_days is None or recommended_days == -1:
             return False
         now_date = datetime.now(timezone.utc)
-        return (now_date - change_date).days > self.credchange_recommended_days
+        return (now_date - change_date).days > recommended_days
 
     # ---------- Datetime Functions ----------
 
-    def _encode_time(self, value):
+    def _encode_time(self, value: datetime) -> str:
         """`bytes` or `str`: Convert datetime to base64 or plaintext string"""
 
         if self.version >= (4, 0):
@@ -1018,7 +1239,7 @@ class PyKeePass:
         else:
             return value.isoformat()
 
-    def _decode_time(self, text):
+    def _decode_time(self, text: str) -> datetime:
         """`datetime.datetime`: Convert base64 time or plaintext time to datetime"""
 
         if self.version >= (4, 0):
@@ -1037,7 +1258,12 @@ class PyKeePass:
             )
 
 
-def create_database(filename, password=None, keyfile=None, transformed_key=None):
+def create_database(
+    filename: FilenameType | StreamType,
+    password: str | None = None,
+    keyfile: FilenameType | None = None,
+    transformed_key: bytes | None = None,
+) -> PyKeePass:
     """
     Create a new database at ``filename`` with supplied credentials.
 
@@ -1060,11 +1286,11 @@ def create_database(filename, password=None, keyfile=None, transformed_key=None)
     keepass_instance.password = password
     keepass_instance.keyfile = keyfile
 
-    keepass_instance.save(transformed_key)
+    keepass_instance.save(transformed_key=transformed_key)
     return keepass_instance
 
 
-def debug_setup():
+def debug_setup() -> None:
     """Convenience function to quickly enable debug messages"""
 
     logging.basicConfig()

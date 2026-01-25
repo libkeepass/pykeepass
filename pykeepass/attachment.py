@@ -1,8 +1,18 @@
+from typing import TYPE_CHECKING
+
+from lxml.etree import Element
+
 from . import entry
+from .baseelement import BaseElement
 from .exceptions import BinaryError
 
+if TYPE_CHECKING:
+    from construct import FilenameType, StreamType
 
-class Attachment:
+    from .pykeepass import PyKeePass
+
+
+class Attachment(BaseElement):
     """Binary data attached to an `Entry`.
 
     *Binary* refers to the bytes of the attached data
@@ -13,40 +23,68 @@ class Attachment:
 
     """
 
-    def __init__(self, element=None, kp=None, id=None, filename=None):
+    _element: Element
+    _kp: "PyKeePass | None"
+
+    def __init__(
+        self,
+        element: Element,
+        kp: "PyKeePass | None",
+        id: int | None = None,
+        filename: FilenameType | StreamType | None = None,
+    ) -> None:
         self._element = element
         self._kp = kp
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Attachment: '{}' -> {}".format(self.filename, self.id)
 
     @property
-    def id(self):
-        """`str`: get or set id of binary the attachment points to"""
-        return int(self._element.find("Value").attrib["Ref"])
+    def id(self) -> int:
+        """`int`: get or set id of binary the attachment points to"""
+        value_elem = self._element.find("Value")
+        if value_elem is None:
+            raise ValueError("Value element not found")
+        ref = value_elem.attrib.get("Ref")
+        if ref is None:
+            raise ValueError("Ref attribute not found")
+        return int(ref)
 
     @id.setter
-    def id(self, id):
-        self._element.find("Value").attrib["Ref"] = str(id)
+    def id(self, id: int) -> None:
+        value_elem = self._element.find("Value")
+        if value_elem is None:
+            raise ValueError("Value element not found")
+        value_elem.attrib["Ref"] = str(id)
 
     @property
-    def filename(self):
+    def filename(self) -> str | None:
         """`str`: get or set filename string"""
-        return self._element.find("Key").text
+        key_elem = self._element.find("Key")
+        if key_elem is None:
+            return None
+        return key_elem.text
 
     @filename.setter
-    def filename(self, filename):
-        self._element.find("Key").text = filename
+    def filename(self, filename: str) -> None:
+        key_elem = self._element.find("Key")
+        if key_elem is None:
+            raise ValueError("Key element not found")
+        key_elem.text = filename
 
     @property
-    def entry(self):
+    def entry(self) -> "entry.Entry":
         """`Entry`: entry this attachment is associated with"""
-        ancestor = self._element.getparent()
-        return entry.Entry(element=ancestor, kp=self._kp)
+        parent = self._element.getparent()
+        if parent is None:
+            raise ValueError("Parent element not found")
+        return entry.Entry(element=parent, kp=self._kp)
 
     @property
-    def binary(self):
+    def binary(self) -> bytes:
         """`bytes`: binary data this attachment points to"""
+        if self._kp is None:
+            raise BinaryError("Attachment has no associated database")
         try:
             return self._kp.binaries[self.id]
         except IndexError:
@@ -54,6 +92,9 @@ class Attachment:
 
     data = binary
 
-    def delete(self):
+    def delete(self) -> None:
         """delete this attachment"""
-        self._element.getparent().remove(self._element)
+        parent = self._element.getparent()
+        if parent is None:
+            raise ValueError("Parent element not found")
+        parent.remove(self._element)
