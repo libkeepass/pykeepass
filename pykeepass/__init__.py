@@ -1,4 +1,12 @@
-from __future__ import absolute_import
-from .pykeepass import PyKeePass, create_database
+"""
+.. include:: ../README.md
+"""
 
-from pykeepass.version import __version__
+from .pykeepass import PyKeePass, create_database
+from .entry import Entry
+from .group import Group
+from .attachment import Attachment
+from .icons import icons
+from .version import __version__
+
+__all__ = ["__version__", "PyKeePass", "Entry", "Group", "Attachment", "icons", "create_database"]

@@ -1,17 +1,11 @@
-# FIXME python2
-from __future__ import absolute_import, unicode_literals
-from future.utils import python_2_unicode_compatible
-
 from lxml.builder import E
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
 
-import pykeepass.entry
-from pykeepass.baseelement import BaseElement
+from .baseelement import BaseElement
+from .entry import Entry
 
 
-# FIXME python2
-@python_2_unicode_compatible
 class Group(BaseElement):
 
     def __init__(self, name=None, element=None, icon=None, notes=None,
@@ -41,8 +35,14 @@ class Group(BaseElement):
             self._element = element
 
     @property
+    def _first_entry(self):
+        children = self._element.getchildren()
+        first_element = next(e for e in children if e.tag == "Entry")
+        return children.index(first_element)
+
+    @property
     def name(self):
-        """str: get or set group name"""
+        """`str`: get or set group name"""
         return self._get_subelement_text('Name')
 
     @name.setter
@@ -51,7 +51,7 @@ class Group(BaseElement):
 
     @property
     def notes(self):
-        """str: get or set group notes"""
+        """`str`: get or set group notes"""
         return self._get_subelement_text('Notes')
 
     @notes.setter
@@ -60,22 +60,22 @@ class Group(BaseElement):
 
     @property
     def entries(self):
-        """:obj:`list` of :obj:`Entry`: get list of entries in this group"""
-        return [pykeepass.entry.Entry(element=x, kp=self._kp) for x in self._element.findall('Entry')]
+        """`list` of `Entry`: get list of entries in this group"""
+        return [Entry(element=x, kp=self._kp) for x in self._element.findall('Entry')]
 
     @property
     def subgroups(self):
-        """:obj:`list` of :obj:`Group`: get list of groups in this group"""
+        """`list` of `Group`: get list of groups in this group"""
         return [Group(element=x, kp=self._kp) for x in self._element.findall('Group')]
 
     @property
     def is_root_group(self):
-        """bool: return True if this is the database root"""
+        """`bool`: return True if this is the database root"""
         return self._element.getparent().tag == 'Root'
 
     @property
     def path(self):
-        """:obj:`list` of (:obj:`str` or None): a list containing names of all parent groups, not including root"""
+        """`list` of (`str` or `None`): names of all parent groups, not including root"""
         # The root group is an orphan
         if self.is_root_group or self.parentgroup is None:
             return []
@@ -91,9 +91,10 @@ class Group(BaseElement):
         """Add copy of an entry to this group
 
         Args:
-            entries (:obj:`Entry` or :obj:`list` of :obj:`Entry`)
+            entries (`Entry` or `list` of `Entry`)
         """
-        if type(entries) is list:
+        # FIXME: check if `entries` is iterable instead of list
+        if isinstance(entries, list):
             for e in entries:
                 self._element.append(e._element)
         else:
@@ -101,5 +102,5 @@ class Group(BaseElement):
 
     def __str__(self):
         # filter out NoneTypes and join into string
-        pathstr = '/'.join('' if p==None else p for p in self.path)
+        pathstr = '/'.join('' if p is None else p for p in self.path)
         return 'Group: "{}"'.format(pathstr)

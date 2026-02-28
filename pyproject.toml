@@ -1,0 +1,49 @@
+[project]
+name = "pykeepass"
+# setuptools normalizes semver '-' to '.'
+# avoid using hyphens: 1.2.3.post1
+version = "4.1.1.post1"
+readme = "README.md"
+description = "Python library to interact with keepass databases (supports KDBX3 and KDBX4)"
+authors = [
+    { name = "Philipp Schmitt", email = "philipp@schmitt.co" },
+    { name = "Evan Widloski", email = "evan_gh@widloski.com" }
+]
+license = {text = "GPL-3.0"}
+keywords = ["vault", "keepass"]
+requires-python = ">=3.7"
+dependencies = [
+    "pyotp>=2.9.0",
+    "setuptools; python_version<'3.8'",
+    "construct>=2.10.53",
+    "argon2_cffi>=18.1.0",
+    "pycryptodomex>=3.6.2",
+    "lxml",
+]
+classifiers = [
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+[project.optional-dependencies]
+test = ["pyotp", "pdoc"]
+
+[project.urls]
+Homepage = "https://github.com/libkeepass/pykeepass"
+Repository = "https://github.com/libkeepass/pykeepass"
+Issues = "https://github.com/libkeepass/pykeepass/issues"
+Changelog = "https://github.com/libkeepass/pykeepass/blob/master/CHANGELOG.rst"
+
+[tool.setuptools]
+packages = ["pykeepass", "pykeepass.kdbx_parsing"]
+include-package-data = true
+
+[build-system]
+requires = ["setuptools>=59.0.0"]
+build-backend = 'setuptools.build_meta'

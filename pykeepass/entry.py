@@ -1,18 +1,12 @@
-# FIXME python2
-from __future__ import absolute_import, unicode_literals
-from future.utils import python_2_unicode_compatible
-
 import logging
 from copy import deepcopy
-from datetime import datetime
 
 from lxml.builder import E
 from lxml.etree import Element, _Element
 from lxml.objectify import ObjectifiedElement
 
-import pykeepass.attachment
-import pykeepass.group
-from pykeepass.baseelement import BaseElement
+from . import attachment
+from .baseelement import BaseElement
 
 logger = logging.getLogger(__name__)
 reserved_keys = [
@@ -28,13 +22,11 @@ reserved_keys = [
     'otp'
 ]
 
-# FIXME python2
-@python_2_unicode_compatible
 class Entry(BaseElement):
 
     def __init__(self, title=None, username=None, password=None, url=None,
                  notes=None, otp=None, tags=None, expires=False, expiry_time=None,
-                 icon=None, autotype_sequence=None, autotype_enabled=True,
+                 icon=None, autotype_sequence=None, autotype_enabled=True, autotype_window=None,
                  element=None, kp=None):
 
         self._kp = kp
@@ -57,16 +49,22 @@ class Entry(BaseElement):
             if notes:
                 self._element.append(E.String(E.Key('Notes'), E.Value(notes)))
             if otp:
-                self._element.append(E.String(E.Key('otp'), E.Value(otp)))
+                self._element.append(
+                    E.String(E.Key('otp'), E.Value(otp, Protected="True"))
+                )
             if tags:
                 self._element.append(
-                    E.Tags(';'.join(tags) if type(tags) is list else tags)
+                    E.Tags(';'.join(tags) if isinstance(tags, list) else tags)
                 )
             self._element.append(
                 E.AutoType(
                     E.Enabled(str(autotype_enabled)),
                     E.DataTransferObfuscation('0'),
-                    E.DefaultSequence(str(autotype_sequence) if autotype_sequence else '')
+                    E.DefaultSequence(str(autotype_sequence) if autotype_sequence else ''),
+                    E.Association(
+                        E.Window(str(autotype_window) if autotype_window else ''),
+                        E.KeystrokeSequence('')
+                    )
                 )
             )
             # FIXME: include custom_properties in constructor
@@ -84,30 +82,45 @@ class Entry(BaseElement):
         """Get a string field from an entry
 
         Args:
-            key (str): name of field
+            key (`str`): name of field
 
         Returns:
-            (str or None): field value
+            `str` or `None`: field value
         """
 
-        field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), first=True)
+        field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), history=True, first=True)
         if field is not None:
             return field.text
 
-    def _set_string_field(self, key, value, protected=True):
+    def _set_string_field(self, key, value, protected=None):
         """Create or overwrite a string field in an Entry
 
         Args:
-            key (str): name of field
-            value (str): value of field
-            protected (bool): mark whether the field should be protected in memory
-                in other tools.  This property is ignored in PyKeePass and all
-                fields are decrypted immediately upon opening the database.
+            key (`str`): name of field
+            value (`str`): value of field
+            protected (`bool` or `None`): mark whether the field should be protected in memory
+                in other tools.  If `None`, value is either copied from existing field or field
+                is created with protected property unset.
+
+        Note: pykeepass does not support memory protection
         """
-        field = self._xpath('String/Key[text()="{}"]/..'.format(key), first=True)
+        field = self._xpath('String/Key[text()="{}"]/..'.format(key), history=True, first=True)
+
+        protected_str = None
+        if protected is None:
+            protected_field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), first=True)
+            if protected_field is not None:
+                protected_str = protected_field.attrib.get("Protected")
+        else:
+            protected_str = str(protected)
+
         if field is not None:
             self._element.remove(field)
-        self._element.append(E.String(E.Key(key), E.Value(value, Protected=str(protected))))
+
+        if protected_str is None:
+            self._element.append(E.String(E.Key(key), E.Value(value)))
+        else:
+            self._element.append(E.String(E.Key(key), E.Value(value, Protected=protected_str)))
 
     def _get_string_field_keys(self, exclude_reserved=False):
         results = [x.find('Key').text for x in self._element.findall('String')]
@@ -117,7 +130,28 @@ class Entry(BaseElement):
             return results
 
     @property
+    def index(self):
+        """`int`: index of a entry within a group"""
+        group = self.group._element
+        children = group.getchildren()
+        first_index = self.group._first_entry
+        index = children.index(self._element)
+        return index - first_index
+
+    def reindex(self, new_index):
+        """Move entry to a new index within a group
+        
+        Args:
+            new_index (`int`): new index for the entry starting at 0
+        """
+        group = self.group._element
+        first_index = self.group._first_entry
+        group.remove(self._element)
+        group.insert(new_index+first_index, self._element)
+
+    @property
     def attachments(self):
+        """`list` of `Attachment`: attachments associated with entry"""
         return self._kp.find_attachments(
             element=self,
             filename='.*',
@@ -126,23 +160,36 @@ class Entry(BaseElement):
         )
 
     def add_attachment(self, id, filename):
+        """Add attachment to entry
+
+        The existence of a binary with the given `id` is not checked
+
+        Args:
+            id (`int`): ID of attachment in database
+            filename (`str`): filename to assign to this attachment data
+
+        Returns:
+            `Attachment`
+        """
         element = E.Binary(
             E.Key(filename),
             E.Value(Ref=str(id))
         )
         self._element.append(element)
 
-        return pykeepass.attachment.Attachment(element=element, kp=self._kp)
+        return attachment.Attachment(element=element, kp=self._kp)
 
     def delete_attachment(self, attachment):
+        """remove an attachment from entry.  Does not remove binary data"""
         attachment.delete()
 
     def deref(self, attribute):
+        """See `PyKeePass.deref`"""
         return self._kp.deref(getattr(self, attribute))
 
     @property
     def title(self):
-        """str: get or set entry title"""
+        """get or set entry title"""
         return self._get_string_field('Title')
 
     @title.setter
@@ -151,7 +198,7 @@ class Entry(BaseElement):
 
     @property
     def username(self):
-        """str: get or set entry username"""
+        """`str`: get or set entry username"""
         return self._get_string_field('UserName')
 
     @username.setter
@@ -160,12 +207,15 @@ class Entry(BaseElement):
 
     @property
     def password(self):
-        """str: get or set entry password"""
+        """`str`: get or set entry password"""
         return self._get_string_field('Password')
 
     @password.setter
     def password(self, value):
-        return self._set_string_field('Password', value)
+        if self.password:
+            return self._set_string_field('Password', value)
+        else:
+            return self._set_string_field('Password', value, True)
 
     @property
     def url(self):
@@ -178,7 +228,7 @@ class Entry(BaseElement):
 
     @property
     def notes(self):
-        """str: get or set entry notes"""
+        """`str`: get or set entry notes"""
         return self._get_string_field('Notes')
 
     @notes.setter
@@ -187,7 +237,7 @@ class Entry(BaseElement):
 
     @property
     def icon(self):
-        """str: get or set entry icon. See icons.py"""
+        """`str`: get or set entry icon. See `icons`"""
         return self._get_subelement_text('IconID')
 
     @icon.setter
@@ -196,28 +246,31 @@ class Entry(BaseElement):
 
     @property
     def tags(self):
-        """str: get or set entry tags"""
+        """`str`: get or set entry tags"""
         val = self._get_subelement_text('Tags')
-        return val.split(';') if val else val
+        return val.replace(',', ';').split(';') if val else []
 
     @tags.setter
-    def tags(self, value):
+    def tags(self, value, sep=';'):
         # Accept both str or list
-        v = ';'.join(value if type(value) is list else [value])
+        v = sep.join(value if isinstance(value, list) else [value])
         return self._set_subelement_text('Tags', v)
 
     @property
     def otp(self):
-        """str: get or set entry OTP text. (defacto standard)"""
+        """`str`: get or set entry OTP text. (defacto standard)"""
         return self._get_string_field('otp')
 
     @otp.setter
     def otp(self, value):
-        return self._set_string_field('otp', value)
+        if self.otp:
+            return self._set_string_field('otp', value)
+        else:
+            return self._set_string_field('otp', value, True)
 
     @property
     def history(self):
-        """:obj:`list` of :obj:`HistoryEntry`: get entry history"""
+        """`list` of `HistoryEntry`: get entry history"""
         if self._element.find('History') is not None:
             return [HistoryEntry(element=x, kp=self._kp) for x in self._element.find('History').findall('Entry')]
         else:
@@ -255,8 +308,20 @@ class Entry(BaseElement):
         self._element.find('AutoType/DefaultSequence').text = value
 
     @property
+    def autotype_window(self):
+        """`str`: get or set [autotype target window filter](https://keepass.info/help/base/autotype.html#autowindows)"""
+        sequence = self._element.find('AutoType/Association/Window')
+        if sequence is None or sequence.text == '':
+            return None
+        return sequence.text
+
+    @autotype_window.setter
+    def autotype_window(self, value):
+        self._element.find('AutoType/Association/Window').text = value
+
+    @property
     def is_a_history_entry(self):
-        """bool: check if entry is History entry"""
+        """`bool`: check if entry is History entry"""
         parent = self._element.getparent()
         if parent is not None:
             return parent.tag == 'History'
@@ -264,8 +329,8 @@ class Entry(BaseElement):
 
     @property
     def path(self):
-        """Path to element as list.  List contains all parent group names
-        ending with entry title.  List contains strings or NoneTypes."""
+        """`list` of (`str` or `None`): Path of entry.  List contains all parent group names
+        ending with entry title. May contain `None` for unnamed/untitled groups/entries."""
 
         # The root group is an orphan
         if self.parentgroup is None:
@@ -301,13 +366,17 @@ class Entry(BaseElement):
         specified key.
 
         Args:
-            key (:obj:`str`): key of the custom property to check.
+            key (`str`): key of the custom property to check.
 
         Returns:
-            bool: Whether the custom property is protected.
+            `bool`: Whether the custom property is protected.
 
         """
         assert key not in reserved_keys, '{} is a reserved key'.format(key)
+        return self._is_property_protected(key)
+
+    def _is_property_protected(self, key):
+        """Whether a property is protected."""
         field = self._xpath('String/Key[text()="{}"]/../Value'.format(key), first=True)
         if field is not None:
             return field.attrib.get("Protected", "False") == "True"
@@ -325,10 +394,10 @@ class Entry(BaseElement):
         """Create reference to an attribute of this element.
 
         Args:
-            attribute (str): one of 'title', 'username', 'password', 'url', 'notes', or 'uuid'
+            attribute (`str`): one of 'title', 'username', 'password', 'url', 'notes', or 'uuid'
 
         Returns:
-            str: [field reference][fieldref] to this field of this entry
+            `str`: [field reference][fieldref] to this field of this entry
 
         [fieldref]: https://keepass.info/help/base/fieldrefs.html
         """
@@ -343,10 +412,10 @@ class Entry(BaseElement):
         return '{{REF:{}@I:{}}}'.format(attribute_to_field[attribute], self.uuid.hex.upper())
 
     def save_history(self):
-        '''
+        """
         Save the entry in its history.  History is not created unless this function is
         explicitly called.
-        '''
+        """
         archive = deepcopy(self._element)
         hist = archive.find('History')
         if hist is not None:
@@ -362,8 +431,8 @@ class Entry(BaseElement):
         Delete entries from history
 
         Args:
-            history_entry (Entry): history item to delete
-            all (bool): delete all entries from history.  Default is False
+            history_entry (`Entry`): history item to delete
+            all (`bool`): delete all entries from history.  Default is False
         """
 
         if all:
@@ -373,7 +442,7 @@ class Entry(BaseElement):
 
     def __str__(self):
         # filter out NoneTypes and join into string
-        pathstr = '/'.join('' if p==None else p for p in self.path)
+        pathstr = '/'.join('' if p is None else p for p in self.path)
         return 'Entry: "{} ({})"'.format(pathstr, self.username)
 
 
@@ -383,6 +452,7 @@ class HistoryEntry(Entry):
         pathstr = super().__str__()
         return 'HistoryEntry: {}'.format(pathstr)
 
-    def __eq__(self, other):
-        # all history items share the same uuid, so examine xml directly
-        return self._element == other._element
+    def __hash__(self):
+        # All history items share the same UUID with themselves and their
+        # parent, so consider the mtime also
+        return hash((self.uuid, self.mtime))

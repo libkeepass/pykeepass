@@ -1,4 +1,35 @@
-4.0.4 -
+4.1.1 - 2025-03-04
+------------------
+- fixed #410 - support empty string as password
+
+4.1.0 - 2024-06-26
+------------------
+- merged #389 - add PyKeePass.database_name and database_description
+- merged #392, fixed #390 - fix pkg_resources dependency issue
+- fixed #391 - Entry.tags returns empty list instead of None
+- fixed #395 - set 'encoding' attribute when exporting as XML
+- fixed #383 - parse datetimes using isoformat instead of strptime
+
+4.0.7 - 2024-02-29
+------------------
+- fixed #359 - PyKeePass has `decrypt` kwarg for accessing header info
+- merged #347 - added Entry.index and Entry.move for moving entries
+- merged #367 - added Entry.autotype_window setter
+- merged #364 - allow filename/keyfile to be file-like objects
+- merged #371 - drop dateutil dependency
+- merged #348 - switch to pyproject.toml
+
+4.0.6 - 2023-08-22
+------------------
+- fixed #350 - fixed all Python 2 deprecation FIXMEs (e.g. future, )
+
+4.0.5 - 2023-06-05
+------------------
+- fixed #344 - AttributeError when accessing Times with None value
+- use __hash__ when evaluating equality
+- use mtime/uuid for HistoryEntry hashing
+
+4.0.4 - 2023-05-23
 ------------------
 - fixed #314 - correctly handle binaries with no data
 - fixed #265 - check for keepass signature
@@ -6,11 +37,12 @@
 - fixed #194 - added 'protected' arg to _set_string_field
 - use official icon names from KeePass source and deprecate old icons
 - added Entry.is_custom_property_protected()
+- fixed #338 - allow comma entry tag separator
 
 4.0.3 - 2022-06-21
 ------------------
-- add otp support
-- add debug_setup() function
+- added otp support
+- added debug_setup() function
 
 4.0.2 - 2022-05-21
 ------------------

@@ -1,8 +1,10 @@
-from construct import Struct, Switch, Bytes, Int16ul, RawCopy, Check, this
-from .kdbx3 import DynamicHeader as DynamicHeader3
+from construct import Bytes, Check, Int16ul, RawCopy, Struct, Switch, this
+
 from .kdbx3 import Body as Body3
-from .kdbx4 import DynamicHeader as DynamicHeader4
+from .kdbx3 import DynamicHeader as DynamicHeader3
 from .kdbx4 import Body as Body4
+from .kdbx4 import DynamicHeader as DynamicHeader4
+
 
 # verify file signature
 def check_signature(ctx):

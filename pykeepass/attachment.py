@@ -1,16 +1,17 @@
-# FIXME python2
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import absolute_import
-from future.utils import python_2_unicode_compatible
+from . import entry
+from .exceptions import BinaryError
 
-import pykeepass.entry
 
-from pykeepass.exceptions import BinaryError
+class Attachment:
+    """Binary data attached to an `Entry`.
 
-# FIXME python2
-@python_2_unicode_compatible
-class Attachment(object):
+    *Binary* refers to the bytes of the attached data
+    (stored at the root level of the database), while *attachment* is a
+    reference to a binary (stored in an entry).  A binary can be referenced
+    by none, one or many attachments.
+    A piece of binary data may be attached to multiple entries
+
+    """
     def __init__(self, element=None, kp=None, id=None, filename=None):
         self._element = element
         self._kp = kp
@@ -20,7 +21,7 @@ class Attachment(object):
 
     @property
     def id(self):
-        """str: get or set id of binary the attachment points to"""
+        """`str`: get or set id of binary the attachment points to"""
         return int(self._element.find('Value').attrib['Ref'])
 
     @id.setter
@@ -29,7 +30,7 @@ class Attachment(object):
 
     @property
     def filename(self):
-        """str: get or set filename attachment"""
+        """`str`: get or set filename string"""
         return self._element.find('Key').text
 
     @filename.setter
@@ -38,13 +39,13 @@ class Attachment(object):
 
     @property
     def entry(self):
-        """Entry: get entry this attachment is associated with"""
+        """`Entry`: entry this attachment is associated with"""
         ancestor = self._element.getparent()
-        return pykeepass.entry.Entry(element=ancestor, kp=self._kp)
+        return entry.Entry(element=ancestor, kp=self._kp)
 
     @property
     def binary(self):
-        """bytes: get binary this attachment points to"""
+        """`bytes`: binary data this attachment points to"""
         try:
             return self._kp.binaries[self.id]
         except IndexError:

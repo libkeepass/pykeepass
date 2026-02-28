@@ -1,21 +1,54 @@
 # Evan Widloski - 2018-04-11
 # keepass decrypt experimentation
 
-import struct
 import hashlib
-import argon2
 import hmac
+import struct
+
+import argon2
 from construct import (
-    Byte, Bytes, Int32ul, RepeatUntil, GreedyBytes, Struct, this, Mapping,
-    Switch, Flag, Prefixed, Int64ul, Int32sl, Int64sl, GreedyString, Padding,
-    Peek, Checksum, Computed, IfThenElse, Pointer, Tell
-)
-from .common import (
-    aes_kdf, Concatenated, AES256Payload, ChaCha20Payload, TwoFishPayload,
-    DynamicDict, compute_key_composite, Reparsed, Decompressed,
-    compute_master, CompressionFlags, XML, CipherId, ProtectedStreamId, Unprotect
+    Byte,
+    Bytes,
+    Checksum,
+    Computed,
+    Flag,
+    GreedyBytes,
+    GreedyString,
+    If,
+    IfThenElse,
+    Int32sl,
+    Int32ul,
+    Int64sl,
+    Int64ul,
+    Mapping,
+    Padding,
+    Peek,
+    Pointer,
+    Prefixed,
+    RepeatUntil,
+    Struct,
+    Switch,
+    Tell,
+    this,
 )
 
+from .common import (
+    XML,
+    AES256Payload,
+    ChaCha20Payload,
+    CipherId,
+    CompressionFlags,
+    Concatenated,
+    Decompressed,
+    DynamicDict,
+    ProtectedStreamId,
+    Reparsed,
+    TwoFishPayload,
+    Unprotect,
+    aes_kdf,
+    compute_key_composite,
+    compute_master,
+)
 
 # -------------------- Key Derivation --------------------
 
@@ -259,17 +292,21 @@ Body = Struct(
         this._.header.data,
         # exception=HeaderChecksumError,
     ),
-    "cred_check" / Checksum(
-        Bytes(32),
-        compute_header_hmac_hash,
-        this,
-        # exception=CredentialsError,
+    "cred_check" / If(this._._.decrypt,
+        Checksum(
+            Bytes(32),
+            compute_header_hmac_hash,
+            this,
+            # exception=CredentialsError,
+        )
     ),
-    "payload" / UnpackedPayload(
-        IfThenElse(
-            this._.header.value.dynamic_header.compression_flags.data.compression,
-            Decompressed(DecryptedPayload),
-            DecryptedPayload
+    "payload" / If(this._._.decrypt,
+        UnpackedPayload(
+            IfThenElse(
+                this._.header.value.dynamic_header.compression_flags.data.compression,
+                Decompressed(DecryptedPayload),
+                DecryptedPayload
+            )
         )
     )
 )

@@ -24,9 +24,10 @@
 
 __all__ = ['Twofish']
 
-from . import pytwofish
-from Cryptodome.Util.strxor import strxor
 from Cryptodome.Util.Padding import pad
+from Cryptodome.Util.strxor import strxor
+
+from . import pytwofish
 
 MODE_ECB = 1
 MODE_CBC = 2

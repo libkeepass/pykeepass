@@ -1,11 +1,9 @@
-#!/usr/bin/env python3
-
-
 # ---------- Find functions ---------------
 # Use find_entries()/find_groups() instead
 
 def find_groups_by_name(self, group_name, regex=False, flags=None,
                         group=None, first=False):
+    """@private"""
     return self.find_groups(
         name=group_name,
         regex=regex,
@@ -16,6 +14,7 @@ def find_groups_by_name(self, group_name, regex=False, flags=None,
 
 def find_groups_by_path(self, group_path_str=None, regex=False, flags=None,
                         group=None, first=False):
+    """@private"""
     return self.find_groups(
         path=group_path_str,
         regex=regex,
@@ -26,6 +25,7 @@ def find_groups_by_path(self, group_path_str=None, regex=False, flags=None,
 
 def find_groups_by_uuid(self, uuid, regex=False, flags=None,
                         group=None, history=False, first=False):
+    """@private"""
     return self.find_groups(
         uuid=uuid,
         regex=regex,
@@ -37,6 +37,7 @@ def find_groups_by_uuid(self, uuid, regex=False, flags=None,
 
 def find_groups_by_notes(self, notes, regex=False, flags=None,
                             group=None, history=False, first=False):
+    """@private"""
     return self.find_groups(
         notes=notes,
         regex=regex,
@@ -48,6 +49,7 @@ def find_groups_by_notes(self, notes, regex=False, flags=None,
 
 def find_entries_by_title(self, title, regex=False, flags=None,
                             group=None, history=False, first=False):
+    """@private"""
     return self.find_entries(
         title=title,
         regex=regex,
@@ -59,6 +61,7 @@ def find_entries_by_title(self, title, regex=False, flags=None,
 
 def find_entries_by_username(self, username, regex=False, flags=None,
                                 group=None, history=False, first=False):
+    """@private"""
     return self.find_entries(
         username=username,
         regex=regex,
@@ -70,6 +73,7 @@ def find_entries_by_username(self, username, regex=False, flags=None,
 
 def find_entries_by_password(self, password, regex=False, flags=None,
                                 group=None, history=False, first=False):
+    """@private"""
     return self.find_entries(
         password=password,
         regex=regex,
@@ -81,6 +85,7 @@ def find_entries_by_password(self, password, regex=False, flags=None,
 
 def find_entries_by_url(self, url, regex=False, flags=None,
                         group=None, history=False, first=False):
+    """@private"""
     return self.find_entries(
         url=url,
         regex=regex,
@@ -92,6 +97,7 @@ def find_entries_by_url(self, url, regex=False, flags=None,
 
 def find_entries_by_notes(self, notes, regex=False, flags=None,
                             group=None, history=False, first=False):
+    """@private"""
     return self.find_entries(
         notes=notes,
         regex=regex,
@@ -103,6 +109,7 @@ def find_entries_by_notes(self, notes, regex=False, flags=None,
 
 def find_entries_by_path(self, path, regex=False, flags=None,
                             group=None, history=False, first=False):
+    """@private"""
     return self.find_entries(
         path=path,
         regex=regex,
@@ -114,6 +121,7 @@ def find_entries_by_path(self, path, regex=False, flags=None,
 
 def find_entries_by_uuid(self, uuid, regex=False, flags=None,
                             group=None, history=False, first=False):
+    """@private"""
     return self.find_entries(
         uuid=uuid,
         regex=regex,
@@ -125,6 +133,7 @@ def find_entries_by_uuid(self, uuid, regex=False, flags=None,
 
 def find_entries_by_string(self, string, regex=False, flags=None,
                             group=None, history=False, first=False):
+    """@private"""
     return self.find_entries(
         string=string,
         regex=regex,

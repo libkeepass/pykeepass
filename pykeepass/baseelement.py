@@ -1,14 +1,13 @@
-from __future__ import absolute_import
-
 import base64
-import struct
 import uuid
+from datetime import datetime, timezone
+
+
 from lxml import etree
 from lxml.builder import E
-from datetime import datetime
 
 
-class BaseElement(object):
+class BaseElement:
     """Entry and Group inherit from this class"""
 
     def __init__(self, element, kp=None, icon=None, expires=False,
@@ -20,9 +19,9 @@ class BaseElement(object):
         )
         if icon:
             self._element.append(E.IconID(icon))
-        current_time_str = self._kp._encode_time(datetime.now())
+        current_time_str = self._kp._encode_time(datetime.now(timezone.utc))
         if expiry_time:
-            expiry_time_str = self._kp._encode_time(expiry_time)
+            expiry_time_str = self._kp._encode_time(expiry_time.astimezone(timezone.utc))
         else:
             expiry_time_str = current_time_str
 
@@ -93,7 +92,7 @@ class BaseElement(object):
         times = self._element.find('Times')
         if times is not None:
             prop = times.find(prop)
-            if prop is not None:
+            if prop is not None and prop.text is not None:
                 return self._kp._decode_time(prop.text)
 
     def _set_times_property(self, prop, value):
@@ -119,8 +118,8 @@ class BaseElement(object):
     def expired(self):
         if self.expires:
             return (
-                self._kp._datetime_to_utc(datetime.utcnow()) >
-                self._kp._datetime_to_utc(self.expiry_time)
+                datetime.now(timezone.utc) >
+                self.expiry_time
             )
 
         return False
@@ -135,6 +134,7 @@ class BaseElement(object):
 
     @property
     def ctime(self):
+        """(datetime.datetime): Creation time."""
         return self._get_times_property('CreationTime')
 
     @ctime.setter
@@ -143,6 +143,7 @@ class BaseElement(object):
 
     @property
     def atime(self):
+        """(datetime.datetime): Access time. Update with touch()"""
         return self._get_times_property('LastAccessTime')
 
     @atime.setter
@@ -151,6 +152,7 @@ class BaseElement(object):
 
     @property
     def mtime(self):
+        """(datetime.datetime): Access time. Update with touch(modify=True)"""
         return self._get_times_property('LastModificationTime')
 
     @mtime.setter
@@ -166,11 +168,13 @@ class BaseElement(object):
     def __repr__(self):
         return self.__str__()
 
+    def __hash__(self):
+        return hash((self.uuid,))
+
     def __eq__(self, other):
-        if hasattr(other, 'uuid'):
-            return self.uuid == other.uuid
-        else:
-            return False
+        if isinstance(other, BaseElement):
+            return hash(self) == hash(other)
+        return NotImplemented
 
     def touch(self, modify=False):
         """
@@ -179,7 +183,7 @@ class BaseElement(object):
         Args:
             modify (bool): update access time as well a modification time
         """
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         self.atime = now
         if modify:
             self.mtime = now
