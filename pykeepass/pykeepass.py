@@ -1,4 +1,5 @@
 import base64
+import io
 import logging
 import os
 import re
@@ -155,14 +156,18 @@ class PyKeePass:
             filename = self.filename
 
         if hasattr(filename, "write"):
+            # buffer stream writes to prevent corruption on failure
+            # (same principle as temp file for disk saves)
+            buffer = io.BytesIO()
             KDBX.build_stream(
                 self.kdbx,
-                filename,
+                buffer,
                 password=self.password,
                 keyfile=self.keyfile,
                 transformed_key=transformed_key,
                 decrypt=True
             )
+            filename.write(buffer.getvalue())
         else:
             # save to temporary file to prevent database clobbering
             # see issues 223, 101

@@ -1,3 +1,7 @@
+- 2025-03-04
+------------------
+- fixed #219 - seeds not regenerated on save
+
 4.1.1 - 2025-03-04
 ------------------
 - fixed #410 - support empty string as password

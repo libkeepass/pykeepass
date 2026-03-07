@@ -1,4 +1,5 @@
 from construct import Bytes, Check, Int16ul, RawCopy, Struct, Switch, this
+from construct import stream_seek, stream_tell, stream_read, stream_write
 
 from .kdbx3 import Body as Body3
 from .kdbx3 import DynamicHeader as DynamicHeader3
@@ -10,8 +11,19 @@ from .kdbx4 import DynamicHeader as DynamicHeader4
 def check_signature(ctx):
     return ctx.sig1 == b'\x03\xd9\xa2\x9a' and ctx.sig2 == b'\x67\xFB\x4B\xB5'
 
+
+class RawCopyRebuild(RawCopy):
+    """RawCopy that always rebuilds from .value, ignoring cached .data.
+    This ensures subcons like RandomGreedyBytes run on every build."""
+
+    def _build(self, obj, stream, context, path):
+        if 'data' in obj:
+            del obj['data']
+        return super()._build(obj, stream, context, path)
+
+
 KDBX = Struct(
-    "header" / RawCopy(
+    "header" / RawCopyRebuild(
         Struct(
             "sig1" / Bytes(4),
             "sig2" / Bytes(4),

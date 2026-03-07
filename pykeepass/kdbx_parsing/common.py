@@ -13,6 +13,7 @@ from construct import (
     Adapter,
     BitsSwapped,
     BitStruct,
+    Construct,
     Container,
     Flag,
     GreedyBytes,
@@ -20,9 +21,13 @@ from construct import (
     ListContainer,
     Mapping,
     Padding,
+    SizeofError,
     Switch,
+    stream_read_entire,
+    stream_write,
 )
 from Cryptodome.Cipher import AES, ChaCha20, Salsa20
+from Cryptodome.Random import get_random_bytes
 from Cryptodome.Util import Padding as CryptoPadding
 from lxml import etree
 
@@ -80,6 +85,28 @@ class DynamicDict(Adapter):
                 l.append(obj[key])
 
         return ListContainer(l)
+
+    def _build(self, obj, stream, context, path):
+        obj2 = self._encode(obj, context, path)
+        buildret = self.subcon._build(obj2, stream, context, path)
+        if buildret is not None:
+            return self._decode(buildret, context, path)
+        return obj
+
+
+class RandomGreedyBytes(Construct):
+    """Parses like GreedyBytes, but generates random bytes of same length during build."""
+
+    def _parse(self, stream, context, path):
+        return stream_read_entire(stream, path)
+
+    def _build(self, obj, stream, context, path):
+        data = get_random_bytes(len(obj))
+        stream_write(stream, data, len(data), path)
+        return data
+
+    def _sizeof(self, context, path):
+        raise SizeofError(path=path)
 
 
 def Reparsed(subcon_out):
