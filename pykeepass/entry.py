@@ -39,10 +39,10 @@ class Entry(BaseElement):
                 expiry_time=expiry_time,
                 icon=icon
             )
-            self._element.append(E.String(E.Key('Title'), E.Value(title)))
-            self._element.append(E.String(E.Key('UserName'), E.Value(username)))
+            self._element.append(E.String(E.Key('Title'), E.Value(title if title is not None else "")))
+            self._element.append(E.String(E.Key('UserName'), E.Value(username if username is not None else "")))
             self._element.append(
-                E.String(E.Key('Password'), E.Value(password, Protected="True"))
+                E.String(E.Key('Password'), E.Value(password if password is not None else "", Protected="True"))
             )
             if url:
                 self._element.append(E.String(E.Key('URL'), E.Value(url)))
