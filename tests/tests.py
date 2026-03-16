@@ -1335,11 +1335,15 @@ class KDBXTests(unittest.TestCase):
             # verify that various seeds have been regenerated after saving
             regen_test(old_kp, new_kp, 'kdbx.header.value.dynamic_header.master_seed.data')
             regen_test(old_kp, new_kp, 'kdbx.header.value.dynamic_header.encryption_iv.data')
-            if new_kp.version == (3, 0):
+            if new_kp.version == (3, 1):
                 regen_test(old_kp, new_kp, 'kdbx.header.value.dynamic_header.protected_stream_key.data')
-                regen_test(old_kp, new_kp, 'kdbx.header.value.dynamic_header.old_start_bytes.data')
-            if new_kp.version == (4, 1):
+                regen_test(old_kp, new_kp, 'kdbx.header.value.dynamic_header.stream_start_bytes.data')
+                regen_test(old_kp, new_kp, 'kdbx.header.value.dynamic_header.transform_seed.data')
+            if new_kp.version == (4, 0):
                 regen_test(old_kp, new_kp, 'kdbx.body.payload.inner_header.protected_stream_key.data')
+                if new_kp.kdf_algorithm.startswith('argon'):
+                    regen_test(old_kp, new_kp, 'kdbx.header.value.dynamic_header.kdf_parameters.data.dict.S.value')
+
 
         # remove old files
         for filename in os.listdir(base_dir):
