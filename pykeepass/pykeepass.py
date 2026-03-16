@@ -144,6 +144,9 @@ class PyKeePass:
     def save(self, filename=None, transformed_key=None):
         """Save current database object to disk.
 
+        The build process will randomize seeds while writing to disk, but `.kdbx`
+        will not reflect these new values.  Call `.reload()` if you need them.
+
         Args:
             filename (`str`, optional): path to database or stream object.
                 If None, the path given when the database was opened is used.
