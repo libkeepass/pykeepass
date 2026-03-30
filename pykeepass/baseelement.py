@@ -78,7 +78,12 @@ class BaseElement:
 
     @property
     def icon(self):
-        return self._get_subelement_text('IconID')
+        """`str`: get or set entry icon. See `icons`"""
+        value = self._get_subelement_text('IconID')
+        if not int(value):
+            uuid = self._get_subelement_text('CustomIconUUID')
+            value = uuid if uuid is not None else value
+        return value
 
     @icon.setter
     def icon(self, value):

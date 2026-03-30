@@ -872,6 +872,18 @@ class PyKeePass:
         for reference in binaries_gt:
             reference.id = reference.id - 1
 
+    @property
+    def customIcons(self):
+        """`dictionary` of `uuid(str):png(bytes)`: all attached custom icons in database."""
+        icons = {}
+        counter = 0
+        for elem in self._xpath('/KeePassFile/Meta/CustomIcons/Icon'):
+            if elem.text is not None:
+                counter+=1
+            else:
+                icons[elem.find('UUID').text] = base64.b64decode(elem.find('Data').text)
+        return icons
+
     # ---------- Misc ----------
 
     def deref(self, value):
