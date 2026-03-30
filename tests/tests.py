@@ -511,6 +511,19 @@ class EntryTests3(KDBX3Tests):
             self.kp.root_group
         )
 
+    def test_null_values(self):
+        """Set title, username, password to `None` as the docs allow"""
+        entry = Entry(
+            None,
+            None,
+            None,
+            kp=self.kp
+        )
+        self.assertEqual(entry.title, '')
+        self.assertEqual(entry.username, '')
+        self.assertEqual(entry.password, '')
+
+
     def test_references(self):
         original_entry = self.kp.find_entries(title='foobar_entry', first=True)
         original_entry_duplicate = self.kp.find_entries(title='foobar_entry', first=True)
