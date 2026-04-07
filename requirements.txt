@@ -4,7 +4,7 @@ cffi==1.17.1
 construct==2.10.70
 Jinja2==3.1.6
 lxml==5.3.1
-MarkupSafe==3.0.2
+MarkupSafe==3.0.3
 pdoc==15.0.1
 pycparser==2.22
 pycryptodomex==3.21.0
