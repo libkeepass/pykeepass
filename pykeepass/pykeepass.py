@@ -27,6 +27,7 @@ from .exceptions import (
 )
 from .group import Group
 from .kdbx_parsing import KDBX, kdf_uuids
+from .kdbx_parsing.common import rotate_seeds
 from .xpath import attachment_xp, entry_xp, group_xp, path_xp
 
 logger = logging.getLogger(__name__)
@@ -144,19 +145,24 @@ class PyKeePass:
     def save(self, filename=None, transformed_key=None):
         """Save current database object to disk.
 
-        The build process will randomize seeds while writing to disk, but `.kdbx`
-        will not reflect these new values.  Call `.reload()` if you need them.
+        Seeds and IVs are rotated on every save, so the bytes written differ
+        each time even when the contents do not.  Note `.transformed_key` still
+        reports the key computed when the database was opened; call `.reload()`
+        for the new one.
 
         Args:
             filename (`str`, optional): path to database or stream object.
                 If None, the path given when the database was opened is used.
                 PyKeePass.filename is unchanged.
             transformed_key (`bytes`, optional): precomputed transformed
-                key.
+                key.  The KDF salt is left untouched when this is given, since
+                the key would otherwise no longer match the database.
         """
 
         if not filename:
             filename = self.filename
+
+        rotate_seeds(self.kdbx, rotate_kdf_salt=transformed_key is None)
 
         if hasattr(filename, "write"):
             # buffer stream writes to prevent corruption on failure
@@ -1064,7 +1070,7 @@ def create_database(
     keepass_instance.password = password
     keepass_instance.keyfile = keyfile
 
-    keepass_instance.save(transformed_key)
+    keepass_instance.save(transformed_key=transformed_key)
     return keepass_instance
 
 def debug_setup():

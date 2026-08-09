@@ -13,7 +13,6 @@ from construct import (
     Adapter,
     BitsSwapped,
     BitStruct,
-    Construct,
     Container,
     Flag,
     GreedyBytes,
@@ -21,10 +20,7 @@ from construct import (
     ListContainer,
     Mapping,
     Padding,
-    SizeofError,
     Switch,
-    stream_read_entire,
-    stream_write,
 )
 from Cryptodome.Cipher import AES, ChaCha20, Salsa20
 from Cryptodome.Random import get_random_bytes
@@ -85,28 +81,6 @@ class DynamicDict(Adapter):
                 l.append(obj[key])
 
         return ListContainer(l)
-
-    def _build(self, obj, stream, context, path):
-        obj2 = self._encode(obj, context, path)
-        buildret = self.subcon._build(obj2, stream, context, path)
-        if buildret is not None:
-            return self._decode(buildret, context, path)
-        return obj
-
-
-class RandomGreedyBytes(Construct):
-    """Parses like GreedyBytes, but generates random bytes of same length during build."""
-
-    def _parse(self, stream, context, path):
-        return stream_read_entire(stream, path)
-
-    def _build(self, obj, stream, context, path):
-        data = get_random_bytes(len(obj))
-        stream_write(stream, data, len(data), path)
-        return data
-
-    def _sizeof(self, context, path):
-        raise SizeofError(path=path)
 
 
 def Reparsed(subcon_out):
@@ -213,6 +187,53 @@ def compute_master(context):
         context._.header.value.dynamic_header.master_seed.data +
         context.transformed_key).digest()
     return master_key
+
+
+# -------------------- Seed Rotation --------------------
+
+# length of regenerated seeds, per the KDBX specification
+SEED_LENGTH = 32
+# nonce/IV length required by each payload cipher
+IV_LENGTH = {'aes256': 16, 'twofish': 16, 'chacha20': 12}
+
+
+def rotate_seeds(kdbx, rotate_kdf_salt=True):
+    """Replace every random seed and IV in a database with a fresh value.
+
+    Called before saving so that no two writes of a database ever encrypt under
+    the same master key and IV.  See issue #219.
+
+    Args:
+        kdbx (`Container`): parsed database to modify in place
+        rotate_kdf_salt (`bool`): whether to also rotate the KDF salt.  Pass
+            `False` when reusing a precomputed transformed key, since that key
+            is only valid for the salt it was derived against.
+    """
+
+    header = kdbx.header.value.dynamic_header
+
+    header.master_seed.data = get_random_bytes(SEED_LENGTH)
+    header.encryption_iv.data = get_random_bytes(
+        IV_LENGTH.get(header.cipher_id.data, len(header.encryption_iv.data))
+    )
+
+    if kdbx.header.value.major_version >= 4:
+        # in KDBX4 the protected stream key lives in the inner header
+        if kdbx.body.payload is None:
+            raise ValueError('Database is not decrypted')
+        inner_header = kdbx.body.payload.inner_header
+        inner_header.protected_stream_key.data = get_random_bytes(
+            len(inner_header.protected_stream_key.data)
+        )
+        if rotate_kdf_salt:
+            header.kdf_parameters.data.dict['S'].value = get_random_bytes(SEED_LENGTH)
+    else:
+        header.protected_stream_key.data = get_random_bytes(
+            len(header.protected_stream_key.data)
+        )
+        header.stream_start_bytes.data = get_random_bytes(SEED_LENGTH)
+        if rotate_kdf_salt:
+            header.transform_seed.data = get_random_bytes(SEED_LENGTH)
 
 
 # -------------------- XML Processing --------------------

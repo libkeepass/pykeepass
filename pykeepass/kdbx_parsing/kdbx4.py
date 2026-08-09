@@ -42,7 +42,6 @@ from .common import (
     Decompressed,
     DynamicDict,
     ProtectedStreamId,
-    RandomGreedyBytes,
     Reparsed,
     TwoFishPayload,
     Unprotect,
@@ -130,7 +129,7 @@ VariantDictionaryItem = Struct(
              0x08: Flag,
              0x0C: Int32sl,
              0x0D: Int64sl,
-             0x42: Switch(this.key, {'S': RandomGreedyBytes()}, default=GreedyBytes),
+             0x42: GreedyBytes,
              0x18: GreedyString('utf-8')
              }
         )
@@ -174,9 +173,7 @@ DynamicHeaderItem = Struct(
             this.id,
             {'compression_flags': CompressionFlags,
              'kdf_parameters': VariantDictionary,
-             'cipher_id': CipherId,
-             'master_seed': RandomGreedyBytes(),
-             'encryption_iv': RandomGreedyBytes(),
+             'cipher_id': CipherId
              },
             default=GreedyBytes
         )
@@ -257,9 +254,7 @@ InnerHeaderItem = Struct(
         Int32ul,
         Switch(
             this.type,
-            {'protected_stream_id': ProtectedStreamId,
-             'protected_stream_key': RandomGreedyBytes(),
-             },
+            {'protected_stream_id': ProtectedStreamId},
             default=GreedyBytes
         )
     )

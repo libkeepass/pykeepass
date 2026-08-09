@@ -36,7 +36,6 @@ from .common import (
     Decompressed,
     DynamicDict,
     ProtectedStreamId,
-    RandomGreedyBytes,
     Reparsed,
     TwoFishPayload,
     Unprotect,
@@ -98,12 +97,7 @@ DynamicHeaderItem = Struct(
             {'compression_flags': CompressionFlags,
              'cipher_id': CipherId,
              'transform_rounds': Int64ul,
-             'protected_stream_id': ProtectedStreamId,
-             'master_seed': RandomGreedyBytes(),
-             'transform_seed': RandomGreedyBytes(),
-             'encryption_iv': RandomGreedyBytes(),
-             'protected_stream_key': RandomGreedyBytes(),
-             'stream_start_bytes': RandomGreedyBytes(),
+             'protected_stream_id': ProtectedStreamId
              },
             default=GreedyBytes
         )

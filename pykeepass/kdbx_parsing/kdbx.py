@@ -1,5 +1,4 @@
 from construct import Bytes, Check, Int16ul, RawCopy, Struct, Switch, this
-from construct import stream_seek, stream_tell, stream_read, stream_write
 
 from .kdbx3 import Body as Body3
 from .kdbx3 import DynamicHeader as DynamicHeader3
@@ -14,7 +13,10 @@ def check_signature(ctx):
 
 class RawCopyRebuild(RawCopy):
     """RawCopy that always rebuilds from .value, ignoring cached .data.
-    This ensures subcons like RandomGreedyBytes run on every build."""
+
+    Without this, the header bytes captured at parse time are written back
+    verbatim and any modification to the header (e.g. the seed rotation done by
+    `PyKeePass.save`) is silently dropped."""
 
     def _build(self, obj, stream, context, path):
         if 'data' in obj:
