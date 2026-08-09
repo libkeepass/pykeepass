@@ -1,13 +1,16 @@
-argon2-cffi==23.1.0
-argon2-cffi-bindings==21.2.0
-cffi==1.17.1
+argon2-cffi==25.1.0
+argon2-cffi-bindings==25.1.0
+cffi==2.1.1
 construct==2.10.70
+importlib_metadata==9.0.0
 Jinja2==3.1.6
-lxml==5.3.1
-MarkupSafe==3.0.2
-pdoc==15.0.1
-pycparser==2.22
-pycryptodomex==3.21.0
-Pygments==2.19.1
+lxml==6.1.1
+markdown2==2.5.5
+MarkupSafe==3.0.3
+pdoc==16.0.0
+pycparser==3.0
+pycryptodomex==3.23.0
+Pygments==2.20.0
 pykeepass @ file:///home/evan/resources/pykeepass
-pyotp==2.9.0
+PyOTP==2.10.0
+zipp==4.1.0
