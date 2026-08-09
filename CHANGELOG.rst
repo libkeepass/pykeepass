@@ -1,4 +1,4 @@
-- 2025-03-04
+4.2.0 - 2026-08-09
 ------------------
 - fixed #219 - seeds not regenerated on save
 
