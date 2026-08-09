@@ -1,4 +1,5 @@
 import base64
+import io
 import logging
 import os
 import re
@@ -26,6 +27,7 @@ from .exceptions import (
 )
 from .group import Group
 from .kdbx_parsing import KDBX, kdf_uuids
+from .kdbx_parsing.common import rotate_seeds
 from .xpath import attachment_xp, entry_xp, group_xp, path_xp
 
 logger = logging.getLogger(__name__)
@@ -143,26 +145,38 @@ class PyKeePass:
     def save(self, filename=None, transformed_key=None):
         """Save current database object to disk.
 
+        Seeds and IVs are rotated on every save, so the bytes written differ
+        each time even when the contents do not.  Note `.transformed_key` still
+        reports the key computed when the database was opened; call `.reload()`
+        for the new one.
+
         Args:
             filename (`str`, optional): path to database or stream object.
                 If None, the path given when the database was opened is used.
                 PyKeePass.filename is unchanged.
             transformed_key (`bytes`, optional): precomputed transformed
-                key.
+                key.  The KDF salt is left untouched when this is given, since
+                the key would otherwise no longer match the database.
         """
 
         if not filename:
             filename = self.filename
 
+        rotate_seeds(self.kdbx, rotate_kdf_salt=transformed_key is None)
+
         if hasattr(filename, "write"):
+            # buffer stream writes to prevent corruption on failure
+            # (same principle as temp file for disk saves)
+            buffer = io.BytesIO()
             KDBX.build_stream(
                 self.kdbx,
-                filename,
+                buffer,
                 password=self.password,
                 keyfile=self.keyfile,
                 transformed_key=transformed_key,
                 decrypt=True
             )
+            filename.write(buffer.getvalue())
         else:
             # save to temporary file to prevent database clobbering
             # see issues 223, 101
@@ -1056,7 +1070,7 @@ def create_database(
     keepass_instance.password = password
     keepass_instance.keyfile = keyfile
 
-    keepass_instance.save(transformed_key)
+    keepass_instance.save(transformed_key=transformed_key)
     return keepass_instance
 
 def debug_setup():

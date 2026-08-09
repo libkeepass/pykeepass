@@ -10,8 +10,22 @@ from .kdbx4 import DynamicHeader as DynamicHeader4
 def check_signature(ctx):
     return ctx.sig1 == b'\x03\xd9\xa2\x9a' and ctx.sig2 == b'\x67\xFB\x4B\xB5'
 
+
+class RawCopyRebuild(RawCopy):
+    """RawCopy that always rebuilds from .value, ignoring cached .data.
+
+    Without this, the header bytes captured at parse time are written back
+    verbatim and any modification to the header (e.g. the seed rotation done by
+    `PyKeePass.save`) is silently dropped."""
+
+    def _build(self, obj, stream, context, path):
+        if 'data' in obj:
+            del obj['data']
+        return super()._build(obj, stream, context, path)
+
+
 KDBX = Struct(
-    "header" / RawCopy(
+    "header" / RawCopyRebuild(
         Struct(
             "sig1" / Bytes(4),
             "sig2" / Bytes(4),

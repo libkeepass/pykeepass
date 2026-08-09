@@ -1310,17 +1310,40 @@ class KDBXTests(unittest.TestCase):
                  filenames_in, filenames_out, passwords, transformed_keys,
                  keyfiles, encryption_algorithms, kdf_algorithms, versions
         ):
-            kp = PyKeePass(
+            old_kp = PyKeePass(
                 filename_in,
                 password,
                 keyfile,
                 transformed_key=transformed_key
             )
-            self.assertEqual(kp.encryption_algorithm, encryption_algorithm)
-            self.assertEqual(kp.kdf_algorithm, kdf_algorithm)
-            self.assertEqual(kp.version, version)
+            self.assertEqual(old_kp.encryption_algorithm, encryption_algorithm)
+            self.assertEqual(old_kp.kdf_algorithm, kdf_algorithm)
+            self.assertEqual(old_kp.version, version)
 
-            kp.save(
+            # import recursive getattr
+            from operator import attrgetter
+
+            seed_attrs = [
+                'kdbx.header.value.dynamic_header.master_seed.data',
+                'kdbx.header.value.dynamic_header.encryption_iv.data',
+            ]
+            # the KDF salt may only be rotated when we are free to rederive the
+            # transformed key from the password/keyfile
+            salt_attrs = []
+            if version == (3, 1):
+                seed_attrs += [
+                    'kdbx.header.value.dynamic_header.protected_stream_key.data',
+                    'kdbx.header.value.dynamic_header.stream_start_bytes.data',
+                ]
+                salt_attrs.append('kdbx.header.value.dynamic_header.transform_seed.data')
+            else:
+                seed_attrs.append('kdbx.body.payload.inner_header.protected_stream_key.data')
+                if kdf_algorithm.startswith('argon'):
+                    salt_attrs.append('kdbx.header.value.dynamic_header.kdf_parameters.data.dict.S.value')
+
+            before = {a: attrgetter(a)(old_kp) for a in seed_attrs + salt_attrs}
+
+            old_kp.save(
                 filename_out,
                 transformed_key=transformed_key
             )
@@ -1329,18 +1352,70 @@ class KDBXTests(unittest.TestCase):
                 # rewind so PyKeePass can read from the same stream
                 filename_out.seek(0)
 
-            kp = PyKeePass(
+            new_kp = PyKeePass(
                 filename_out,
                 password,
                 keyfile,
                 transformed_key=transformed_key
             )
 
-        for filename in base_dir.glob('*.out'):
-            os.remove(filename)
+            for attr in seed_attrs:
+                # seed was rotated by the save...
+                self.assertNotEqual(
+                    before[attr], attrgetter(attr)(old_kp),
+                    "seed {} not rotated on file {}".format(attr, filename_in)
+                )
+                # ...and the rotated value is what landed on disk
+                self.assertEqual(
+                    attrgetter(attr)(old_kp), attrgetter(attr)(new_kp),
+                    "in-memory {} does not match saved file {}".format(attr, filename_in)
+                )
+
+            for attr in salt_attrs:
+                if transformed_key is None:
+                    self.assertNotEqual(
+                        before[attr], attrgetter(attr)(old_kp),
+                        "kdf salt {} not rotated on file {}".format(attr, filename_in)
+                    )
+                else:
+                    # a caller supplied transformed key is bound to the salt
+                    self.assertEqual(
+                        before[attr], attrgetter(attr)(old_kp),
+                        "kdf salt {} rotated out from under a supplied "
+                        "transformed_key on file {}".format(attr, filename_in)
+                    )
+                self.assertEqual(
+                    attrgetter(attr)(old_kp), attrgetter(attr)(new_kp)
+                )
+
+
+        # remove old files
+        for filename in os.listdir(base_dir):
+            if filename.endswith('.out'):
+                os.remove(os.path.join(base_dir, filename))
 
         keyfile_fd.close()
 
+    def test_save_transformed_key_keeps_credentials(self):
+        """saving with a precomputed transformed key must not lock out the
+        password/keyfile the key was derived from"""
+
+        for name, keyfile in [('test3.kdbx', 'test3.key'),
+                              ('test4.kdbx', 'test4.key')]:
+            filename_out = base_dir / (name + '.out')
+            shutil.copy(base_dir / name, filename_out)
+
+            kp = PyKeePass(filename_out, 'password', base_dir / keyfile)
+            salt = kp.database_salt
+            kp.save(transformed_key=kp.transformed_key)
+
+            # the salt the supplied key was derived against has to survive
+            self.assertEqual(salt, kp.database_salt, name)
+            # both ways of opening the database still work
+            PyKeePass(filename_out, 'password', base_dir / keyfile)
+            PyKeePass(filename_out, transformed_key=kp.transformed_key)
+
+            os.remove(filename_out)
 
     def test_open_error(self):
 
